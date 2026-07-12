@@ -40,9 +40,11 @@ function OrderDetail() {
 
   const updateStatus = async (newStatus) => {
     try {
-      // Use confirm-payment endpoint for payment confirmation
+      // Use specific endpoints for certain actions
       if (newStatus === 'in_progress') {
         await axios.put(`/api/orders/${id}/confirm-payment`)
+      } else if (newStatus === 'sent') {
+        await axios.put(`/api/orders/${id}/send`)
       } else {
         await axios.put(`/api/orders/${id}`, { status: newStatus })
       }
