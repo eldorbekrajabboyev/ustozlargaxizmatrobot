@@ -1,7 +1,7 @@
 const TelegramBot = require('node-telegram-bot-api');
-const axios = require('axios');
+const { queryAll, queryOne, run } = require('./database');
 
-const API_URL = process.env.API_URL || 'http://localhost:3000';
+let botInstance = null;
 
 async function startBot() {
   const BOT_TOKEN = process.env.BOT_TOKEN;
@@ -10,35 +10,28 @@ async function startBot() {
   }
 
   const bot = new TelegramBot(BOT_TOKEN, { polling: true });
+  botInstance = bot;
   console.log('🤖 Metodikish Bot started');
 
   // ==================== HELPERS ====================
 
-  async function apiGet(path) {
-    const res = await axios.get(`${API_URL}/api${path}`);
-    return res.data;
-  }
-
-  async function apiPost(path, data) {
-    const res = await axios.post(`${API_URL}/api${path}`, data);
-    return res.data;
-  }
-
-  async function ensureUser(msg) {
-    const tg = msg.from;
-    return apiPost('/users', {
-      telegram_id: tg.id,
-      username: tg.username,
-      first_name: tg.first_name,
-      last_name: tg.last_name,
-    });
+  function ensureUser(tgUser) {
+    const existing = queryOne('SELECT * FROM users WHERE telegram_id = ?', [tgUser.id]);
+    if (existing) {
+      run('UPDATE users SET username = ?, first_name = ?, last_name = ? WHERE telegram_id = ?',
+        [tgUser.username, tgUser.first_name, tgUser.last_name, tgUser.id]);
+      return queryOne('SELECT * FROM users WHERE telegram_id = ?', [tgUser.id]);
+    }
+    const result = run('INSERT INTO users (telegram_id, username, first_name, last_name) VALUES (?, ?, ?, ?)',
+      [tgUser.id, tgUser.username, tgUser.first_name, tgUser.last_name]);
+    return queryOne('SELECT * FROM users WHERE id = ?', [result.lastInsertRowid]);
   }
 
   // ==================== COMMANDS ====================
 
   bot.onText(/\/start/, async (msg) => {
     const chatId = msg.chat.id;
-    await ensureUser(msg);
+    ensureUser(msg.from);
 
     const keyboard = {
       reply_markup: {
@@ -66,17 +59,15 @@ async function startBot() {
     const data = query.data;
     const telegramId = query.from.id;
 
-    await ensureUser(query);
+    ensureUser(query.from);
 
     if (data === 'services') {
-      const services = await apiGet('/services');
-      const activeServices = services.filter(s => s.is_active);
-
-      if (activeServices.length === 0) {
+      const services = queryAll('SELECT * FROM services WHERE is_active = 1');
+      if (services.length === 0) {
         return bot.sendMessage(chatId, 'Hozircha xizmatlar mavjud emas.');
       }
 
-      const buttons = activeServices.map(s => [
+      const buttons = services.map(s => [
         { text: `${s.name} - ${s.price.toLocaleString()} so'm`, callback_data: `order_${s.id}` }
       ]);
       buttons.push([{ text: '🔙 Orqaga', callback_data: 'back_main' }]);
@@ -113,10 +104,17 @@ async function startBot() {
     }
 
     if (data === 'my_orders') {
-      const user = await apiGet(`/users/${telegramId}`);
+      const user = queryOne('SELECT id FROM users WHERE telegram_id = ?', [telegramId]);
       if (!user) return bot.sendMessage(chatId, "Siz hali ro'yxatdan o'tmagansiz.");
 
-      const orders = await apiGet(`/user/orders/${telegramId}`);
+      const orders = queryAll(`
+        SELECT o.*, s.name as service_name
+        FROM orders o
+        LEFT JOIN services s ON o.service_id = s.id
+        WHERE o.user_id = ?
+        ORDER BY o.created_at DESC
+      `, [user.id]);
+
       if (orders.length === 0) {
         return bot.sendMessage(chatId, "📦 Sizda hali buyurtmalar mavjud emas.");
       }
@@ -140,7 +138,7 @@ async function startBot() {
     // Order creation flow
     if (data.startsWith('order_')) {
       const serviceId = data.split('_')[1];
-      const service = (await apiGet('/services')).find(s => s.id == serviceId);
+      const service = queryOne('SELECT * FROM services WHERE id = ?', [parseInt(serviceId)]);
       if (!service) return;
 
       if (!global.userStates) global.userStates = {};
@@ -237,24 +235,20 @@ async function startBot() {
 
   async function createOrder(chatId, telegramId, state) {
     try {
-      const user = await apiGet(`/users/${telegramId}`);
+      const user = queryOne('SELECT id FROM users WHERE telegram_id = ?', [telegramId]);
+      const service = queryOne('SELECT * FROM services WHERE id = ?', [parseInt(state.service_id)]);
 
-      const order = await apiPost('/orders', {
-        user_id: user.id,
-        service_id: state.service_id,
-        full_name: state.full_name,
-        address: state.address,
-        school: state.school,
-        subject: state.subject,
-        grade: state.grade,
-        topic: state.topic,
-      });
+      const orderCode = `MK-${Date.now().toString(36).toUpperCase()}`;
 
-      const cards = await apiGet('/user/active-cards');
-      const card = cards[0];
+      const result = run(`
+        INSERT INTO orders (order_code, user_id, service_id, full_name, address, school, subject, grade, topic, total_price)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, [orderCode, user.id, parseInt(state.service_id), state.full_name, state.address, state.school, state.subject, state.grade, state.topic, service.price]);
+
+      const card = queryOne('SELECT * FROM payment_cards WHERE is_active = 1 LIMIT 1');
 
       let paymentText = `✅ *Buyurtma yaratildi!*\n\n`;
-      paymentText += `📋 Buyurtma raqami: *${order.order_code}*\n`;
+      paymentText += `📋 Buyurtma raqami: *${orderCode}*\n`;
       paymentText += `📝 Xizmat: ${state.service_name}\n`;
       paymentText += `💰 Narxi: ${state.service_price.toLocaleString()} so'm\n\n`;
 
@@ -269,7 +263,7 @@ async function startBot() {
       const keyboard = {
         reply_markup: {
           inline_keyboard: [
-            [{ text: '📤 Chek yuborish', callback_data: `send_receipt_${order.id}` }],
+            [{ text: '📤 Chek yuborish', callback_data: `send_receipt_${result.lastInsertRowid}` }],
             [{ text: '🔙 Asosiy menyu', callback_data: 'back_main' }],
           ],
         },
@@ -285,7 +279,7 @@ async function startBot() {
     }
   }
 
-  // Handle receipt upload
+  // Handle receipt upload callback
   bot.on('callback_query', async (query) => {
     const data = query.data;
     const chatId = query.message.chat.id;
@@ -299,6 +293,7 @@ async function startBot() {
     }
   });
 
+  // Handle photo (receipt)
   bot.on('photo', async (msg) => {
     const chatId = msg.chat.id;
     const telegramId = msg.from.id;
@@ -309,17 +304,22 @@ async function startBot() {
     const photo = msg.photo[msg.photo.length - 1];
 
     try {
+      const BOT_TOKEN = process.env.BOT_TOKEN;
       const file = await bot.getFile(photo.file_id);
       const fileUrl = `https://api.telegram.org/file/bot${BOT_TOKEN}/${file.file_path}`;
 
-      const response = await axios.get(fileUrl, { responseType: 'stream' });
-      const FormData = require('form-data');
-      const form = new FormData();
-      form.append('receipt', response.data, { filename: 'receipt.jpg' });
+      const axios = require('axios');
+      const fs = require('fs');
+      const path = require('path');
+      const { v4: uuidv4 } = require('uuid');
 
-      await axios.post(`${API_URL}/api/orders/${state.order_id}/receipt`, form, {
-        headers: form.getHeaders(),
-      });
+      const response = await axios.get(fileUrl, { responseType: 'arraybuffer' });
+      const filename = `${uuidv4()}.jpg`;
+      const uploadPath = path.join(__dirname, '..', 'uploads', 'receipts', filename);
+      fs.writeFileSync(uploadPath, response.data);
+
+      run('UPDATE orders SET payment_receipt = ?, status = ? WHERE id = ?',
+        [`/uploads/receipts/${filename}`, 'pending_confirmation', parseInt(state.order_id)]);
 
       bot.sendMessage(
         chatId,
@@ -327,11 +327,13 @@ async function startBot() {
         "Tayyor bo'lgach sizga xabar beriladi."
       );
 
-      const settings = await apiGet('/settings');
-      if (settings.admin_chat_id) {
+      // Notify admin
+      const settings = queryOne("SELECT value FROM settings WHERE key = 'admin_chat_id'");
+      if (settings && settings.value) {
+        const order = queryOne('SELECT order_code FROM orders WHERE id = ?', [parseInt(state.order_id)]);
         bot.sendMessage(
-          settings.admin_chat_id,
-          `🔔 *Yangi to'lov cheki!*\n\nBuyurtma: #${state.order_id}\nFoydalanuvchi: ${msg.from.first_name}`,
+          settings.value,
+          `🔔 *Yangi to'lov cheki!*\n\nBuyurtma: #${order ? order.order_code : state.order_id}\nFoydalanuvchi: ${msg.from.first_name}`,
           { parse_mode: 'Markdown' }
         );
       }
@@ -346,20 +348,28 @@ async function startBot() {
   // Admin commands
   bot.onText(/\/admin/, async (msg) => {
     const chatId = msg.chat.id;
-    const settings = await apiGet('/settings');
+    const settings = queryOne("SELECT value FROM settings WHERE key = 'admin_chat_id'");
 
-    if (String(msg.from.id) === settings.admin_chat_id) {
-      const stats = await apiGet('/stats');
+    if (settings && String(msg.from.id) === settings.value) {
+      const totalOrders = queryOne('SELECT COUNT(*) as count FROM orders').count;
+      const pendingPayment = queryOne("SELECT COUNT(*) as count FROM orders WHERE status = 'pending_payment'").count;
+      const pendingConfirmation = queryOne("SELECT COUNT(*) as count FROM orders WHERE status = 'pending_confirmation'").count;
+      const inProgress = queryOne("SELECT COUNT(*) as count FROM orders WHERE status = 'in_progress'").count;
+      const ready = queryOne("SELECT COUNT(*) as count FROM orders WHERE status = 'ready'").count;
+      const sent = queryOne("SELECT COUNT(*) as count FROM orders WHERE status = 'sent'").count;
+      const totalRevenueResult = queryOne("SELECT COALESCE(SUM(total_price), 0) as total FROM orders WHERE status IN ('in_progress', 'ready', 'sent')");
+      const totalRevenue = totalRevenueResult ? totalRevenueResult.total : 0;
+
       bot.sendMessage(
         chatId,
         `📊 *Admin Panel*\n\n` +
-        `📦 Jami buyurtmalar: ${stats.totalOrders}\n` +
-        `💳 To'lov kutilmoqda: ${stats.pendingPayment}\n` +
-        `🔍 Tekshirilmoqda: ${stats.pendingConfirmation}\n` +
-        `📝 Tayyorlanmoqda: ${stats.inProgress}\n` +
-        `✅ Tayyor: ${stats.ready}\n` +
-        `📤 Yuborilgan: ${stats.sent}\n` +
-        `💰 Jami daromad: ${stats.totalRevenue.toLocaleString()} so'm`,
+        `📦 Jami buyurtmalar: ${totalOrders}\n` +
+        `💳 To'lov kutilmoqda: ${pendingPayment}\n` +
+        `🔍 Tekshirilmoqda: ${pendingConfirmation}\n` +
+        `📝 Tayyorlanmoqda: ${inProgress}\n` +
+        `✅ Tayyor: ${ready}\n` +
+        `📤 Yuborilgan: ${sent}\n` +
+        `💰 Jami daromad: ${totalRevenue.toLocaleString()} so'm`,
         { parse_mode: 'Markdown' }
       );
     }
