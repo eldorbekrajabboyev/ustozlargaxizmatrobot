@@ -417,7 +417,7 @@ async function start() {
   if (process.env.BOT_TOKEN) {
     try {
       const { startBot } = require('./bot');
-      await startBot();
+      await startBot(app);
       console.log('🤖 Bot started');
     } catch (err) {
       console.error('⚠️ Bot failed to start:', err.message);

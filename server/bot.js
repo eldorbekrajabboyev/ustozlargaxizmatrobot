@@ -3,13 +3,34 @@ const { queryAll, queryOne, run } = require('./database');
 
 let botInstance = null;
 
-async function startBot() {
+async function startBot(app) {
   const BOT_TOKEN = process.env.BOT_TOKEN;
   if (!BOT_TOKEN) {
     throw new Error('BOT_TOKEN is required');
   }
 
-  const bot = new TelegramBot(BOT_TOKEN, { polling: true });
+  // Use webhook mode for production (no polling conflicts)
+  const WEBHOOK_URL = process.env.WEBHOOK_URL;
+  
+  let bot;
+  if (WEBHOOK_URL) {
+    // Webhook mode for production
+    bot = new TelegramBot(BOT_TOKEN);
+    const webhookPath = `/webhook/${BOT_TOKEN}`;
+    
+    app.post(webhookPath, (req, res) => {
+      bot.processUpdate(req.body);
+      res.sendStatus(200);
+    });
+    
+    await bot.setWebHook(`${WEBHOOK_URL}${webhookPath}`);
+    console.log(`🤖 Bot webhook set: ${WEBHOOK_URL}${webhookPath}`);
+  } else {
+    // Polling mode for local development
+    bot = new TelegramBot(BOT_TOKEN, { polling: true });
+    console.log('🤖 Bot polling mode started');
+  }
+  
   botInstance = bot;
   console.log('🤖 Metodikish Bot started');
 

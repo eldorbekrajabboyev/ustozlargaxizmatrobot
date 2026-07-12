@@ -10,22 +10,12 @@ services:
     startCommand: cd server && node index.js
     envVars:
       - key: PORT
-        value: 3000
-      - key: API_URL
+        value: 10000
+      - key: BOT_TOKEN
+        sync: false
+      - key: WEBHOOK_URL
         value: https://ustozlargaxizmatrobot.onrender.com
     disk:
       name: data
       mountPath: /opt/render/project/data
       sizeGB: 1
-
-  - type: worker
-    name: metodikish-bot
-    runtime: node
-    plan: free
-    buildCommand: cd bot && npm install
-    startCommand: cd bot && node bot.js
-    envVars:
-      - key: BOT_TOKEN
-        sync: false
-      - key: API_URL
-        value: https://ustozlargaxizmatrobot.onrender.com
