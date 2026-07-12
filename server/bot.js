@@ -9,25 +9,38 @@ async function startBot(app) {
     throw new Error('BOT_TOKEN is required');
   }
 
-  // Use webhook mode for production (no polling conflicts)
+  // Determine mode: webhook for production, polling for local dev
   const WEBHOOK_URL = process.env.WEBHOOK_URL || (process.env.RENDER ? `https://${process.env.RENDER_SERVICE_NAME}.onrender.com` : '');
+  const webhookPath = `/webhook/${BOT_TOKEN}`;
   
   let bot;
+  
   if (WEBHOOK_URL) {
-    // Webhook mode for production
-    bot = new TelegramBot(BOT_TOKEN);
-    const webhookPath = `/webhook/${BOT_TOKEN}`;
-    
-    app.post(webhookPath, (req, res) => {
-      bot.processUpdate(req.body);
-      res.sendStatus(200);
-    });
-    
-    await bot.setWebHook(`${WEBHOOK_URL}${webhookPath}`);
-    console.log(`🤖 Bot webhook set: ${WEBHOOK_URL}${webhookPath}`);
+    // Try webhook mode
+    try {
+      bot = new TelegramBot(BOT_TOKEN);
+      
+      app.post(webhookPath, (req, res) => {
+        try {
+          bot.processUpdate(req.body);
+        } catch (e) {
+          console.error('Webhook processUpdate error:', e.message);
+        }
+        res.sendStatus(200);
+      });
+      
+      // Delete old webhook first, then set new one
+      await bot.deleteWebHook();
+      await bot.setWebHook(`${WEBHOOK_URL}${webhookPath}`);
+      console.log(`🤖 Bot webhook set: ${WEBHOOK_URL}${webhookPath}`);
+    } catch (whErr) {
+      console.error('⚠️ Webhook setup failed, falling back to polling:', whErr.message);
+      bot = new TelegramBot(BOT_TOKEN, { polling: { interval: 2000, timeout: 30 } });
+      console.log('🤖 Bot polling mode started (fallback)');
+    }
   } else {
     // Polling mode for local development
-    bot = new TelegramBot(BOT_TOKEN, { polling: true });
+    bot = new TelegramBot(BOT_TOKEN, { polling: { interval: 2000, timeout: 30 } });
     console.log('🤖 Bot polling mode started');
   }
   
