@@ -412,6 +412,19 @@ async function start() {
     console.log(`🚀 Server running on port ${PORT}`);
     console.log(`📡 API: http://localhost:${PORT}/api`);
   });
+
+  // Start bot if BOT_TOKEN is provided
+  if (process.env.BOT_TOKEN) {
+    try {
+      const { startBot } = require('./bot');
+      await startBot();
+      console.log('🤖 Bot started');
+    } catch (err) {
+      console.error('⚠️ Bot failed to start:', err.message);
+    }
+  } else {
+    console.log('⚠️ BOT_TOKEN not set, bot not started');
+  }
 }
 
 start().catch(err => {
