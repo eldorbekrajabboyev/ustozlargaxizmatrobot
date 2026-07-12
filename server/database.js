@@ -104,15 +104,15 @@ async function initDatabase() {
   const serviceCount = db.exec('SELECT COUNT(*) as count FROM services')[0]?.values[0][0] || 0;
   if (serviceCount === 0) {
     db.run("INSERT INTO services (name, description, price) VALUES (?, ?, ?)",
-      ["Metodik Qo'llanma", "Batafsil metodik qo'llanma hujjati", 50000]);
+      ["Metodik Qo'llanma", "Batafsil metodik qo'llanma hujjati", 250000]);
     db.run("INSERT INTO services (name, description, price) VALUES (?, ?, ?)",
-      ["Metodik Tavsiya", "Metodik tavsiya hujjati", 30000]);
+      ["Metodik Tavsiya", "Metodik tavsiya hujjati", 200000]);
   }
 
   const cardCount = db.exec('SELECT COUNT(*) as count FROM payment_cards')[0]?.values[0][0] || 0;
   if (cardCount === 0) {
     db.run("INSERT INTO payment_cards (card_number, card_holder, bank_name) VALUES (?, ?, ?)",
-      ["8600 1234 5678 9012", "Test Card", "Test Bank"]);
+      ["8600 1234 5678 9012", "Rajabboyev Eldorbek", "Ipak Yo'li Bank"]);
   }
 
   const settingsCount = db.exec('SELECT COUNT(*) as count FROM settings')[0]?.values[0][0] || 0;

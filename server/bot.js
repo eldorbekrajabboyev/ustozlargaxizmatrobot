@@ -374,7 +374,12 @@ async function startBot(app) {
         },
       };
 
-      bot.sendMessage(chatId, paymentText, { parse_mode: 'Markdown', ...keyboard });
+      bot.sendMessage(chatId, paymentText, { parse_mode: 'Markdown', ...keyboard })
+        .then(sentMsg => {
+          // Save message ID for later deletion
+          if (!global.paymentMessages) global.paymentMessages = {};
+          global.paymentMessages[telegramId] = sentMsg.message_id;
+        });
 
       delete global.userStates[telegramId];
     } catch (err) {
@@ -422,6 +427,13 @@ async function startBot(app) {
 
       const updateResult = run('UPDATE orders SET payment_receipt = ?, status = ? WHERE id = ?',
         [`/uploads/receipts/${filename}`, 'pending_confirmation', orderId]);
+
+      // Delete the payment message
+      if (global.paymentMessages && global.paymentMessages[telegramId]) {
+        bot.deleteMessage(chatId, global.paymentMessages[telegramId])
+          .catch(err => console.log('Could not delete payment message:', err.message));
+        delete global.paymentMessages[telegramId];
+      }
 
       console.log(`Update result:`, updateResult);
 
