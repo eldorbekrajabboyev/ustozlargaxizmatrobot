@@ -173,14 +173,16 @@ async function startBot() {
   // ==================== ORDER FLOW MESSAGES ====================
 
   bot.on('message', async (msg) => {
-    if (!msg.text || msg.text.startsWith('/')) return;
-
     const chatId = msg.chat.id;
     const telegramId = msg.from.id;
 
     if (!global.userStates || !global.userStates[telegramId]) return;
 
     const state = global.userStates[telegramId];
+
+    // Skip commands but allow photos for images step
+    if (msg.text && msg.text.startsWith('/')) return;
+    if (!msg.text && !msg.photo) return;
 
     switch (state.step) {
       case 'full_name':
