@@ -413,63 +413,46 @@ app.put('/api/orders/:id/send', (req, res) => {
 
 // --- Statistics ---
 app.get('/api/stats', (req, res) => {
-  const totalOrders = queryOne('SELECT COUNT(*) as count FROM orders').count;
-  const pendingPayment = queryOne("SELECT COUNT(*) as count FROM orders WHERE status = 'pending_payment'").count;
-  const pendingConfirmation = queryOne("SELECT COUNT(*) as count FROM orders WHERE status = 'pending_confirmation'").count;
-  const inProgress = queryOne("SELECT COUNT(*) as count FROM orders WHERE status = 'in_progress'").count;
-  const ready = queryOne("SELECT COUNT(*) as count FROM orders WHERE status = 'ready'").count;
-  const sent = queryOne("SELECT COUNT(*) as count FROM orders WHERE status = 'sent'").count;
-  const totalUsers = queryOne('SELECT COUNT(*) as count FROM users').count;
-  const totalRevenueResult = queryOne("SELECT COALESCE(SUM(total_price), 0) as total FROM orders WHERE status IN ('in_progress', 'ready', 'sent')");
-  const totalRevenue = totalRevenueResult ? totalRevenueResult.total : 0;
+  try {
+    const totalOrders = queryOne('SELECT COUNT(*) as count FROM orders').count;
+    const pendingPayment = queryOne("SELECT COUNT(*) as count FROM orders WHERE status = 'pending_payment'").count;
+    const pendingConfirmation = queryOne("SELECT COUNT(*) as count FROM orders WHERE status = 'pending_confirmation'").count;
+    const inProgress = queryOne("SELECT COUNT(*) as count FROM orders WHERE status = 'in_progress'").count;
+    const ready = queryOne("SELECT COUNT(*) as count FROM orders WHERE status = 'ready'").count;
+    const sent = queryOne("SELECT COUNT(*) as count FROM orders WHERE status = 'sent'").count;
+    const totalUsers = queryOne('SELECT COUNT(*) as count FROM users').count;
+    const totalRevenueResult = queryOne("SELECT COALESCE(SUM(total_price), 0) as total FROM orders WHERE status IN ('in_progress', 'ready', 'sent')");
+    const totalRevenue = totalRevenueResult ? totalRevenueResult.total : 0;
 
-  const subjectStats = queryAll(`
-    SELECT subject, COUNT(*) as count FROM orders GROUP BY subject ORDER BY count DESC LIMIT 10
-  `);
+    let subjectStats = [];
+    let gradeStats = [];
+    let regionStats = [];
+    
+    try {
+      subjectStats = queryAll("SELECT subject, COUNT(*) as count FROM orders GROUP BY subject ORDER BY count DESC LIMIT 10");
+    } catch (e) { console.error('subjectStats error:', e.message); }
+    
+    try {
+      gradeStats = queryAll("SELECT grade, COUNT(*) as count FROM orders GROUP BY grade ORDER BY count DESC");
+    } catch (e) { console.error('gradeStats error:', e.message); }
+    
+    try {
+      regionStats = queryAll("SELECT address as region, COUNT(*) as count FROM orders GROUP BY address ORDER BY count DESC LIMIT 20");
+    } catch (e) { console.error('regionStats error:', e.message); }
 
-  // Grade statistics
-  const gradeStats = queryAll(`
-    SELECT grade, COUNT(*) as count FROM orders GROUP BY grade ORDER BY count DESC
-  `);
+    let recentOrders = [];
+    try {
+      recentOrders = queryAll("SELECT o.id, o.order_code, o.full_name, o.status, o.total_price, o.created_at, s.name as service_name FROM orders o LEFT JOIN services s ON o.service_id = s.id ORDER BY o.created_at DESC LIMIT 10");
+    } catch (e) { console.error('recentOrders error:', e.message); }
 
-  // Region statistics - extract region from address field
-  const regionStats = queryAll(`
-    SELECT 
-      CASE 
-        WHEN address LIKE '%Andijon%' THEN 'Andijon viloyati'
-        WHEN address LIKE '%Buxoro%' THEN 'Buxoro viloyati'
-        WHEN address LIKE '%Jizzax%' THEN 'Jizzax viloyati'
-        WHEN address LIKE '%Qashqadaryo%' THEN 'Qashqadaryo viloyati'
-        WHEN address LIKE '%Navoiy%' THEN 'Navoiy viloyati'
-        WHEN address LIKE '%Namangan%' THEN 'Namangan viloyati'
-        WHEN address LIKE '%Samarqand%' THEN 'Samarqand viloyati'
-        WHEN address LIKE '%Sirdaryo%' THEN 'Sirdaryo viloyati'
-        WHEN address LIKE '%Surxondaryo%' THEN 'Surxondaryo viloyati'
-        WHEN address LIKE '%Toshkent vil%' THEN 'Toshkent viloyati'
-        WHEN address LIKE "%Farg'ona%" THEN "Farg'ona viloyati"
-        WHEN address LIKE '%Xorazm%' THEN 'Xorazm viloyati'
-        WHEN address LIKE '%Toshkent sh%' THEN 'Toshkent shahri'
-        WHEN address LIKE "%Qoraqalpog%" THEN "Qoraqalpog'iston Respublikasi"
-        ELSE 'Noma\'lum'
-      END as region,
-      COUNT(*) as count
-    FROM orders
-    GROUP BY region
-    ORDER BY count DESC
-  `);
-
-  const recentOrders = queryAll(`
-    SELECT o.id, o.order_code, o.full_name, o.status, o.total_price, o.created_at,
-           s.name as service_name
-    FROM orders o
-    LEFT JOIN services s ON o.service_id = s.id
-    ORDER BY o.created_at DESC LIMIT 10
-  `);
-
-  res.json({
-    totalOrders, pendingPayment, pendingConfirmation, inProgress, ready, sent,
-    totalUsers, totalRevenue, subjectStats, gradeStats, regionStats, recentOrders
-  });
+    res.json({
+      totalOrders, pendingPayment, pendingConfirmation, inProgress, ready, sent,
+      totalUsers, totalRevenue, subjectStats, gradeStats, regionStats, recentOrders
+    });
+  } catch (err) {
+    console.error('Stats error:', err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // --- Settings ---
