@@ -9,13 +9,23 @@ services:
       cd ../admin && npm install && npm run build
     startCommand: cd server && node index.js
     envVars:
-      - key: BOT_TOKEN
-        sync: false
       - key: PORT
         value: 3000
       - key: API_URL
-        value: https://metodikish.onrender.com
+        value: https://ustozlargaxizmatrobot.onrender.com
     disk:
       name: data
       mountPath: /opt/render/project/data
       sizeGB: 1
+
+  - type: worker
+    name: metodikish-bot
+    runtime: node
+    plan: free
+    buildCommand: cd bot && npm install
+    startCommand: cd bot && node bot.js
+    envVars:
+      - key: BOT_TOKEN
+        sync: false
+      - key: API_URL
+        value: https://ustozlargaxizmatrobot.onrender.com
