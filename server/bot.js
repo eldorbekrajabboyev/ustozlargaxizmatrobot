@@ -61,6 +61,16 @@ async function startBot() {
 
     ensureUser(query.from);
 
+    // Handle receipt upload
+    if (data.startsWith('send_receipt_')) {
+      const orderId = data.split('_')[2];
+      if (!global.receiptStates) global.receiptStates = {};
+      global.receiptStates[query.from.id] = { order_id: orderId };
+      bot.sendMessage(chatId, '📸 Chek rasmini yuboring (rasm sifatida):');
+      bot.answerCallbackQuery(query.id);
+      return;
+    }
+
     if (data === 'services') {
       const services = queryAll('SELECT * FROM services WHERE is_active = 1');
       if (services.length === 0) {
@@ -278,20 +288,6 @@ async function startBot() {
       delete global.userStates[telegramId];
     }
   }
-
-  // Handle receipt upload callback
-  bot.on('callback_query', async (query) => {
-    const data = query.data;
-    const chatId = query.message.chat.id;
-
-    if (data.startsWith('send_receipt_')) {
-      const orderId = data.split('_')[2];
-      if (!global.receiptStates) global.receiptStates = {};
-      global.receiptStates[query.from.id] = { order_id: orderId };
-      bot.sendMessage(chatId, '📸 Chek rasmini yuboring (rasm sifatida):');
-      bot.answerCallbackQuery(query.id);
-    }
-  });
 
   // Handle photo (receipt)
   bot.on('photo', async (msg) => {
