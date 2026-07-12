@@ -380,16 +380,20 @@ async function startBot(app) {
         bot.sendMessage(
           chatId,
           "🖼 Rasm yuklamoqchimisiz? (5 tagacha)\n\n" +
-          "Ha bo'lsa, rasmlarni yuboring.\n" +
-          '"O\'tkazib yuborish" deb yozing.'
+          "Ha bo'lsa, rasmlarni yuboring.",
+          {
+            reply_markup: {
+              inline_keyboard: [
+                [{ text: '⏭ O\'tkazib yuborish', callback_data: 'images_done' }],
+              ],
+            },
+          }
         );
         break;
 
       case 'images':
         if (!state.images) state.images = [];
-        if (msg.text && msg.text.toLowerCase() === "o'tkazib yuborish") {
-          await createOrder(chatId, telegramId, state);
-        } else if (msg.photo) {
+        if (msg.photo) {
           if (state.images.length >= 5) {
             bot.sendMessage(chatId, '⚠️ Maksimal 5 ta rasm yuklash mumkin. Buyurtma yaratilmoqda...');
             await createOrder(chatId, telegramId, state);
@@ -400,6 +404,7 @@ async function startBot(app) {
               reply_markup: {
                 inline_keyboard: [
                   [{ text: '✅ Tayyor', callback_data: 'images_done' }],
+                  [{ text: '⏭ O\'tkazib yuborish', callback_data: 'images_done' }],
                 ],
               },
             };
