@@ -10,13 +10,31 @@ async function startBot(app) {
   }
 
   // Determine mode: webhook for production, polling for local dev
-  const WEBHOOK_URL = process.env.WEBHOOK_URL || (process.env.RENDER ? `https://${process.env.RENDER_SERVICE_NAME}.onrender.com` : '');
+  const WEBHOOK_URL = process.env.WEBHOOK_URL || '';
+  const IS_RENDER = !!process.env.RENDER;
   const webhookPath = `/webhook/${BOT_TOKEN}`;
   
   let bot;
+
+  // Always clean up any old webhook first
+  try {
+    const tempBot = new TelegramBot(BOT_TOKEN);
+    const webhookInfo = await tempBot.getWebHookInfo();
+    console.log(`🔍 Current webhook: ${webhookInfo.url || 'none'}`);
+    if (webhookInfo.url) {
+      await tempBot.deleteWebHook();
+      console.log('🗑️ Deleted old webhook');
+    }
+  } catch (e) {
+    console.error('⚠️ Could not check/clear old webhook:', e.message);
+  }
   
-  if (WEBHOOK_URL) {
-    // Try webhook mode
+  if (IS_RENDER) {
+    // Render free tier: always use polling (service sleeps, webhooks can't deliver)
+    bot = new TelegramBot(BOT_TOKEN, { polling: { interval: 2000, timeout: 30 } });
+    console.log('🤖 Bot polling mode (Render - webhooks unreliable on free tier)');
+  } else if (WEBHOOK_URL && WEBHOOK_URL.startsWith('https://')) {
+    // Webhook mode for other production environments
     try {
       bot = new TelegramBot(BOT_TOKEN);
       
@@ -29,10 +47,12 @@ async function startBot(app) {
         res.sendStatus(200);
       });
       
-      // Delete old webhook first, then set new one
-      await bot.deleteWebHook();
-      await bot.setWebHook(`${WEBHOOK_URL}${webhookPath}`);
-      console.log(`🤖 Bot webhook set: ${WEBHOOK_URL}${webhookPath}`);
+      const result = await bot.setWebHook(`${WEBHOOK_URL}${webhookPath}`);
+      if (result) {
+        console.log(`🤖 Bot webhook set: ${WEBHOOK_URL}${webhookPath}`);
+      } else {
+        throw new Error('setWebHook returned false');
+      }
     } catch (whErr) {
       console.error('⚠️ Webhook setup failed, falling back to polling:', whErr.message);
       bot = new TelegramBot(BOT_TOKEN, { polling: { interval: 2000, timeout: 30 } });
