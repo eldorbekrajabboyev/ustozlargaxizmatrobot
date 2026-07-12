@@ -359,10 +359,14 @@ app.put('/api/orders/:id/send', (req, res) => {
       WHERE o.id = ?
     `, [orderId]);
     
+    console.log(`Send order ${orderId}:`, order);
+    
     run('UPDATE orders SET status = ? WHERE id = ?', ['sent', orderId]);
     
     // Send notification and document to user
     const bot = require('./bot').getBotInstance();
+    console.log('Bot instance:', bot ? 'available' : 'null');
+    
     if (bot && order && order.telegram_id) {
       const message = `📤 *Buyurtma tayyor va yuborildi!*\n\n📋 Buyurtma: #${order.order_code}`;
       
@@ -370,30 +374,39 @@ app.put('/api/orders/:id/send', (req, res) => {
         // Send document file to user
         const fs = require('fs');
         const filePath = path.join(__dirname, '..', order.document_file);
+        console.log('Document file path:', filePath);
+        console.log('File exists:', fs.existsSync(filePath));
         
         if (fs.existsSync(filePath)) {
           bot.sendMessage(order.telegram_id, message, { parse_mode: 'Markdown' })
             .then(() => {
+              console.log('Text sent, sending document...');
               return bot.sendDocument(
                 order.telegram_id,
                 filePath,
                 { caption: `📄 ${order.service_name || 'Hujjat'}` }
               );
             })
+            .then(() => console.log('Document sent successfully'))
             .catch(err => console.error('Failed to send document:', err.message));
         } else {
+          console.log('File NOT found at:', filePath);
           // File not found, just send text
           bot.sendMessage(order.telegram_id, message + '\n\n📥 Hujjatni bot orqali yuklab oling.', { parse_mode: 'Markdown' })
             .catch(err => console.error('Failed to send notification:', err.message));
         }
       } else {
+        console.log('No document_file in order');
         bot.sendMessage(order.telegram_id, message, { parse_mode: 'Markdown' })
           .catch(err => console.error('Failed to send notification:', err.message));
       }
+    } else {
+      console.log('Cannot send: bot=', !!bot, 'order=', !!order, 'telegram_id=', order?.telegram_id);
     }
     
     res.json({ success: true });
   } catch (err) {
+    console.error('Send error:', err);
     res.status(500).json({ error: err.message });
   }
 });

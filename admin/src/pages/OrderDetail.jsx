@@ -146,13 +146,18 @@ function OrderDetail() {
                     ✅ Tayyor
                   </button>
                 )}
-                {order.status === 'ready' && (
+                {order.status === 'ready' && order.document_file && (
                   <button
                     onClick={() => updateStatus('sent')}
                     className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600"
                   >
                     📤 Yuborish
                   </button>
+                )}
+                {order.status === 'ready' && !order.document_file && (
+                  <span className="px-4 py-2 bg-gray-300 text-gray-500 rounded-lg text-sm cursor-not-allowed">
+                    📤 Avval hujjat yuklang
+                  </span>
                 )}
               </div>
             </div>
