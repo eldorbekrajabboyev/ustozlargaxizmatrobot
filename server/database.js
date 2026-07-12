@@ -17,8 +17,17 @@ async function initDatabase() {
 
   // Load existing database or create new one
   if (fs.existsSync(DB_PATH)) {
-    const buffer = fs.readFileSync(DB_PATH);
-    db = new SQL.Database(buffer);
+    try {
+      const buffer = fs.readFileSync(DB_PATH);
+      db = new SQL.Database(buffer);
+      // Test if DB is valid
+      db.exec('SELECT 1');
+      console.log('📦 Loaded existing database');
+    } catch (e) {
+      console.error('⚠️ Database corrupted, creating new one:', e.message);
+      try { fs.unlinkSync(DB_PATH); } catch (_) {}
+      db = new SQL.Database();
+    }
   } else {
     db = new SQL.Database();
   }
@@ -169,6 +178,8 @@ function queryOne(sql, params = []) {
 function run(sql, params = []) {
   const sanitized = sanitizeParams(params);
   db.run(sql, sanitized);
+  // Capture modified rows BEFORE any other SQL statement resets the counter
+  const changes = db.getRowsModified();
   saveDatabase();
   // Get last insert rowid using exec
   let lastId = 0;
@@ -180,7 +191,7 @@ function run(sql, params = []) {
   } catch (e) {
     console.error('Error getting last_insert_rowid:', e);
   }
-  return { lastInsertRowid: lastId, changes: db.getRowsModified() };
+  return { lastInsertRowid: lastId, changes };
 }
 
 module.exports = {

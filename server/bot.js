@@ -10,7 +10,7 @@ async function startBot(app) {
   }
 
   // Use webhook mode for production (no polling conflicts)
-  const WEBHOOK_URL = process.env.WEBHOOK_URL;
+  const WEBHOOK_URL = process.env.WEBHOOK_URL || (process.env.RENDER ? `https://${process.env.RENDER_SERVICE_NAME}.onrender.com` : '');
   
   let bot;
   if (WEBHOOK_URL) {

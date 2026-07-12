@@ -414,13 +414,13 @@ app.put('/api/orders/:id/send', (req, res) => {
 // --- Statistics ---
 app.get('/api/stats', (req, res) => {
   try {
-    const totalOrders = queryOne('SELECT COUNT(*) as count FROM orders').count;
-    const pendingPayment = queryOne("SELECT COUNT(*) as count FROM orders WHERE status = 'pending_payment'").count;
-    const pendingConfirmation = queryOne("SELECT COUNT(*) as count FROM orders WHERE status = 'pending_confirmation'").count;
-    const inProgress = queryOne("SELECT COUNT(*) as count FROM orders WHERE status = 'in_progress'").count;
-    const ready = queryOne("SELECT COUNT(*) as count FROM orders WHERE status = 'ready'").count;
-    const sent = queryOne("SELECT COUNT(*) as count FROM orders WHERE status = 'sent'").count;
-    const totalUsers = queryOne('SELECT COUNT(*) as count FROM users').count;
+    const totalOrders = queryOne('SELECT COUNT(*) as count FROM orders')?.count || 0;
+    const pendingPayment = queryOne("SELECT COUNT(*) as count FROM orders WHERE status = 'pending_payment'")?.count || 0;
+    const pendingConfirmation = queryOne("SELECT COUNT(*) as count FROM orders WHERE status = 'pending_confirmation'")?.count || 0;
+    const inProgress = queryOne("SELECT COUNT(*) as count FROM orders WHERE status = 'in_progress'")?.count || 0;
+    const ready = queryOne("SELECT COUNT(*) as count FROM orders WHERE status = 'ready'")?.count || 0;
+    const sent = queryOne("SELECT COUNT(*) as count FROM orders WHERE status = 'sent'")?.count || 0;
+    const totalUsers = queryOne('SELECT COUNT(*) as count FROM users')?.count || 0;
     const totalRevenueResult = queryOne("SELECT COALESCE(SUM(total_price), 0) as total FROM orders WHERE status IN ('in_progress', 'ready', 'sent')");
     const totalRevenue = totalRevenueResult ? totalRevenueResult.total : 0;
 
