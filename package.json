@@ -1,0 +1,17 @@
+{
+  "name": "metodikish",
+  "version": "1.0.0",
+  "description": "Metodikish - Telegram Bot & MiniApp for selling educational materials",
+  "scripts": {
+    "install:all": "cd server && npm install && cd ../client && npm install && cd ../admin && npm install && cd ../bot && npm install",
+    "dev:server": "cd server && npm run dev",
+    "dev:client": "cd client && npm run dev",
+    "dev:admin": "cd admin && npm run dev",
+    "dev:bot": "cd bot && npm run dev",
+    "build:client": "cd client && npm run build",
+    "build:admin": "cd admin && npm run build",
+    "start": "cd server && npm start"
+  },
+  "keywords": ["telegram", "bot", "miniapp", "education"],
+  "license": "MIT"
+}

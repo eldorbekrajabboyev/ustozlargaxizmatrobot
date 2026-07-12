@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: metodikish
+    runtime: node
+    plan: free
+    buildCommand: |
+      cd server && npm install
+      cd ../client && npm install && npm run build
+      cd ../admin && npm install && npm run build
+    startCommand: cd server && node index.js
+    envVars:
+      - key: BOT_TOKEN
+        sync: false
+      - key: PORT
+        value: 3000
+      - key: API_URL
+        value: https://metodikish.onrender.com
+    disk:
+      name: data
+      mountPath: /opt/render/project/data
+      sizeGB: 1
