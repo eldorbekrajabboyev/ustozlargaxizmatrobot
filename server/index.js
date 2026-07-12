@@ -414,6 +414,11 @@ app.get('/api/stats', (req, res) => {
     SELECT subject, COUNT(*) as count FROM orders GROUP BY subject ORDER BY count DESC LIMIT 10
   `);
 
+  // Grade statistics
+  const gradeStats = queryAll(`
+    SELECT grade, COUNT(*) as count FROM orders GROUP BY grade ORDER BY count DESC
+  `);
+
   // Region statistics - extract region from address field
   const regionStats = queryAll(`
     SELECT 
@@ -450,7 +455,7 @@ app.get('/api/stats', (req, res) => {
 
   res.json({
     totalOrders, pendingPayment, pendingConfirmation, inProgress, ready, sent,
-    totalUsers, totalRevenue, subjectStats, regionStats, recentOrders
+    totalUsers, totalRevenue, subjectStats, gradeStats, regionStats, recentOrders
   });
 });
 

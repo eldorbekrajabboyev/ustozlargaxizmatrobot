@@ -107,6 +107,78 @@ async function startBot(app) {
       return;
     }
 
+    // Handle images done
+    if (data === 'images_done') {
+      if (!global.userStates || !global.userStates[telegramId]) return;
+      const state = global.userStates[telegramId];
+      if (state.step === 'images') {
+        // Delete the images count message
+        if (state.imagesMsgId) {
+          bot.deleteMessage(chatId, state.imagesMsgId).catch(() => {});
+        }
+        await createOrder(chatId, telegramId, state);
+      }
+      bot.answerCallbackQuery(query.id);
+      return;
+    }
+
+    // Handle grade selection
+    if (data.startsWith('grade_')) {
+      const grade = data.replace('grade_', '');
+      if (!global.userStates || !global.userStates[telegramId]) return;
+      
+      const state = global.userStates[telegramId];
+      if (state.step === 'grade') {
+        state.grade = grade;
+        state.step = 'subject';
+        
+        // Get subjects based on grade
+        const gradeNum = parseInt(grade);
+        let subjects = [];
+        
+        if (gradeNum >= 1 && gradeNum <= 4) {
+          subjects = ['Ona tili', "O'qish", 'Matematika', 'Tabiiy fan', 'Tarbiya', 'Texnologiya', "Tasviriy san'at", 'Musiqa', 'Jismoniy tarbiya', 'Ingliz tili'];
+        } else if (gradeNum >= 5 && gradeNum <= 6) {
+          subjects = ['Ona tili', 'Adabiyot', "O'zbek tili", 'Ingliz tili', 'Matematika', 'Tabiiy fan', 'Informatika', 'Tarix', 'Tarbiya', 'Texnologiya', "Tasviriy san'at", 'Musiqa', 'Jismoniy tarbiya'];
+        } else if (gradeNum >= 7 && gradeNum <= 9) {
+          subjects = ['Ona tili', 'Adabiyot', 'Ingliz tili', 'Algebra', 'Geometriya', 'Fizika', 'Kimyo', 'Biologiya', 'Geografiya', "O'zbekiston tarixi", 'Jahon tarixi', 'Informatika', 'Tarbiya', "Davlat va huquq asoslari", 'Chizmachilik', 'Jismoniy tarbiya'];
+        } else if (gradeNum >= 10 && gradeNum <= 11) {
+          subjects = ['Ona tili', 'Adabiyot', 'Ingliz tili', 'Algebra', 'Geometriya', 'Fizika', 'Kimyo', 'Biologiya', 'Geografiya', "O'zbekiston tarixi", 'Jahon tarixi', 'Informatika', "Davlat va huquq asoslari", 'Tarbiya', 'Jismoniy tarbiya'];
+        }
+        
+        // Build subject buttons (2 per row)
+        const subjectButtons = [];
+        for (let i = 0; i < subjects.length; i += 2) {
+          const row = [{ text: subjects[i], callback_data: `subject_${subjects[i]}` }];
+          if (subjects[i + 1]) {
+            row.push({ text: subjects[i + 1], callback_data: `subject_${subjects[i + 1]}` });
+          }
+          subjectButtons.push(row);
+        }
+        
+        bot.sendMessage(chatId, '📚 Fan nomini tanlang:', {
+          reply_markup: { inline_keyboard: subjectButtons }
+        });
+      }
+      bot.answerCallbackQuery(query.id);
+      return;
+    }
+
+    // Handle subject selection
+    if (data.startsWith('subject_')) {
+      const subject = data.replace('subject_', '');
+      if (!global.userStates || !global.userStates[telegramId]) return;
+      
+      const state = global.userStates[telegramId];
+      if (state.step === 'subject') {
+        state.subject = subject;
+        state.step = 'topic';
+        bot.sendMessage(chatId, '📖 Mavzuni kiriting:');
+      }
+      bot.answerCallbackQuery(query.id);
+      return;
+    }
+
     if (data === 'services') {
       const services = queryAll('SELECT * FROM services WHERE is_active = 1');
       if (services.length === 0) {
@@ -254,20 +326,19 @@ async function startBot(app) {
 
       case 'school':
         state.school = msg.text;
-        state.step = 'subject';
-        bot.sendMessage(chatId, '📚 Fan nomini kiriting:');
-        break;
-
-      case 'subject':
-        state.subject = msg.text;
         state.step = 'grade';
-        bot.sendMessage(chatId, '🎓 Nechinchi sinf? (masalan: 5-sinf):');
-        break;
-
-      case 'grade':
-        state.grade = msg.text;
-        state.step = 'topic';
-        bot.sendMessage(chatId, '📖 Mavzuni kiriting:');
+        // Show grade buttons 1-11
+        const gradeButtons = [];
+        for (let i = 1; i <= 11; i += 2) {
+          const row = [{ text: `${i}-sinf`, callback_data: `grade_${i}` }];
+          if (i + 1 <= 11) {
+            row.push({ text: `${i + 1}-sinf`, callback_data: `grade_${i + 1}` });
+          }
+          gradeButtons.push(row);
+        }
+        bot.sendMessage(chatId, '🎓 Nechinchi sinf?', {
+          reply_markup: { inline_keyboard: gradeButtons }
+        });
         break;
 
       case 'topic':
@@ -291,10 +362,31 @@ async function startBot(app) {
             await createOrder(chatId, telegramId, state);
           } else {
             state.images.push(msg.photo[msg.photo.length - 1].file_id);
-            bot.sendMessage(chatId, `✅ Rasm qabul qilindi (${state.images.length}/5). Yana yuboring yoki "Tayyor" deb yozing.`);
+            const count = state.images.length;
+            const keyboard = {
+              reply_markup: {
+                inline_keyboard: [
+                  [{ text: '✅ Tayyor', callback_data: 'images_done' }],
+                ],
+              },
+            };
+            if (state.imagesMsgId) {
+              // Edit existing message
+              bot.editMessageText(
+                `✅ Rasm qabul qilindi (${count}/5). Yana yuboring yoki "Tayyor" tugmasini bosing.`,
+                { chat_id: chatId, message_id: state.imagesMsgId, ...keyboard }
+              ).catch(() => {});
+            } else {
+              // Send new message and save its ID
+              bot.sendMessage(
+                chatId,
+                `✅ Rasm qabul qilindi (${count}/5). Yana yuboring yoki "Tayyor" tugmasini bosing.`,
+                keyboard
+              ).then(sentMsg => {
+                state.imagesMsgId = sentMsg.message_id;
+              });
+            }
           }
-        } else if (msg.text && msg.text.toLowerCase() === 'tayyor') {
-          await createOrder(chatId, telegramId, state);
         }
         break;
     }

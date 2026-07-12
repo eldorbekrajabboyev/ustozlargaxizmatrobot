@@ -104,6 +104,35 @@ function Dashboard() {
           </div>
         </div>
 
+        {/* Grade Stats */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+          <div className="p-4 border-b border-gray-100">
+            <h2 className="font-semibold">Sinf bo'yicha statistika</h2>
+          </div>
+          <div className="p-4">
+            {stats.gradeStats && stats.gradeStats.length > 0 ? (
+              <div className="space-y-3">
+                {stats.gradeStats.map((stat, idx) => (
+                  <div key={idx} className="flex items-center justify-between">
+                    <span className="text-gray-700">{stat.grade}-sinf</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-32 bg-gray-200 rounded-full h-2">
+                        <div
+                          className="bg-yellow-500 h-2 rounded-full"
+                          style={{ width: `${(stat.count / stats.totalOrders) * 100}%` }}
+                        ></div>
+                      </div>
+                      <span className="text-sm font-medium text-gray-500 w-8 text-right">{stat.count}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 text-center py-4">Ma'lumotlar yo'q</p>
+            )}
+          </div>
+        </div>
+
         {/* Subject Stats */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100">
           <div className="p-4 border-b border-gray-100">
