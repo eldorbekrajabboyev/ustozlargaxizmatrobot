@@ -361,18 +361,35 @@ app.put('/api/orders/:id/send', (req, res) => {
     
     run('UPDATE orders SET status = ? WHERE id = ?', ['sent', orderId]);
     
-    // Send notification to user
+    // Send notification and document to user
     const bot = require('./bot').getBotInstance();
     if (bot && order && order.telegram_id) {
-      let message = `📤 *Buyurtma tayyor va yuborildi!*\n\n`;
-      message += `📋 Buyurtma: #${order.order_code}\n`;
+      const message = `📤 *Buyurtma tayyor va yuborildi!*\n\n📋 Buyurtma: #${order.order_code}`;
       
       if (order.document_file) {
-        message += `\n📥 Hujjatni bot orqali yuklab oling.`;
+        // Send document file to user
+        const fs = require('fs');
+        const filePath = path.join(__dirname, '..', order.document_file);
+        
+        if (fs.existsSync(filePath)) {
+          bot.sendMessage(order.telegram_id, message, { parse_mode: 'Markdown' })
+            .then(() => {
+              return bot.sendDocument(
+                order.telegram_id,
+                filePath,
+                { caption: `📄 ${order.service_name || 'Hujjat'}` }
+              );
+            })
+            .catch(err => console.error('Failed to send document:', err.message));
+        } else {
+          // File not found, just send text
+          bot.sendMessage(order.telegram_id, message + '\n\n📥 Hujjatni bot orqali yuklab oling.', { parse_mode: 'Markdown' })
+            .catch(err => console.error('Failed to send notification:', err.message));
+        }
+      } else {
+        bot.sendMessage(order.telegram_id, message, { parse_mode: 'Markdown' })
+          .catch(err => console.error('Failed to send notification:', err.message));
       }
-      
-      bot.sendMessage(order.telegram_id, message, { parse_mode: 'Markdown' })
-        .catch(err => console.error('Failed to send notification:', err.message));
     }
     
     res.json({ success: true });
