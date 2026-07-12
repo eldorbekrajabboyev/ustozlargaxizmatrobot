@@ -252,10 +252,18 @@ async function startBot() {
 
       const orderCode = `MK-${Date.now().toString(36).toUpperCase()}`;
 
-      const result = run(`
+      run(`
         INSERT INTO orders (order_code, user_id, service_id, full_name, address, school, subject, grade, topic, total_price)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [orderCode, user.id, parseInt(state.service_id), state.full_name, state.address, state.school, state.subject, state.grade, state.topic, service.price]);
+
+      // Get order by order_code (more reliable than lastInsertRowid)
+      const order = queryOne('SELECT * FROM orders WHERE order_code = ?', [orderCode]);
+      if (!order) {
+        bot.sendMessage(chatId, "❌ Buyurtma yaratishda xatolik.");
+        delete global.userStates[telegramId];
+        return;
+      }
 
       const card = queryOne('SELECT * FROM payment_cards WHERE is_active = 1 LIMIT 1');
 
@@ -275,7 +283,7 @@ async function startBot() {
       const keyboard = {
         reply_markup: {
           inline_keyboard: [
-            [{ text: '📤 Chek yuborish', callback_data: `send_receipt_${result.lastInsertRowid}` }],
+            [{ text: '📤 Chek yuborish', callback_data: `send_receipt_${order.id}` }],
             [{ text: '🔙 Asosiy menyu', callback_data: 'back_main' }],
           ],
         },
@@ -300,6 +308,9 @@ async function startBot() {
 
     const state = global.receiptStates[telegramId];
     const photo = msg.photo[msg.photo.length - 1];
+    const orderId = parseInt(state.order_id);
+
+    console.log(`Receipt upload for order_id: ${orderId}`);
 
     try {
       const BOT_TOKEN = process.env.BOT_TOKEN;
@@ -311,13 +322,27 @@ async function startBot() {
       const path = require('path');
       const { v4: uuidv4 } = require('uuid');
 
+      // Ensure receipts directory exists
+      const receiptsDir = path.join(__dirname, '..', 'uploads', 'receipts');
+      if (!fs.existsSync(receiptsDir)) {
+        fs.mkdirSync(receiptsDir, { recursive: true });
+      }
+
       const response = await axios.get(fileUrl, { responseType: 'arraybuffer' });
       const filename = `${uuidv4()}.jpg`;
-      const uploadPath = path.join(__dirname, '..', 'uploads', 'receipts', filename);
+      const uploadPath = path.join(receiptsDir, filename);
       fs.writeFileSync(uploadPath, response.data);
 
-      run('UPDATE orders SET payment_receipt = ?, status = ? WHERE id = ?',
-        [`/uploads/receipts/${filename}`, 'pending_confirmation', parseInt(state.order_id)]);
+      console.log(`Receipt saved: ${filename}, updating order ${orderId}`);
+
+      const updateResult = run('UPDATE orders SET payment_receipt = ?, status = ? WHERE id = ?',
+        [`/uploads/receipts/${filename}`, 'pending_confirmation', orderId]);
+
+      console.log(`Update result:`, updateResult);
+
+      // Verify the update
+      const updatedOrder = queryOne('SELECT id, status, payment_receipt FROM orders WHERE id = ?', [orderId]);
+      console.log(`Updated order:`, updatedOrder);
 
       bot.sendMessage(
         chatId,
@@ -328,10 +353,10 @@ async function startBot() {
       // Notify admin
       const settings = queryOne("SELECT value FROM settings WHERE key = 'admin_chat_id'");
       if (settings && settings.value) {
-        const order = queryOne('SELECT order_code FROM orders WHERE id = ?', [parseInt(state.order_id)]);
+        const order = queryOne('SELECT order_code FROM orders WHERE id = ?', [orderId]);
         bot.sendMessage(
           settings.value,
-          `🔔 *Yangi to'lov cheki!*\n\nBuyurtma: #${order ? order.order_code : state.order_id}\nFoydalanuvchi: ${msg.from.first_name}`,
+          `🔔 *Yangi to'lov cheki!*\n\nBuyurtma: #${order ? order.order_code : orderId}\nFoydalanuvchi: ${msg.from.first_name}`,
           { parse_mode: 'Markdown' }
         );
       }

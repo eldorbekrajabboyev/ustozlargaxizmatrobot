@@ -170,9 +170,17 @@ function run(sql, params = []) {
   const sanitized = sanitizeParams(params);
   db.run(sql, sanitized);
   saveDatabase();
-  // Get last insert rowid
-  const result = db.exec('SELECT last_insert_rowid() as id');
-  return { lastInsertRowid: result[0]?.values[0][0] || 0, changes: db.getRowsModified() };
+  // Get last insert rowid using exec
+  let lastId = 0;
+  try {
+    const result = db.exec('SELECT last_insert_rowid() as id');
+    if (result.length > 0 && result[0].values.length > 0) {
+      lastId = result[0].values[0][0];
+    }
+  } catch (e) {
+    console.error('Error getting last_insert_rowid:', e);
+  }
+  return { lastInsertRowid: lastId, changes: db.getRowsModified() };
 }
 
 module.exports = {
