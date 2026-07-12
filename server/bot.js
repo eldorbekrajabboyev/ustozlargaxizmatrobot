@@ -92,6 +92,21 @@ async function startBot(app) {
       return;
     }
 
+    // Handle region selection
+    if (data.startsWith('region_')) {
+      const region = data.replace('region_', '');
+      if (!global.userStates || !global.userStates[telegramId]) return;
+      
+      const state = global.userStates[telegramId];
+      if (state.step === 'region') {
+        state.region = region;
+        state.step = 'district';
+        bot.sendMessage(chatId, `📍 ${region} tumanini/shahrini kiriting:`);
+      }
+      bot.answerCallbackQuery(query.id);
+      return;
+    }
+
     if (data === 'services') {
       const services = queryAll('SELECT * FROM services WHERE is_active = 1');
       if (services.length === 0) {
@@ -208,12 +223,31 @@ async function startBot(app) {
     switch (state.step) {
       case 'full_name':
         state.full_name = msg.text;
-        state.step = 'address';
-        bot.sendMessage(chatId, '📍 Yashash manzilingizni kiriting:');
+        state.step = 'region';
+        // Show region buttons
+        const regions = [
+          'Andijon viloyati', 'Buxoro viloyati', 'Jizzax viloyati',
+          'Qashqadaryo viloyati', 'Navoiy viloyati', 'Namangan viloyati',
+          'Samarqand viloyati', 'Sirdaryo viloyati', 'Surxondaryo viloyati',
+          'Toshkent viloyati', "Farg'ona viloyati", 'Xorazm viloyati',
+          'Toshkent shahri', 'Qoraqalpog\'iston Respublikasi'
+        ];
+        const regionButtons = [];
+        for (let i = 0; i < regions.length; i += 2) {
+          const row = [{ text: regions[i], callback_data: `region_${regions[i]}` }];
+          if (regions[i + 1]) {
+            row.push({ text: regions[i + 1], callback_data: `region_${regions[i + 1]}` });
+          }
+          regionButtons.push(row);
+        }
+        bot.sendMessage(chatId, '📍 Maktab joylashgan viloyatni tanlang:', {
+          reply_markup: { inline_keyboard: regionButtons }
+        });
         break;
 
-      case 'address':
-        state.address = msg.text;
+      case 'district':
+        state.district = msg.text;
+        state.address = `${state.region}, ${msg.text}`;
         state.step = 'school';
         bot.sendMessage(chatId, '🏫 Maktab nomi/sonini kiriting:');
         break;

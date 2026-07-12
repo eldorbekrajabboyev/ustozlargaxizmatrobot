@@ -414,6 +414,32 @@ app.get('/api/stats', (req, res) => {
     SELECT subject, COUNT(*) as count FROM orders GROUP BY subject ORDER BY count DESC LIMIT 10
   `);
 
+  // Region statistics - extract region from address field
+  const regionStats = queryAll(`
+    SELECT 
+      CASE 
+        WHEN address LIKE '%Andijon%' THEN 'Andijon viloyati'
+        WHEN address LIKE '%Buxoro%' THEN 'Buxoro viloyati'
+        WHEN address LIKE '%Jizzax%' THEN 'Jizzax viloyati'
+        WHEN address LIKE '%Qashqadaryo%' THEN 'Qashqadaryo viloyati'
+        WHEN address LIKE '%Navoiy%' THEN 'Navoiy viloyati'
+        WHEN address LIKE '%Namangan%' THEN 'Namangan viloyati'
+        WHEN address LIKE '%Samarqand%' THEN 'Samarqand viloyati'
+        WHEN address LIKE '%Sirdaryo%' THEN 'Sirdaryo viloyati'
+        WHEN address LIKE '%Surxondaryo%' THEN 'Surxondaryo viloyati'
+        WHEN address LIKE '%Toshkent vil%' THEN 'Toshkent viloyati'
+        WHEN address LIKE "%Farg'ona%" THEN "Farg'ona viloyati"
+        WHEN address LIKE '%Xorazm%' THEN 'Xorazm viloyati'
+        WHEN address LIKE '%Toshkent sh%' THEN 'Toshkent shahri'
+        WHEN address LIKE "%Qoraqalpog%" THEN "Qoraqalpog'iston Respublikasi"
+        ELSE 'Noma\'lum'
+      END as region,
+      COUNT(*) as count
+    FROM orders
+    GROUP BY region
+    ORDER BY count DESC
+  `);
+
   const recentOrders = queryAll(`
     SELECT o.id, o.order_code, o.full_name, o.status, o.total_price, o.created_at,
            s.name as service_name
@@ -424,7 +450,7 @@ app.get('/api/stats', (req, res) => {
 
   res.json({
     totalOrders, pendingPayment, pendingConfirmation, inProgress, ready, sent,
-    totalUsers, totalRevenue, subjectStats, recentOrders
+    totalUsers, totalRevenue, subjectStats, regionStats, recentOrders
   });
 });
 
