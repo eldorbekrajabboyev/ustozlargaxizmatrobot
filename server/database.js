@@ -141,10 +141,16 @@ function saveDatabase() {
 // Auto-save every 30 seconds
 setInterval(saveDatabase, 30000);
 
+// Helper: sanitize params - replace undefined with null
+function sanitizeParams(params) {
+  return params.map(p => p === undefined ? null : p);
+}
+
 // Helper: run query and return results as array of objects
 function queryAll(sql, params = []) {
+  const sanitized = sanitizeParams(params);
   const stmt = db.prepare(sql);
-  if (params.length > 0) stmt.bind(params);
+  if (sanitized.length > 0) stmt.bind(sanitized);
   const results = [];
   while (stmt.step()) {
     results.push(stmt.getAsObject());
@@ -161,7 +167,8 @@ function queryOne(sql, params = []) {
 
 // Helper: run statement
 function run(sql, params = []) {
-  db.run(sql, params);
+  const sanitized = sanitizeParams(params);
+  db.run(sql, sanitized);
   saveDatabase();
   // Get last insert rowid
   const result = db.exec('SELECT last_insert_rowid() as id');
