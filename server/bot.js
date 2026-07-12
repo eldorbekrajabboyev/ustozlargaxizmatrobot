@@ -422,4 +422,8 @@ async function startBot(app) {
   return bot;
 }
 
-module.exports = { startBot };
+function getBotInstance() {
+  return botInstance;
+}
+
+module.exports = { startBot, getBotInstance };

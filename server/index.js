@@ -283,8 +283,45 @@ app.post('/api/orders/:id/document', upload.single('document'), (req, res) => {
 // Confirm payment
 app.put('/api/orders/:id/confirm-payment', (req, res) => {
   try {
-    run('UPDATE orders SET status = ? WHERE id = ?', ['in_progress', parseInt(req.params.id)]);
-    res.json({ success: true });
+    const orderId = parseInt(req.params.id);
+    
+    // Get order with user info
+    const order = queryOne(`
+      SELECT o.*, u.telegram_id, u.first_name
+      FROM orders o
+      LEFT JOIN users u ON o.user_id = u.id
+      WHERE o.id = ?
+    `, [orderId]);
+    
+    if (!order) {
+      return res.status(404).json({ error: 'Buyurtma topilmadi' });
+    }
+    
+    // Update status to in_progress
+    run('UPDATE orders SET status = ? WHERE id = ?', ['in_progress', orderId]);
+    
+    // Count queue position (how many orders are in_progress before this one)
+    const queueResult = queryOne(`
+      SELECT COUNT(*) as position FROM orders 
+      WHERE status = 'in_progress' AND created_at <= ?
+    `, [order.created_at]);
+    
+    const queuePosition = queueResult ? queueResult.position : 1;
+    
+    // Send notification to user via bot
+    const bot = require('./bot').getBotInstance();
+    if (bot && order.telegram_id) {
+      bot.sendMessage(
+        order.telegram_id,
+        `✅ *To'lovingiz tasdiqlandi!*\n\n` +
+        `📋 Buyurtma: #${order.order_code}\n` +
+        `🔢 Sizning navbatingiz: *${queuePosition}*\n\n` +
+        `Hujjat tayyor bo'lgach sizga xabar beriladi.`,
+        { parse_mode: 'Markdown' }
+      ).catch(err => console.error('Failed to send notification:', err.message));
+    }
+    
+    res.json({ success: true, queuePosition });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -304,7 +341,32 @@ app.put('/api/orders/:id/reject-payment', (req, res) => {
 // Mark as sent
 app.put('/api/orders/:id/send', (req, res) => {
   try {
-    run('UPDATE orders SET status = ? WHERE id = ?', ['sent', parseInt(req.params.id)]);
+    const orderId = parseInt(req.params.id);
+    
+    // Get order with user info
+    const order = queryOne(`
+      SELECT o.*, u.telegram_id
+      FROM orders o
+      LEFT JOIN users u ON o.user_id = u.id
+      WHERE o.id = ?
+    `, [orderId]);
+    
+    run('UPDATE orders SET status = ? WHERE id = ?', ['sent', orderId]);
+    
+    // Send notification to user
+    const bot = require('./bot').getBotInstance();
+    if (bot && order && order.telegram_id) {
+      let message = `📤 *Buyurtma tayyor va yuborildi!*\n\n`;
+      message += `📋 Buyurtma: #${order.order_code}\n`;
+      
+      if (order.document_file) {
+        message += `\n📥 Hujjatni bot orqali yuklab oling.`;
+      }
+      
+      bot.sendMessage(order.telegram_id, message, { parse_mode: 'Markdown' })
+        .catch(err => console.error('Failed to send notification:', err.message));
+    }
+    
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
