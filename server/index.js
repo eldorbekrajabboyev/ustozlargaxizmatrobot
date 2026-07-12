@@ -519,6 +519,13 @@ app.get('*', (req, res) => {
   res.status(404).json({ error: 'Not found' });
 });
 
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught exception:', err);
+});
+process.on('unhandledRejection', (err) => {
+  console.error('Unhandled rejection:', err);
+});
+
 // Start server
 async function start() {
   await initDatabase();
