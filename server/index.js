@@ -40,7 +40,7 @@ const upload = multer({
   storage,
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
   fileFilter: (req, file, cb) => {
-    const allowed = /jpeg|jpg|png|gif|pdf/;
+    const allowed = /jpeg|jpg|png|gif|pdf|doc|docx/;
     const ext = allowed.test(path.extname(file.originalname).toLowerCase());
     const mime = allowed.test(file.mimetype);
     if (ext || mime) {
@@ -243,8 +243,16 @@ app.put('/api/orders/:id', (req, res) => {
   }
 });
 
+// Middleware to set upload type
+function setUploadType(type) {
+  return (req, res, next) => {
+    req.uploadType = type;
+    next();
+  };
+}
+
 // Upload payment receipt
-app.post('/api/orders/:id/receipt', upload.single('receipt'), (req, res) => {
+app.post('/api/orders/:id/receipt', setUploadType('receipts'), upload.single('receipt'), (req, res) => {
   try {
     run('UPDATE orders SET payment_receipt = ?, status = ? WHERE id = ?',
       [`/uploads/receipts/${req.file.filename}`, 'pending_confirmation', parseInt(req.params.id)]);
@@ -255,7 +263,7 @@ app.post('/api/orders/:id/receipt', upload.single('receipt'), (req, res) => {
 });
 
 // Upload order images (up to 5)
-app.post('/api/orders/:id/images', upload.array('images', 5), (req, res) => {
+app.post('/api/orders/:id/images', setUploadType('images'), upload.array('images', 5), (req, res) => {
   try {
     const images = [];
     req.files.forEach(file => {
@@ -270,7 +278,7 @@ app.post('/api/orders/:id/images', upload.array('images', 5), (req, res) => {
 });
 
 // Upload document (admin)
-app.post('/api/orders/:id/document', upload.single('document'), (req, res) => {
+app.post('/api/orders/:id/document', setUploadType('documents'), upload.single('document'), (req, res) => {
   try {
     run('UPDATE orders SET document_file = ?, status = ? WHERE id = ?',
       [`/uploads/documents/${req.file.filename}`, 'ready', parseInt(req.params.id)]);
