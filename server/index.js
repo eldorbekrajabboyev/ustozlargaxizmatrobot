@@ -437,7 +437,7 @@ app.get('/api/stats', (req, res) => {
     } catch (e) { console.error('gradeStats error:', e.message); }
     
     try {
-      regionStats = queryAll("SELECT address as region, COUNT(*) as count FROM orders GROUP BY address ORDER BY count DESC LIMIT 20");
+      regionStats = queryAll("SELECT CASE WHEN INSTR(address, ',') > 0 THEN SUBSTR(address, 1, INSTR(address, ',') - 1) ELSE address END as region, COUNT(*) as count FROM orders GROUP BY CASE WHEN INSTR(address, ',') > 0 THEN SUBSTR(address, 1, INSTR(address, ',') - 1) ELSE address END ORDER BY count DESC LIMIT 20");
     } catch (e) { console.error('regionStats error:', e.message); }
 
     let recentOrders = [];
