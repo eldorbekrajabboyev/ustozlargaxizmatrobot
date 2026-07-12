@@ -286,6 +286,36 @@ async function startBot(app) {
         return;
       }
 
+      // Save images to server
+      if (state.images && state.images.length > 0) {
+        const axios = require('axios');
+        const fs = require('fs');
+        const path = require('path');
+        const { v4: uuidv4 } = require('uuid');
+        const BOT_TOKEN = process.env.BOT_TOKEN;
+
+        const imagesDir = path.join(__dirname, '..', 'uploads', 'images');
+        if (!fs.existsSync(imagesDir)) {
+          fs.mkdirSync(imagesDir, { recursive: true });
+        }
+
+        for (const fileId of state.images) {
+          try {
+            const fileInfo = await bot.getFile(fileId);
+            const fileUrl = `https://api.telegram.org/file/bot${BOT_TOKEN}/${fileInfo.file_path}`;
+            const response = await axios.get(fileUrl, { responseType: 'arraybuffer' });
+            const filename = `${uuidv4()}.jpg`;
+            const uploadPath = path.join(imagesDir, filename);
+            fs.writeFileSync(uploadPath, response.data);
+            run('INSERT INTO order_images (order_id, image_path) VALUES (?, ?)',
+              [order.id, `/uploads/images/${filename}`]);
+          } catch (imgErr) {
+            console.error('Failed to save image:', imgErr.message);
+          }
+        }
+        console.log(`Saved ${state.images.length} images for order ${orderCode}`);
+      }
+
       const card = queryOne('SELECT * FROM payment_cards WHERE is_active = 1 LIMIT 1');
 
       let paymentText = `✅ *Buyurtma yaratildi!*\n\n`;
