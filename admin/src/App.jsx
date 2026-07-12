@@ -47,7 +47,7 @@ function Sidebar() {
 
 function App() {
   return (
-    <Router>
+    <Router basename="/admin">
       <div className="flex">
         <Sidebar />
         <div className="flex-1 ml-64">
