@@ -4,18 +4,23 @@ import axios from 'axios'
 
 const PAYMENT_TIMEOUT_MS = 4 * 60 * 1000
 
+function parseToUTCTimestamp(dateStr) {
+  if (!dateStr) return NaN
+  if (typeof dateStr === 'number') return dateStr
+  const clean = String(dateStr).replace('T', ' ').replace(/\.\d+Z?$/, '').replace(/Z$/i, '').trim()
+  const match = clean.match(/(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2}):(\d{2})/)
+  if (!match) return NaN
+  const [, y, m, d, h, min, s] = match.map(Number)
+  return Date.UTC(y, m - 1, d, h - 5, min, s)
+}
+
 function useCountdown(createdAt) {
   const [remaining, setRemaining] = useState(0)
   const [expired, setExpired] = useState(false)
 
   useEffect(() => {
     if (!createdAt) return
-    let createdTime
-    if (typeof createdAt === 'string' && createdAt.includes(' ') && !createdAt.includes('T')) {
-      createdTime = new Date(createdAt.replace(' ', 'T') + '+05:00').getTime()
-    } else {
-      createdTime = new Date(createdAt).getTime()
-    }
+    const createdTime = parseToUTCTimestamp(createdAt)
     if (isNaN(createdTime)) return
     const endTime = createdTime + PAYMENT_TIMEOUT_MS
     const tick = () => {
