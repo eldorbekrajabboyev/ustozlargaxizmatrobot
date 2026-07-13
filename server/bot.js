@@ -132,6 +132,7 @@ async function startBot(app) {
       `Quyidagi tugmalardan birini tanlang:`,
       { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [
         [{ text: '📚 Xizmatlar', callback_data: 'services' }],
+        [{ text: '📱 Xizmatlar App', web_app: { url: 'https://metodikish.fly.dev/' } }],
         [{ text: '📦 Buyurtmalarim', callback_data: 'my_orders' }],
         [{ text: "ℹ️ Ma'lumot", callback_data: 'info' }],
       ]}}
@@ -242,6 +243,7 @@ async function startBot(app) {
     if (data === 'back_main') {
       bot.sendMessage(chatId, '🏠 Asosiy menyu:', { reply_markup: { inline_keyboard: [
         [{ text: '📚 Xizmatlar', callback_data: 'services' }],
+        [{ text: '📱 Xizmatlar App', web_app: { url: 'https://metodikish.fly.dev/' } }],
         [{ text: '📦 Buyurtmalarim', callback_data: 'my_orders' }],
         [{ text: "ℹ️ Ma'lumot", callback_data: 'info' }],
       ]}});
