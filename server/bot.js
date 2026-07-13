@@ -363,8 +363,8 @@ async function startBot(app) {
       const service = await queryOne('SELECT * FROM services WHERE id = ?', [parseInt(state.service_id)]);
       const orderCode = `MK-${Date.now().toString(36).toUpperCase()}`;
 
-      await run(`INSERT INTO orders (order_code, user_id, service_id, full_name, address, school, subject, grade, topic, total_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [orderCode, user.id, parseInt(state.service_id), state.full_name, state.address, state.school, state.subject, state.grade, state.topic, service.price]);
+      await run(`INSERT INTO orders (order_code, user_id, service_id, full_name, address, school, subject, grade, topic, total_price, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [orderCode, user.id, parseInt(state.service_id), state.full_name, state.address, state.school, state.subject, state.grade, state.topic, service.price, nowUZ()]);
 
       const order = await queryOne('SELECT * FROM orders WHERE order_code = ?', [orderCode]);
       if (!order) {

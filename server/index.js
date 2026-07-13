@@ -239,9 +239,9 @@ app.post('/api/orders', async (req, res) => {
     if (!service) return res.status(400).json({ error: 'Xizmat topilmadi' });
     const orderCode = `MK-${Date.now().toString(36).toUpperCase()}`;
     const result = await run(`
-      INSERT INTO orders (order_code, user_id, service_id, full_name, address, school, subject, grade, topic, total_price)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `, [orderCode, user_id, service_id, full_name, address, school, subject, grade, topic, service.price]);
+      INSERT INTO orders (order_code, user_id, service_id, full_name, address, school, subject, grade, topic, total_price, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [orderCode, user_id, service_id, full_name, address, school, subject, grade, topic, service.price, nowUZ()]);
     const order = await queryOne('SELECT * FROM orders WHERE id = ?', [result.lastInsertRowid]);
     res.json(fixOrderDates(order));
   } catch (err) { res.status(500).json({ error: err.message }); }
