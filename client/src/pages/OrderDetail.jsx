@@ -10,7 +10,13 @@ function useCountdown(createdAt) {
 
   useEffect(() => {
     if (!createdAt) return
-    const createdTime = new Date(createdAt).getTime()
+    let createdTime
+    if (typeof createdAt === 'string' && createdAt.includes(' ') && !createdAt.includes('T')) {
+      createdTime = new Date(createdAt.replace(' ', 'T') + '+05:00').getTime()
+    } else {
+      createdTime = new Date(createdAt).getTime()
+    }
+    if (isNaN(createdTime)) return
     const endTime = createdTime + PAYMENT_TIMEOUT_MS
     const tick = () => {
       const diff = endTime - Date.now()

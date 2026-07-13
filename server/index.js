@@ -14,6 +14,20 @@ function nowUZ() {
   return d.toISOString().replace('T', ' ').slice(0, 19);
 }
 
+function toISODate(dateStr) {
+  if (!dateStr || typeof dateStr !== 'string') return dateStr;
+  if (dateStr.includes('T')) return dateStr;
+  return dateStr.replace(' ', 'T') + '+05:00';
+}
+
+function fixOrderDates(order) {
+  if (!order) return order;
+  for (const key of ['created_at', 'receipt_uploaded_at', 'ready_at', 'updated_at']) {
+    if (order[key]) order[key] = toISODate(order[key]);
+  }
+  return order;
+}
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -196,6 +210,7 @@ app.get('/api/orders', async (req, res) => {
     for (const order of orders) {
       order.images = await queryAll('SELECT * FROM order_images WHERE order_id = ?', [order.id]);
     }
+    orders.forEach(fixOrderDates);
     const countResult = await queryOne(`SELECT COUNT(*) as count FROM orders o LEFT JOIN users u ON o.user_id = u.id ${whereClause}`, params.slice(0, params.length - 2));
     const total = countResult ? countResult.count : 0;
     res.json({ orders, total, page: parseInt(page), limit: parseInt(limit) });
@@ -214,7 +229,7 @@ app.get('/api/orders/:id', async (req, res) => {
     `, [parseInt(req.params.id)]);
     if (!order) return res.status(404).json({ error: 'Buyurtma topilmadi' });
     order.images = await queryAll('SELECT * FROM order_images WHERE order_id = ?', [order.id]);
-    res.json(order);
+    res.json(fixOrderDates(order));
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
@@ -229,7 +244,7 @@ app.post('/api/orders', async (req, res) => {
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [orderCode, user_id, service_id, full_name, address, school, subject, grade, topic, service.price]);
     const order = await queryOne('SELECT * FROM orders WHERE id = ?', [result.lastInsertRowid]);
-    res.json(order);
+    res.json(fixOrderDates(order));
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
@@ -252,7 +267,7 @@ app.put('/api/orders/:id', async (req, res) => {
       WHERE o.id = ?
     `, [parseInt(req.params.id)]);
     order.images = await queryAll('SELECT * FROM order_images WHERE order_id = ?', [order.id]);
-    res.json(order);
+    res.json(fixOrderDates(order));
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
@@ -362,7 +377,7 @@ app.get('/api/stats', async (req, res) => {
     try { subjectStats = await queryAll("SELECT subject, COUNT(*) as count FROM orders GROUP BY subject ORDER BY count DESC LIMIT 10"); } catch (e) {}
     try { gradeStats = await queryAll("SELECT grade, COUNT(*) as count FROM orders GROUP BY grade ORDER BY count DESC"); } catch (e) {}
     try { regionStats = await queryAll("SELECT address as region, COUNT(*) as count FROM orders GROUP BY region ORDER BY count DESC LIMIT 20"); } catch (e) {}
-    try { recentOrders = await queryAll("SELECT o.id, o.order_code, o.full_name, o.status, o.total_price, o.created_at, s.name as service_name FROM orders o LEFT JOIN services s ON o.service_id = s.id ORDER BY o.created_at DESC LIMIT 10"); } catch (e) {}
+    try { recentOrders = await queryAll("SELECT o.id, o.order_code, o.full_name, o.status, o.total_price, o.created_at, s.name as service_name FROM orders o LEFT JOIN services s ON o.service_id = s.id ORDER BY o.created_at DESC LIMIT 10"); recentOrders.forEach(fixOrderDates); } catch (e) {}
 
     // Daily chart data (last 14 days)
     let dailyChart = [];
@@ -415,7 +430,7 @@ app.get('/api/user/orders/:telegram_id', async (req, res) => {
       LEFT JOIN services s ON o.service_id = s.id
       WHERE o.user_id = ? ORDER BY o.created_at DESC
     `, [user.id]);
-    res.json(orders);
+    res.json(orders.map(fixOrderDates));
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
