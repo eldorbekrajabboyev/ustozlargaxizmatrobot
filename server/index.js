@@ -345,6 +345,19 @@ app.put('/api/orders/:id/reject-payment', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+app.post('/api/orders/:id/auto-cancel', async (req, res) => {
+  try {
+    const orderId = parseInt(req.params.id);
+    const order = await queryOne('SELECT status FROM orders WHERE id = ?', [orderId]);
+    if (!order) return res.status(404).json({ error: 'Buyurtma topilmadi' });
+    if (order.status !== 'pending_payment') {
+      return res.json({ success: true, alreadyHandled: true });
+    }
+    await run("UPDATE orders SET status = 'rejected', admin_note = 'Avtomatik bekor qilindi: 4 daqiqada chek yuklanmadi' WHERE id = ?", [orderId]);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 app.put('/api/orders/:id/send', async (req, res) => {
   try {
     const orderId = parseInt(req.params.id);

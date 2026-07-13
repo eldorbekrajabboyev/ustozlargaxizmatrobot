@@ -83,6 +83,13 @@ function OrderDetail({ user }) {
     return () => clearInterval(interval)
   }, [order?.status, orderId])
 
+  useEffect(() => {
+    if (!countdown.expired || !order || order.status !== 'pending_payment') return
+    axios.post(`/api/orders/${orderId}/auto-cancel`).then(() => {
+      setOrder(prev => prev ? { ...prev, status: 'rejected', admin_note: 'Avtomatik bekor qilindi: 4 daqiqada chek yuklanmadi' } : prev)
+    }).catch(() => {})
+  }, [countdown.expired, order?.status, orderId])
+
   const handleReceiptUpload = async (e) => {
     const file = e.target.files[0]
     if (!file) return
