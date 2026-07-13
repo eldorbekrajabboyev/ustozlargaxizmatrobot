@@ -325,8 +325,22 @@ app.put('/api/orders/:id/confirm-payment', async (req, res) => {
 
 app.put('/api/orders/:id/reject-payment', async (req, res) => {
   try {
-    await run('UPDATE orders SET status = ?, payment_receipt = NULL WHERE id = ?',
-      ['pending_payment', parseInt(req.params.id)]);
+    const orderId = parseInt(req.params.id);
+    const { reason } = req.body;
+    const order = await queryOne(`
+      SELECT o.*, u.telegram_id, u.first_name
+      FROM orders o LEFT JOIN users u ON o.user_id = u.id WHERE o.id = ?
+    `, [orderId]);
+    await run('UPDATE orders SET status = ?, payment_receipt = NULL, admin_note = ? WHERE id = ?',
+      ['rejected', reason || null, orderId]);
+    const bot = require('./bot').getBotInstance();
+    if (bot && order && order.telegram_id) {
+      const reasonText = reason ? `\nSababi: ${reason}` : '';
+      bot.sendMessage(order.telegram_id,
+        `❌ *Buyurtmangiz rad etildi!*\n\n📋 Buyurtma: #${order.order_code}${reasonText}\n\nIltimos, buyurtmani qaytadan yarating.`,
+        { parse_mode: 'Markdown' }
+      ).catch(err => console.error('Failed to send rejection notification:', err.message));
+    }
     res.json({ success: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });

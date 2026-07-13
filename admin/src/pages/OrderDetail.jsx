@@ -55,6 +55,18 @@ function OrderDetail() {
     }
   }
 
+  const rejectPayment = async () => {
+    const reason = prompt('Rad etish sababini kiriting (ixtiyoriy):')
+    if (reason === null) return
+    try {
+      await axios.put(`/api/orders/${id}/reject-payment`, { reason: reason || null })
+      const res = await axios.get(`/api/orders/${id}`)
+      setOrder(res.data)
+    } catch (err) {
+      alert('Xatolik')
+    }
+  }
+
   const handleDocumentUpload = async (e) => {
     const file = e.target.files[0]
     if (!file) return
@@ -154,7 +166,7 @@ function OrderDetail() {
                       ✅ Tasdiqlash
                     </button>
                     <button
-                      onClick={() => updateStatus('pending_payment')}
+                      onClick={rejectPayment}
                       className="px-4 py-2 bg-red-500 text-white rounded-lg text-sm hover:bg-red-600"
                     >
                       ❌ Rad etish
