@@ -71,13 +71,15 @@ function OrderDetail({ user }) {
   }, [orderId])
 
   useEffect(() => {
-    if (order?.status !== 'pending_payment') return
+    if (!order) return
+    const pollStatuses = ['pending_payment', 'pending_confirmation']
+    if (!pollStatuses.includes(order.status)) return
     const interval = setInterval(async () => {
       try {
         const res = await axios.get(`/api/orders/${orderId}`)
         setOrder(res.data)
       } catch (e) {}
-    }, 5000)
+    }, 3000)
     return () => clearInterval(interval)
   }, [order?.status, orderId])
 
