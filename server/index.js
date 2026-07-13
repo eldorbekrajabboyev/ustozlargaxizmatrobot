@@ -27,6 +27,17 @@ function fixOrderDates(order) {
   return order;
 }
 
+async function deleteOrderImages(orderId) {
+  const images = await queryAll('SELECT image_path FROM order_images WHERE order_id = ?', [orderId]);
+  for (const img of images) {
+    const filePath = path.join(__dirname, '..', img.image_path);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+  }
+  await run('DELETE FROM order_images WHERE order_id = ?', [orderId]);
+}
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -331,7 +342,8 @@ app.put('/api/orders/:id/reject-payment', async (req, res) => {
       SELECT o.*, u.telegram_id, u.first_name
       FROM orders o LEFT JOIN users u ON o.user_id = u.id WHERE o.id = ?
     `, [orderId]);
-    await run('UPDATE orders SET status = ?, payment_receipt = NULL, admin_note = ? WHERE id = ?',
+    await deleteOrderImages(orderId);
+    await run('UPDATE orders SET status = ?, admin_note = ? WHERE id = ?',
       ['rejected', reason || null, orderId]);
     const bot = require('./bot').getBotInstance();
     if (bot && order && order.telegram_id) {
@@ -353,6 +365,7 @@ app.post('/api/orders/:id/auto-cancel', async (req, res) => {
     if (order.status !== 'pending_payment') {
       return res.json({ success: true, alreadyHandled: true });
     }
+    await deleteOrderImages(orderId);
     await run("UPDATE orders SET status = 'rejected', admin_note = 'Avtomatik bekor qilindi: 4 daqiqada chek yuklanmadi' WHERE id = ?", [orderId]);
     res.json({ success: true });
   } catch (err) { res.status(500).json({ error: err.message }); }

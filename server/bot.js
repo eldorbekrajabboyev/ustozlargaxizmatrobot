@@ -1,10 +1,23 @@
 const TelegramBot = require('node-telegram-bot-api');
 const { queryAll, queryOne, run } = require('./database');
+const fs = require('fs');
+const path = require('path');
 
 let botInstance = null;
 
 function nowUZ() {
   return new Date().toLocaleString('sv-SE', { timeZone: 'Asia/Tashkent' });
+}
+
+async function deleteOrderImages(orderId) {
+  const images = await queryAll('SELECT image_path FROM order_images WHERE order_id = ?', [orderId]);
+  for (const img of images) {
+    const filePath = path.join(__dirname, '..', img.image_path);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+  }
+  await run('DELETE FROM order_images WHERE order_id = ?', [orderId]);
 }
 
 const PAYMENT_TIMEOUT_MS = 4 * 60 * 1000; // 4 minutes
@@ -25,6 +38,7 @@ function startCountdown(bot, chatId, orderId, paymentMsgId, orderCode, telegramI
       clearInterval(interval);
       const order = await queryOne('SELECT status FROM orders WHERE id = ?', [orderId]);
       if (order && order.status === 'pending_payment') {
+        await deleteOrderImages(orderId);
         await run("UPDATE orders SET status = 'rejected', admin_note = 'Avtomatik bekor qilindi: 4 daqiqada chek yuklanmadi' WHERE id = ?", [orderId]);
         bot.deleteMessage(chatId, paymentMsgId).catch(() => {});
         bot.sendMessage(chatId, `❌ *Buyurtma bekor qilindi!*\n\n📋 #${orderCode}\n\n⏱ 4 daqiqada chek yuklanmadi.`, { parse_mode: 'Markdown' });
