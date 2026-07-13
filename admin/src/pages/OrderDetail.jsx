@@ -120,7 +120,28 @@ function OrderDetail() {
                   {statusLabels[order.status]}
                 </span>
                 <span className="text-gray-500">
-                  {new Date(order.created_at).toLocaleString('uz-UZ')}
+                  {order.status === 'pending_payment' && (
+                    <>Yaratilgan: {new Date(order.created_at).toLocaleString('uz-UZ')}</>
+                  )}
+                  {(order.status === 'pending_confirmation' || order.status === 'in_progress') && (
+                    <>Chek yuklangan: {new Date(order.receipt_uploaded_at || order.created_at).toLocaleString('uz-UZ')}</>
+                  )}
+                  {order.status === 'ready' && (
+                    <>
+                      Tayyor: {new Date(order.ready_at || order.created_at).toLocaleString('uz-UZ')}
+                      {order.receipt_uploaded_at && order.ready_at && (
+                        <span className="ml-2 text-xs text-purple-600 font-medium">
+                          ({Math.round((new Date(order.ready_at) - new Date(order.receipt_uploaded_at)) / 3600000)} soatda tayyor bo'ldi)
+                        </span>
+                      )}
+                    </>
+                  )}
+                  {order.status === 'sent' && (
+                    <div className="flex flex-col gap-0.5">
+                      <span>1. Chek: {new Date(order.receipt_uploaded_at || order.created_at).toLocaleString('uz-UZ')}</span>
+                      <span>2. Tayyor: {new Date(order.ready_at || order.created_at).toLocaleString('uz-UZ')}</span>
+                    </div>
+                  )}
                 </span>
               </div>
               <div className="flex gap-2">
@@ -221,7 +242,14 @@ function OrderDetail() {
           {/* Payment Receipt */}
           {order.payment_receipt && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-              <h2 className="font-semibold mb-4">💳 To'lov cheki</h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="font-semibold">💳 To'lov cheki</h2>
+                {order.receipt_uploaded_at && (
+                  <span className="text-sm text-gray-500">
+                    Yuklangan: {new Date(order.receipt_uploaded_at).toLocaleString('uz-UZ')}
+                  </span>
+                )}
+              </div>
               <a href={order.payment_receipt} target="_blank" rel="noopener noreferrer">
                 <img
                   src={order.payment_receipt}

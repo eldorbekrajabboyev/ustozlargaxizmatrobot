@@ -4,17 +4,36 @@ const cors = require('cors');
 const path = require('path');
 const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
-const { initDatabase, queryAll, queryOne, run, saveDatabase } = require('./database');
+const { initDatabase, queryAll, queryOne, run } = require('./database');
+
+const Sentry = require('@sentry/node');
+Sentry.init({ dsn: process.env.SENTRY_DSN, tracesSampleRate: 0.1 });
+
+function nowUZ() {
+  const d = new Date(Date.now() + 5 * 3600 * 1000);
+  return d.toISOString().replace('T', ' ').slice(0, 19);
+}
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
+// Simple in-memory cache
+const cache = new Map();
+function cached(key, ttlMs, fn) {
+  return async (...args) => {
+    const now = Date.now();
+    const entry = cache.get(key);
+    if (entry && now - entry.ts < ttlMs) return entry.data;
+    const data = await fn(...args);
+    cache.set(key, { data, ts: now });
+    return data;
+  };
+}
+
 app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
-// Ensure uploads directory exists
 const fs = require('fs');
 const uploadsDir = path.join(__dirname, '..', 'uploads');
 ['receipts', 'documents', 'images'].forEach(dir => {
@@ -24,7 +43,6 @@ const uploadsDir = path.join(__dirname, '..', 'uploads');
   }
 });
 
-// Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const type = req.uploadType || 'images';
@@ -38,197 +56,194 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+  limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     const allowed = /jpeg|jpg|png|gif|pdf|doc|docx/;
     const ext = allowed.test(path.extname(file.originalname).toLowerCase());
     const mime = allowed.test(file.mimetype);
-    if (ext || mime) {
-      cb(null, true);
-    } else {
-      cb(new Error('Fayl formati noto\'g\'ri'));
-    }
+    cb(null, ext || mime);
   }
 });
+
+function setUploadType(type) {
+  return (req, res, next) => { req.uploadType = type; next(); };
+}
 
 // ==================== API ROUTES ====================
 
-// --- Users ---
-app.get('/api/users', (req, res) => {
-  const users = queryAll('SELECT * FROM users ORDER BY created_at DESC');
-  res.json(users);
-});
-
-app.get('/api/users/:telegram_id', (req, res) => {
-  const user = queryOne('SELECT * FROM users WHERE telegram_id = ?', [parseInt(req.params.telegram_id)]);
-  if (!user) return res.status(404).json({ error: 'Foydalanuvchi topilmadi' });
-  res.json(user);
-});
-
-app.post('/api/users', (req, res) => {
-  const { telegram_id, username, first_name, last_name } = req.body;
+app.get('/api/users', async (req, res) => {
   try {
-    const existing = queryOne('SELECT * FROM users WHERE telegram_id = ?', [telegram_id]);
+    const users = await queryAll('SELECT * FROM users ORDER BY created_at DESC');
+    res.json(users);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.get('/api/users/:telegram_id', async (req, res) => {
+  try {
+    const user = await queryOne('SELECT * FROM users WHERE telegram_id = ?', [parseInt(req.params.telegram_id)]);
+    if (!user) return res.status(404).json({ error: 'Foydalanuvchi topilmadi' });
+    res.json(user);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post('/api/users', async (req, res) => {
+  try {
+    const { telegram_id, username, first_name, last_name } = req.body;
+    const existing = await queryOne('SELECT * FROM users WHERE telegram_id = ?', [telegram_id]);
     if (existing) {
-      run('UPDATE users SET username = ?, first_name = ?, last_name = ? WHERE telegram_id = ?',
+      await run('UPDATE users SET username = ?, first_name = ?, last_name = ? WHERE telegram_id = ?',
         [username, first_name, last_name, telegram_id]);
-      return res.json(queryOne('SELECT * FROM users WHERE telegram_id = ?', [telegram_id]));
+      return res.json(await queryOne('SELECT * FROM users WHERE telegram_id = ?', [telegram_id]));
     }
-    const result = run('INSERT INTO users (telegram_id, username, first_name, last_name) VALUES (?, ?, ?, ?)',
+    const result = await run('INSERT INTO users (telegram_id, username, first_name, last_name) VALUES (?, ?, ?, ?)',
       [telegram_id, username, first_name, last_name]);
-    res.json(queryOne('SELECT * FROM users WHERE id = ?', [result.lastInsertRowid]));
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+    res.json(await queryOne('SELECT * FROM users WHERE id = ?', [result.lastInsertRowid]));
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// --- Services ---
-app.get('/api/services', (req, res) => {
-  const services = queryAll('SELECT * FROM services ORDER BY id ASC');
-  res.json(services);
-});
-
-app.post('/api/services', (req, res) => {
-  const { name, description, price } = req.body;
+app.get('/api/services', async (req, res) => {
   try {
-    const result = run('INSERT INTO services (name, description, price) VALUES (?, ?, ?)',
+    const services = await queryAll('SELECT * FROM services ORDER BY id ASC');
+    res.json(services);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post('/api/services', async (req, res) => {
+  try {
+    const { name, description, price } = req.body;
+    const result = await run('INSERT INTO services (name, description, price) VALUES (?, ?, ?)',
       [name, description, price]);
-    res.json(queryOne('SELECT * FROM services WHERE id = ?', [result.lastInsertRowid]));
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+    res.json(await queryOne('SELECT * FROM services WHERE id = ?', [result.lastInsertRowid]));
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.put('/api/services/:id', (req, res) => {
-  const { name, description, price, is_active } = req.body;
+app.put('/api/services/:id', async (req, res) => {
   try {
-    run('UPDATE services SET name = ?, description = ?, price = ?, is_active = ? WHERE id = ?',
+    const { name, description, price, is_active } = req.body;
+    await run('UPDATE services SET name = ?, description = ?, price = ?, is_active = ? WHERE id = ?',
       [name, description, price, is_active, req.params.id]);
-    res.json(queryOne('SELECT * FROM services WHERE id = ?', [req.params.id]));
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+    res.json(await queryOne('SELECT * FROM services WHERE id = ?', [req.params.id]));
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.delete('/api/services/:id', (req, res) => {
-  run('DELETE FROM services WHERE id = ?', [req.params.id]);
-  res.json({ success: true });
-});
-
-// --- Payment Cards ---
-app.get('/api/cards', (req, res) => {
-  const cards = queryAll('SELECT * FROM payment_cards ORDER BY id ASC');
-  res.json(cards);
-});
-
-app.post('/api/cards', (req, res) => {
-  const { card_number, card_holder, bank_name } = req.body;
+app.delete('/api/services/:id', async (req, res) => {
   try {
-    const result = run('INSERT INTO payment_cards (card_number, card_holder, bank_name) VALUES (?, ?, ?)',
+    await run('DELETE FROM services WHERE id = ?', [req.params.id]);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.get('/api/cards', async (req, res) => {
+  try {
+    const cards = await queryAll('SELECT * FROM payment_cards ORDER BY id ASC');
+    res.json(cards);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post('/api/cards', async (req, res) => {
+  try {
+    const { card_number, card_holder, bank_name } = req.body;
+    const result = await run('INSERT INTO payment_cards (card_number, card_holder, bank_name) VALUES (?, ?, ?)',
       [card_number, card_holder, bank_name]);
-    res.json(queryOne('SELECT * FROM payment_cards WHERE id = ?', [result.lastInsertRowid]));
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+    res.json(await queryOne('SELECT * FROM payment_cards WHERE id = ?', [result.lastInsertRowid]));
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.put('/api/cards/:id', (req, res) => {
-  const { card_number, card_holder, bank_name, is_active } = req.body;
+app.put('/api/cards/:id', async (req, res) => {
   try {
-    run('UPDATE payment_cards SET card_number = ?, card_holder = ?, bank_name = ?, is_active = ? WHERE id = ?',
+    const { card_number, card_holder, bank_name, is_active } = req.body;
+    await run('UPDATE payment_cards SET card_number = ?, card_holder = ?, bank_name = ?, is_active = ? WHERE id = ?',
       [card_number, card_holder, bank_name, is_active, req.params.id]);
-    res.json(queryOne('SELECT * FROM payment_cards WHERE id = ?', [req.params.id]));
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+    res.json(await queryOne('SELECT * FROM payment_cards WHERE id = ?', [req.params.id]));
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.delete('/api/cards/:id', (req, res) => {
-  run('DELETE FROM payment_cards WHERE id = ?', [req.params.id]);
-  res.json({ success: true });
-});
-
-// --- Orders ---
-app.get('/api/orders', (req, res) => {
-  const { status, page = 1, limit = 20 } = req.query;
-  let whereClause = '';
-  const params = [];
-  if (status) {
-    whereClause = 'WHERE o.status = ?';
-    params.push(status);
-  }
-
-  let query = `
-    SELECT o.*, u.username, u.first_name, u.last_name, u.telegram_id,
-           s.name as service_name
-    FROM orders o
-    LEFT JOIN users u ON o.user_id = u.id
-    LEFT JOIN services s ON o.service_id = s.id
-    ${whereClause}
-    ORDER BY o.created_at DESC
-    LIMIT ? OFFSET ?
-  `;
-  params.push(parseInt(limit), (parseInt(page) - 1) * parseInt(limit));
-
-  const orders = queryAll(query, params);
-
-  // Get images for each order
-  orders.forEach(order => {
-    order.images = queryAll('SELECT * FROM order_images WHERE order_id = ?', [order.id]);
-  });
-
-  let countQuery = `SELECT COUNT(*) as count FROM orders o ${whereClause}`;
-  const countParams = status ? [status] : [];
-  const totalResult = queryOne(countQuery, countParams);
-  const total = totalResult ? totalResult.count : 0;
-
-  res.json({ orders, total, page: parseInt(page), limit: parseInt(limit) });
-});
-
-app.get('/api/orders/:id', (req, res) => {
-  const order = queryOne(`
-    SELECT o.*, u.username, u.first_name, u.last_name, u.telegram_id, u.phone,
-           s.name as service_name, s.description as service_description
-    FROM orders o
-    LEFT JOIN users u ON o.user_id = u.id
-    LEFT JOIN services s ON o.service_id = s.id
-    WHERE o.id = ?
-  `, [parseInt(req.params.id)]);
-  if (!order) return res.status(404).json({ error: 'Buyurtma topilmadi' });
-  order.images = queryAll('SELECT * FROM order_images WHERE order_id = ?', [order.id]);
-  res.json(order);
-});
-
-app.post('/api/orders', (req, res) => {
-  const { user_id, service_id, full_name, address, school, subject, grade, topic } = req.body;
+app.delete('/api/cards/:id', async (req, res) => {
   try {
-    const service = queryOne('SELECT * FROM services WHERE id = ?', [service_id]);
+    await run('DELETE FROM payment_cards WHERE id = ?', [req.params.id]);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.get('/api/orders', async (req, res) => {
+  try {
+    const { status, page = 1, limit = 20, search, region, subject, date_from, date_to } = req.query;
+    const conditions = [];
+    const params = [];
+    if (status) { conditions.push('o.status = ?'); params.push(status); }
+    if (region) { conditions.push("o.address LIKE ?"); params.push(region + ',%'); }
+    if (subject) { conditions.push('o.subject = ?'); params.push(subject); }
+    if (date_from) { conditions.push('o.created_at >= ?'); params.push(date_from); }
+    if (date_to) { conditions.push('o.created_at <= ?'); params.push(date_to + ' 23:59:59'); }
+    if (search) {
+      conditions.push("(o.full_name LIKE ? OR o.order_code LIKE ? OR u.username LIKE ?)");
+      const s = `%${search}%`;
+      params.push(s, s, s);
+    }
+    const whereClause = conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : '';
+    const query = `
+      SELECT o.*, u.username, u.first_name, u.last_name, u.telegram_id,
+             s.name as service_name
+      FROM orders o
+      LEFT JOIN users u ON o.user_id = u.id
+      LEFT JOIN services s ON o.service_id = s.id
+      ${whereClause}
+      ORDER BY o.created_at DESC
+      LIMIT ? OFFSET ?
+    `;
+    params.push(parseInt(limit), (parseInt(page) - 1) * parseInt(limit));
+    const orders = await queryAll(query, params);
+    for (const order of orders) {
+      order.images = await queryAll('SELECT * FROM order_images WHERE order_id = ?', [order.id]);
+    }
+    const countResult = await queryOne(`SELECT COUNT(*) as count FROM orders o LEFT JOIN users u ON o.user_id = u.id ${whereClause}`, params.slice(0, params.length - 2));
+    const total = countResult ? countResult.count : 0;
+    res.json({ orders, total, page: parseInt(page), limit: parseInt(limit) });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.get('/api/orders/:id', async (req, res) => {
+  try {
+    const order = await queryOne(`
+      SELECT o.*, u.username, u.first_name, u.last_name, u.telegram_id, u.phone,
+             s.name as service_name, s.description as service_description
+      FROM orders o
+      LEFT JOIN users u ON o.user_id = u.id
+      LEFT JOIN services s ON o.service_id = s.id
+      WHERE o.id = ?
+    `, [parseInt(req.params.id)]);
+    if (!order) return res.status(404).json({ error: 'Buyurtma topilmadi' });
+    order.images = await queryAll('SELECT * FROM order_images WHERE order_id = ?', [order.id]);
+    res.json(order);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post('/api/orders', async (req, res) => {
+  try {
+    const { user_id, service_id, full_name, address, school, subject, grade, topic } = req.body;
+    const service = await queryOne('SELECT * FROM services WHERE id = ?', [service_id]);
     if (!service) return res.status(400).json({ error: 'Xizmat topilmadi' });
-
     const orderCode = `MK-${Date.now().toString(36).toUpperCase()}`;
-
-    const result = run(`
+    const result = await run(`
       INSERT INTO orders (order_code, user_id, service_id, full_name, address, school, subject, grade, topic, total_price)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [orderCode, user_id, service_id, full_name, address, school, subject, grade, topic, service.price]);
-
-    const order = queryOne('SELECT * FROM orders WHERE id = ?', [result.lastInsertRowid]);
+    const order = await queryOne('SELECT * FROM orders WHERE id = ?', [result.lastInsertRowid]);
     res.json(order);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.put('/api/orders/:id', (req, res) => {
-  const { status, admin_note } = req.body;
+app.put('/api/orders/:id', async (req, res) => {
   try {
-    const updates = ['updated_at = CURRENT_TIMESTAMP'];
+    const { status, admin_note } = req.body;
+    const updates = [`updated_at = '${nowUZ()}'`];
     const params = [];
     if (status) { updates.push('status = ?'); params.push(status); }
+    if (status === 'ready') { updates.push(`ready_at = '${nowUZ()}'`); }
     if (admin_note !== undefined) { updates.push('admin_note = ?'); params.push(admin_note); }
     params.push(parseInt(req.params.id));
-    run(`UPDATE orders SET ${updates.join(', ')} WHERE id = ?`, params);
-    const order = queryOne(`
+    await run(`UPDATE orders SET ${updates.join(', ')} WHERE id = ?`, params);
+    const order = await queryOne(`
       SELECT o.*, u.username, u.first_name, u.last_name, u.telegram_id,
              s.name as service_name
       FROM orders o
@@ -236,264 +251,211 @@ app.put('/api/orders/:id', (req, res) => {
       LEFT JOIN services s ON o.service_id = s.id
       WHERE o.id = ?
     `, [parseInt(req.params.id)]);
-    order.images = queryAll('SELECT * FROM order_images WHERE order_id = ?', [order.id]);
+    order.images = await queryAll('SELECT * FROM order_images WHERE order_id = ?', [order.id]);
     res.json(order);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// Middleware to set upload type
-function setUploadType(type) {
-  return (req, res, next) => {
-    req.uploadType = type;
-    next();
-  };
-}
-
-// Upload payment receipt
-app.post('/api/orders/:id/receipt', setUploadType('receipts'), upload.single('receipt'), (req, res) => {
+app.post('/api/orders/:id/receipt', setUploadType('receipts'), upload.single('receipt'), async (req, res) => {
   try {
-    run('UPDATE orders SET payment_receipt = ?, status = ? WHERE id = ?',
+    await run(`UPDATE orders SET payment_receipt = ?, status = ?, receipt_uploaded_at = '${nowUZ()}' WHERE id = ?`,
       [`/uploads/receipts/${req.file.filename}`, 'pending_confirmation', parseInt(req.params.id)]);
     res.json({ success: true, path: `/uploads/receipts/${req.file.filename}` });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// Upload order images (up to 5)
-app.post('/api/orders/:id/images', setUploadType('images'), upload.array('images', 5), (req, res) => {
+app.post('/api/orders/:id/images', setUploadType('images'), upload.array('images', 5), async (req, res) => {
   try {
     const images = [];
-    req.files.forEach(file => {
-      const result = run('INSERT INTO order_images (order_id, image_path) VALUES (?, ?)',
+    for (const file of req.files) {
+      const result = await run('INSERT INTO order_images (order_id, image_path) VALUES (?, ?)',
         [parseInt(req.params.id), `/uploads/images/${file.filename}`]);
       images.push({ id: result.lastInsertRowid, image_path: `/uploads/images/${file.filename}` });
-    });
+    }
     res.json(images);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// Upload document (admin)
-app.post('/api/orders/:id/document', setUploadType('documents'), upload.single('document'), (req, res) => {
+app.post('/api/orders/:id/document', setUploadType('documents'), upload.single('document'), async (req, res) => {
   try {
-    run('UPDATE orders SET document_file = ?, status = ? WHERE id = ?',
+    await run('UPDATE orders SET document_file = ?, status = ? WHERE id = ?',
       [`/uploads/documents/${req.file.filename}`, 'ready', parseInt(req.params.id)]);
     res.json({ success: true, path: `/uploads/documents/${req.file.filename}` });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// Confirm payment
-app.put('/api/orders/:id/confirm-payment', (req, res) => {
+app.put('/api/orders/:id/confirm-payment', async (req, res) => {
   try {
     const orderId = parseInt(req.params.id);
-    
-    // Get order with user info
-    const order = queryOne(`
+    const order = await queryOne(`
       SELECT o.*, u.telegram_id, u.first_name
-      FROM orders o
-      LEFT JOIN users u ON o.user_id = u.id
-      WHERE o.id = ?
+      FROM orders o LEFT JOIN users u ON o.user_id = u.id WHERE o.id = ?
     `, [orderId]);
-    
-    if (!order) {
-      return res.status(404).json({ error: 'Buyurtma topilmadi' });
-    }
-    
-    // Update status to in_progress
-    run('UPDATE orders SET status = ? WHERE id = ?', ['in_progress', orderId]);
-    
-    // Count queue position (how many orders are in_progress before this one)
-    const queueResult = queryOne(`
-      SELECT COUNT(*) as position FROM orders 
-      WHERE status = 'in_progress' AND created_at <= ?
-    `, [order.created_at]);
-    
+    if (!order) return res.status(404).json({ error: 'Buyurtma topilmadi' });
+    await run('UPDATE orders SET status = ? WHERE id = ?', ['in_progress', orderId]);
+    const queueResult = await queryOne(
+      `SELECT COUNT(*) as position FROM orders WHERE status = 'in_progress' AND created_at <= ?`,
+      [order.created_at]
+    );
     const queuePosition = queueResult ? queueResult.position : 1;
-    
-    // Send notification to user via bot
     const bot = require('./bot').getBotInstance();
     if (bot && order.telegram_id) {
-      bot.sendMessage(
-        order.telegram_id,
-        `✅ *To'lovingiz tasdiqlandi!*\n\n` +
-        `📋 Buyurtma: #${order.order_code}\n` +
-        `🔢 Sizning navbatingiz: *${queuePosition}*\n\n` +
-        `Hujjat tayyor bo'lgach sizga xabar beriladi.`,
+      bot.sendMessage(order.telegram_id,
+        `✅ *To'lovingiz tasdiqlandi!*\n\n📋 Buyurtma: #${order.order_code}\n🔢 Sizning navbatingiz: *${queuePosition}*\n\nHujjat tayyor bo'lgach sizga xabar beriladi.`,
         { parse_mode: 'Markdown' }
       ).catch(err => console.error('Failed to send notification:', err.message));
     }
-    
     res.json({ success: true, queuePosition });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// Reject payment
-app.put('/api/orders/:id/reject-payment', (req, res) => {
+app.put('/api/orders/:id/reject-payment', async (req, res) => {
   try {
-    run('UPDATE orders SET status = ?, payment_receipt = NULL WHERE id = ?',
+    await run('UPDATE orders SET status = ?, payment_receipt = NULL WHERE id = ?',
       ['pending_payment', parseInt(req.params.id)]);
     res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// Mark as sent
-app.put('/api/orders/:id/send', (req, res) => {
+app.put('/api/orders/:id/send', async (req, res) => {
   try {
     const orderId = parseInt(req.params.id);
-    
-    // Get order with user info
-    const order = queryOne(`
-      SELECT o.*, u.telegram_id
-      FROM orders o
-      LEFT JOIN users u ON o.user_id = u.id
-      WHERE o.id = ?
+    const order = await queryOne(`
+      SELECT o.*, u.telegram_id FROM orders o
+      LEFT JOIN users u ON o.user_id = u.id WHERE o.id = ?
     `, [orderId]);
-    
-    console.log(`Send order ${orderId}:`, order);
-    
-    run('UPDATE orders SET status = ? WHERE id = ?', ['sent', orderId]);
-    
-    // Send notification and document to user
+    await run('UPDATE orders SET status = ? WHERE id = ?', ['sent', orderId]);
     const bot = require('./bot').getBotInstance();
-    console.log('Bot instance:', bot ? 'available' : 'null');
-    
     if (bot && order && order.telegram_id) {
       const message = `📤 *Buyurtma tayyor va yuborildi!*\n\n📋 Buyurtma: #${order.order_code}`;
-      
       if (order.document_file) {
-        // Send document file to user
-        const fs = require('fs');
         const filePath = path.join(__dirname, '..', order.document_file);
-        console.log('Document file path:', filePath);
-        console.log('File exists:', fs.existsSync(filePath));
-        
         if (fs.existsSync(filePath)) {
           bot.sendMessage(order.telegram_id, message, { parse_mode: 'Markdown' })
-            .then(() => {
-              console.log('Text sent, sending document...');
-              return bot.sendDocument(
-                order.telegram_id,
-                filePath,
-                { caption: `📄 ${order.service_name || 'Hujjat'}` }
-              );
-            })
-            .then(() => console.log('Document sent successfully'))
+            .then(() => bot.sendDocument(order.telegram_id, filePath, { caption: `📄 ${order.service_name || 'Hujjat'}` }))
             .catch(err => console.error('Failed to send document:', err.message));
         } else {
-          console.log('File NOT found at:', filePath);
-          // File not found, just send text
           bot.sendMessage(order.telegram_id, message + '\n\n📥 Hujjatni bot orqali yuklab oling.', { parse_mode: 'Markdown' })
             .catch(err => console.error('Failed to send notification:', err.message));
         }
       } else {
-        console.log('No document_file in order');
         bot.sendMessage(order.telegram_id, message, { parse_mode: 'Markdown' })
           .catch(err => console.error('Failed to send notification:', err.message));
       }
-    } else {
-      console.log('Cannot send: bot=', !!bot, 'order=', !!order, 'telegram_id=', order?.telegram_id);
     }
-    
     res.json({ success: true });
-  } catch (err) {
-    console.error('Send error:', err);
-    res.status(500).json({ error: err.message });
-  }
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// --- Statistics ---
-app.get('/api/stats', (req, res) => {
+app.get('/api/stats', async (req, res) => {
   try {
-    const totalOrders = queryOne('SELECT COUNT(*) as count FROM orders')?.count || 0;
-    const pendingPayment = queryOne("SELECT COUNT(*) as count FROM orders WHERE status = 'pending_payment'")?.count || 0;
-    const pendingConfirmation = queryOne("SELECT COUNT(*) as count FROM orders WHERE status = 'pending_confirmation'")?.count || 0;
-    const inProgress = queryOne("SELECT COUNT(*) as count FROM orders WHERE status = 'in_progress'")?.count || 0;
-    const ready = queryOne("SELECT COUNT(*) as count FROM orders WHERE status = 'ready'")?.count || 0;
-    const sent = queryOne("SELECT COUNT(*) as count FROM orders WHERE status = 'sent'")?.count || 0;
-    const totalUsers = queryOne('SELECT COUNT(*) as count FROM users')?.count || 0;
-    const totalRevenueResult = queryOne("SELECT COALESCE(SUM(total_price), 0) as total FROM orders WHERE status IN ('in_progress', 'ready', 'sent')");
+    const totalOrders = (await queryOne('SELECT COUNT(*) as count FROM orders'))?.count || 0;
+    const pendingPayment = (await queryOne("SELECT COUNT(*) as count FROM orders WHERE status = 'pending_payment'"))?.count || 0;
+    const pendingConfirmation = (await queryOne("SELECT COUNT(*) as count FROM orders WHERE status = 'pending_confirmation'"))?.count || 0;
+    const inProgress = (await queryOne("SELECT COUNT(*) as count FROM orders WHERE status = 'in_progress'"))?.count || 0;
+    const ready = (await queryOne("SELECT COUNT(*) as count FROM orders WHERE status = 'ready'"))?.count || 0;
+    const sent = (await queryOne("SELECT COUNT(*) as count FROM orders WHERE status = 'sent'"))?.count || 0;
+    const totalUsers = (await queryOne('SELECT COUNT(*) as count FROM users'))?.count || 0;
+    const totalRevenueResult = await queryOne("SELECT COALESCE(SUM(total_price), 0) as total FROM orders WHERE status IN ('in_progress', 'ready', 'sent')");
     const totalRevenue = totalRevenueResult ? totalRevenueResult.total : 0;
+    let subjectStats = [], gradeStats = [], regionStats = [], recentOrders = [];
+    try { subjectStats = await queryAll("SELECT subject, COUNT(*) as count FROM orders GROUP BY subject ORDER BY count DESC LIMIT 10"); } catch (e) {}
+    try { gradeStats = await queryAll("SELECT grade, COUNT(*) as count FROM orders GROUP BY grade ORDER BY count DESC"); } catch (e) {}
+    try { regionStats = await queryAll("SELECT address as region, COUNT(*) as count FROM orders GROUP BY region ORDER BY count DESC LIMIT 20"); } catch (e) {}
+    try { recentOrders = await queryAll("SELECT o.id, o.order_code, o.full_name, o.status, o.total_price, o.created_at, s.name as service_name FROM orders o LEFT JOIN services s ON o.service_id = s.id ORDER BY o.created_at DESC LIMIT 10"); } catch (e) {}
 
-    let subjectStats = [];
-    let gradeStats = [];
-    let regionStats = [];
-    
+    // Daily chart data (last 14 days)
+    let dailyChart = [];
     try {
-      subjectStats = queryAll("SELECT subject, COUNT(*) as count FROM orders GROUP BY subject ORDER BY count DESC LIMIT 10");
-    } catch (e) { console.error('subjectStats error:', e.message); }
-    
-    try {
-      gradeStats = queryAll("SELECT grade, COUNT(*) as count FROM orders GROUP BY grade ORDER BY count DESC");
-    } catch (e) { console.error('gradeStats error:', e.message); }
-    
-    try {
-      regionStats = queryAll("SELECT CASE WHEN INSTR(address, ',') > 0 THEN SUBSTR(address, 1, INSTR(address, ',') - 1) ELSE address END as region, COUNT(*) as count FROM orders GROUP BY CASE WHEN INSTR(address, ',') > 0 THEN SUBSTR(address, 1, INSTR(address, ',') - 1) ELSE address END ORDER BY count DESC LIMIT 20");
-    } catch (e) { console.error('regionStats error:', e.message); }
+      dailyChart = await queryAll(`
+        SELECT DATE(created_at) as date, COUNT(*) as count
+        FROM orders WHERE created_at >= datetime('now', '-14 days')
+        GROUP BY DATE(created_at) ORDER BY date
+      `);
+    } catch (e) {}
 
-    let recentOrders = [];
+    // Weekly chart data (last 8 weeks)
+    let weeklyChart = [];
     try {
-      recentOrders = queryAll("SELECT o.id, o.order_code, o.full_name, o.status, o.total_price, o.created_at, s.name as service_name FROM orders o LEFT JOIN services s ON o.service_id = s.id ORDER BY o.created_at DESC LIMIT 10");
-    } catch (e) { console.error('recentOrders error:', e.message); }
+      weeklyChart = await queryAll(`
+        SELECT strftime('%Y-W%W', created_at) as week, COUNT(*) as count
+        FROM orders WHERE created_at >= datetime('now', '-56 days')
+        GROUP BY week ORDER BY week
+      `);
+    } catch (e) {}
 
-    res.json({
-      totalOrders, pendingPayment, pendingConfirmation, inProgress, ready, sent,
-      totalUsers, totalRevenue, subjectStats, gradeStats, regionStats, recentOrders
-    });
-  } catch (err) {
-    console.error('Stats error:', err);
-    res.status(500).json({ error: err.message });
-  }
+    res.json({ totalOrders, pendingPayment, pendingConfirmation, inProgress, ready, sent, totalUsers, totalRevenue, subjectStats, gradeStats, regionStats, recentOrders, dailyChart, weeklyChart });
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// --- Settings ---
-app.get('/api/settings', (req, res) => {
-  const settings = queryAll('SELECT * FROM settings');
-  const obj = {};
-  settings.forEach(s => obj[s.key] = s.value);
-  res.json(obj);
-});
-
-app.put('/api/settings', (req, res) => {
+app.get('/api/settings', async (req, res) => {
   try {
-    Object.entries(req.body).forEach(([key, value]) => {
-      run('UPDATE settings SET value = ?, updated_at = CURRENT_TIMESTAMP WHERE key = ?', [value, key]);
-    });
+    const settings = await queryAll('SELECT * FROM settings');
+    const obj = {};
+    settings.forEach(s => obj[s.key] = s.value);
+    res.json(obj);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.put('/api/settings', async (req, res) => {
+  try {
+    for (const [key, value] of Object.entries(req.body)) {
+      await run(`UPDATE settings SET value = ?, updated_at = '${nowUZ()}' WHERE key = ?`, [value, key]);
+    }
     res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// --- Dashboard stats for MiniApp ---
-app.get('/api/user/orders/:telegram_id', (req, res) => {
-  const user = queryOne('SELECT id FROM users WHERE telegram_id = ?', [parseInt(req.params.telegram_id)]);
-  if (!user) return res.json([]);
-  const orders = queryAll(`
-    SELECT o.*, s.name as service_name
-    FROM orders o
-    LEFT JOIN services s ON o.service_id = s.id
-    WHERE o.user_id = ?
-    ORDER BY o.created_at DESC
-  `, [user.id]);
-  res.json(orders);
+app.get('/api/user/orders/:telegram_id', async (req, res) => {
+  try {
+    const user = await queryOne('SELECT id FROM users WHERE telegram_id = ?', [parseInt(req.params.telegram_id)]);
+    if (!user) return res.json([]);
+    const orders = await queryAll(`
+      SELECT o.*, s.name as service_name FROM orders o
+      LEFT JOIN services s ON o.service_id = s.id
+      WHERE o.user_id = ? ORDER BY o.created_at DESC
+    `, [user.id]);
+    res.json(orders);
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.get('/api/user/active-cards', (req, res) => {
-  const cards = queryAll('SELECT * FROM payment_cards WHERE is_active = 1');
-  res.json(cards);
+app.get('/api/user/active-cards', async (req, res) => {
+  try {
+    const cards = await queryAll('SELECT * FROM payment_cards WHERE is_active = 1');
+    res.json(cards);
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// Serve built frontend files (production)
+// Broadcast message to all users
+app.post('/api/broadcast', async (req, res) => {
+  try {
+    const { message } = req.body;
+    if (!message || !message.trim()) return res.status(400).json({ error: 'Xabar bo\'sh bo\'lmasligi kerak' });
+    const users = await queryAll('SELECT telegram_id FROM users WHERE telegram_id IS NOT NULL');
+    const bot = require('./bot').getBotInstance();
+    let sent = 0, failed = 0;
+    if (bot) {
+      for (const user of users) {
+        try {
+          await bot.sendMessage(user.telegram_id, message, { parse_mode: 'Markdown' });
+          sent++;
+        } catch (e) { failed++; }
+      }
+    }
+    res.json({ success: true, total: users.length, sent, failed });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Get unique filter options for orders (extract region from address)
+app.get('/api/filters', async (req, res) => {
+  try {
+    const regions = await queryAll("SELECT DISTINCT SUBSTR(address, 1, INSTR(address, ',') - 1) as region FROM orders WHERE address IS NOT NULL AND address != '' AND INSTR(address, ',') > 0 ORDER BY region");
+    const subjects = await queryAll("SELECT DISTINCT subject FROM orders WHERE subject IS NOT NULL AND subject != '' ORDER BY subject");
+    res.json({ regions: regions.map(r => r.region), subjects: subjects.map(s => s.subject) });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Serve built frontend files
 const clientBuildPath = path.join(__dirname, '..', 'client', 'dist');
 const adminBuildPath = path.join(__dirname, '..', 'admin', 'dist');
 
@@ -504,37 +466,26 @@ if (fs.existsSync(adminBuildPath)) {
   app.use('/admin', express.static(adminBuildPath));
 }
 
-// SPA fallback for client
 app.get('*', (req, res) => {
   if (req.path.startsWith('/admin')) {
     const adminIndex = path.join(adminBuildPath, 'index.html');
-    if (fs.existsSync(adminIndex)) {
-      return res.sendFile(adminIndex);
-    }
+    if (fs.existsSync(adminIndex)) return res.sendFile(adminIndex);
   }
   const clientIndex = path.join(clientBuildPath, 'index.html');
-  if (fs.existsSync(clientIndex)) {
-    return res.sendFile(clientIndex);
-  }
+  if (fs.existsSync(clientIndex)) return res.sendFile(clientIndex);
   res.status(404).json({ error: 'Not found' });
 });
 
-process.on('uncaughtException', (err) => {
-  console.error('Uncaught exception:', err);
-});
-process.on('unhandledRejection', (err) => {
-  console.error('Unhandled rejection:', err);
-});
+Sentry.setupExpressErrorHandler(app);
+process.on('uncaughtException', (err) => console.error('Uncaught exception:', err));
+process.on('unhandledRejection', (err) => console.error('Unhandled rejection:', err));
 
-// Start server
 async function start() {
   await initDatabase();
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Server running on port ${PORT}`);
     console.log(`📡 API: http://localhost:${PORT}/api`);
   });
-
-  // Start bot if BOT_TOKEN is provided
   if (process.env.BOT_TOKEN) {
     try {
       const { startBot } = require('./bot');

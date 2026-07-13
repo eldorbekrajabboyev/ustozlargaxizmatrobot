@@ -6,6 +6,7 @@ import Users from './pages/Users'
 import Services from './pages/Services'
 import Cards from './pages/Cards'
 import Settings from './pages/Settings'
+import Broadcast from './pages/Broadcast'
 
 const navItems = [
   { path: '/', label: 'Dashboard', icon: '📊' },
@@ -13,6 +14,7 @@ const navItems = [
   { path: '/users', label: 'Foydalanuvchilar', icon: '👥' },
   { path: '/services', label: 'Xizmatlar', icon: '📚' },
   { path: '/cards', label: 'Kartalar', icon: '💳' },
+  { path: '/broadcast', label: 'Xabar yuborish', icon: '📨' },
   { path: '/settings', label: 'Sozlamalar', icon: '⚙️' },
 ]
 
@@ -59,6 +61,7 @@ function App() {
               <Route path="/users" element={<Users />} />
               <Route path="/services" element={<Services />} />
               <Route path="/cards" element={<Cards />} />
+              <Route path="/broadcast" element={<Broadcast />} />
               <Route path="/settings" element={<Settings />} />
             </Routes>
           </div>

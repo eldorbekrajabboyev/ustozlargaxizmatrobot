@@ -1,6 +1,13 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import axios from 'axios'
+
+function getOrderDate(order) {
+  if (order.status === 'pending_payment') return order.created_at
+  if (order.status === 'pending_confirmation' || order.status === 'in_progress') return order.receipt_uploaded_at || order.created_at
+  if (order.status === 'ready' || order.status === 'sent') return order.ready_at || order.receipt_uploaded_at || order.created_at
+  return order.created_at
+}
 
 const statusColors = {
   pending_payment: 'bg-yellow-100 text-yellow-800',
@@ -34,12 +41,27 @@ function Orders() {
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
   const [statusFilter, setStatusFilter] = useState('')
+  const [search, setSearch] = useState('')
+  const [regionFilter, setRegionFilter] = useState('')
+  const [subjectFilter, setSubjectFilter] = useState('')
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
+  const [filterOptions, setFilterOptions] = useState({ regions: [], subjects: [] })
   const [loading, setLoading] = useState(true)
 
-  const fetchOrders = () => {
+  useEffect(() => {
+    axios.get('/api/filters').then(res => setFilterOptions(res.data)).catch(() => {})
+  }, [])
+
+  const fetchOrders = useCallback(() => {
     setLoading(true)
     const params = new URLSearchParams({ page, limit: 20 })
     if (statusFilter) params.append('status', statusFilter)
+    if (search) params.append('search', search)
+    if (regionFilter) params.append('region', regionFilter)
+    if (subjectFilter) params.append('subject', subjectFilter)
+    if (dateFrom) params.append('date_from', dateFrom)
+    if (dateTo) params.append('date_to', dateTo)
     axios.get(`/api/orders?${params}`)
       .then(res => {
         setOrders(res.data.orders)
@@ -47,11 +69,14 @@ function Orders() {
       })
       .catch(console.error)
       .finally(() => setLoading(false))
-  }
+  }, [page, statusFilter, search, regionFilter, subjectFilter, dateFrom, dateTo])
 
-  useEffect(() => {
-    fetchOrders()
-  }, [page, statusFilter])
+  useEffect(() => { fetchOrders() }, [fetchOrders])
+
+  const resetFilters = () => {
+    setSearch(''); setStatusFilter(''); setRegionFilter('')
+    setSubjectFilter(''); setDateFrom(''); setDateTo(''); setPage(1)
+  }
 
   return (
     <div>
@@ -59,7 +84,53 @@ function Orders() {
         <h1 className="text-2xl font-bold">Buyurtmalar ({total})</h1>
       </div>
 
-      {/* Filters */}
+      {/* Search */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-4">
+        <div className="flex gap-3 items-end flex-wrap">
+          <div className="flex-1 min-w-[200px]">
+            <label className="block text-xs font-medium text-gray-500 mb-1">Qidirish</label>
+            <input
+              type="text"
+              value={search}
+              onChange={e => { setSearch(e.target.value); setPage(1) }}
+              placeholder="Ism, buyurtma raqami, username..."
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            />
+          </div>
+          <div className="min-w-[150px]">
+            <label className="block text-xs font-medium text-gray-500 mb-1">Viloyat</label>
+            <select value={regionFilter} onChange={e => { setRegionFilter(e.target.value); setPage(1) }}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500">
+              <option value="">Barchasi</option>
+              {filterOptions.regions.map(r => <option key={r} value={r}>{r}</option>)}
+            </select>
+          </div>
+          <div className="min-w-[150px]">
+            <label className="block text-xs font-medium text-gray-500 mb-1">Fan</label>
+            <select value={subjectFilter} onChange={e => { setSubjectFilter(e.target.value); setPage(1) }}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500">
+              <option value="">Barchasi</option>
+              {filterOptions.subjects.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+          <div className="min-w-[140px]">
+            <label className="block text-xs font-medium text-gray-500 mb-1">Dan</label>
+            <input type="date" value={dateFrom} onChange={e => { setDateFrom(e.target.value); setPage(1) }}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500" />
+          </div>
+          <div className="min-w-[140px]">
+            <label className="block text-xs font-medium text-gray-500 mb-1">Gacha</label>
+            <input type="date" value={dateTo} onChange={e => { setDateTo(e.target.value); setPage(1) }}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500" />
+          </div>
+          <button onClick={resetFilters}
+            className="px-3 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors">
+            Tozalash
+          </button>
+        </div>
+      </div>
+
+      {/* Status Filters */}
       <div className="flex gap-2 mb-4">
         {statusFilters.map(f => (
           <button
@@ -120,7 +191,7 @@ function Orders() {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-500">
-                    {new Date(order.created_at).toLocaleDateString('uz-UZ')}
+                    {new Date(getOrderDate(order)).toLocaleString('uz-UZ')}
                   </td>
                 </tr>
               ))}

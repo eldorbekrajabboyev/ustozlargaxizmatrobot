@@ -15,7 +15,3 @@ services:
         sync: false
       - key: WEBHOOK_URL
         value: https://ustozlargaxizmatrobot.onrender.com
-    disk:
-      name: data
-      mountPath: /opt/render/project/data
-      sizeGB: 1
