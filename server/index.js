@@ -10,8 +10,7 @@ const Sentry = require('@sentry/node');
 Sentry.init({ dsn: process.env.SENTRY_DSN, tracesSampleRate: 0.1 });
 
 function nowUZ() {
-  const d = new Date(Date.now() + 5 * 3600 * 1000);
-  return d.toISOString().replace('T', ' ').slice(0, 19);
+  return new Date().toLocaleString('sv-SE', { timeZone: 'Asia/Tashkent' });
 }
 
 function toISODate(dateStr) {

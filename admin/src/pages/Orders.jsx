@@ -191,7 +191,7 @@ function Orders() {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-500">
-                    {new Date(getOrderDate(order)).toLocaleString('uz-UZ')}
+                    {new Date(getOrderDate(order)).toLocaleString('uz-UZ', { timeZone: 'Asia/Tashkent' })}
                   </td>
                 </tr>
               ))}

@@ -4,8 +4,7 @@ const { queryAll, queryOne, run } = require('./database');
 let botInstance = null;
 
 function nowUZ() {
-  const d = new Date(Date.now() + 5 * 3600 * 1000);
-  return d.toISOString().replace('T', ' ').slice(0, 19);
+  return new Date().toLocaleString('sv-SE', { timeZone: 'Asia/Tashkent' });
 }
 
 const PAYMENT_TIMEOUT_MS = 4 * 60 * 1000; // 4 minutes

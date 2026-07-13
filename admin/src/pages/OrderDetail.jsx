@@ -121,14 +121,14 @@ function OrderDetail() {
                 </span>
                 <span className="text-gray-500">
                   {order.status === 'pending_payment' && (
-                    <>Yaratilgan: {new Date(order.created_at).toLocaleString('uz-UZ')}</>
+                    <>Yaratilgan: {new Date(order.created_at).toLocaleString('uz-UZ', { timeZone: 'Asia/Tashkent' })}</>
                   )}
                   {(order.status === 'pending_confirmation' || order.status === 'in_progress') && (
-                    <>Chek yuklangan: {new Date(order.receipt_uploaded_at || order.created_at).toLocaleString('uz-UZ')}</>
+                    <>Chek yuklangan: {new Date(order.receipt_uploaded_at || order.created_at).toLocaleString('uz-UZ', { timeZone: 'Asia/Tashkent' })}</>
                   )}
                   {order.status === 'ready' && (
                     <>
-                      Tayyor: {new Date(order.ready_at || order.created_at).toLocaleString('uz-UZ')}
+                      Tayyor: {new Date(order.ready_at || order.created_at).toLocaleString('uz-UZ', { timeZone: 'Asia/Tashkent' })}
                       {order.receipt_uploaded_at && order.ready_at && (
                         <span className="ml-2 text-xs text-purple-600 font-medium">
                           ({Math.round((new Date(order.ready_at) - new Date(order.receipt_uploaded_at)) / 3600000)} soatda tayyor bo'ldi)
@@ -138,8 +138,8 @@ function OrderDetail() {
                   )}
                   {order.status === 'sent' && (
                     <div className="flex flex-col gap-0.5">
-                      <span>1. Chek: {new Date(order.receipt_uploaded_at || order.created_at).toLocaleString('uz-UZ')}</span>
-                      <span>2. Tayyor: {new Date(order.ready_at || order.created_at).toLocaleString('uz-UZ')}</span>
+                      <span>1. Chek: {new Date(order.receipt_uploaded_at || order.created_at).toLocaleString('uz-UZ', { timeZone: 'Asia/Tashkent' })}</span>
+                      <span>2. Tayyor: {new Date(order.ready_at || order.created_at).toLocaleString('uz-UZ', { timeZone: 'Asia/Tashkent' })}</span>
                     </div>
                   )}
                 </span>
@@ -246,7 +246,7 @@ function OrderDetail() {
                 <h2 className="font-semibold">💳 To'lov cheki</h2>
                 {order.receipt_uploaded_at && (
                   <span className="text-sm text-gray-500">
-                    Yuklangan: {new Date(order.receipt_uploaded_at).toLocaleString('uz-UZ')}
+                    Yuklangan: {new Date(order.receipt_uploaded_at).toLocaleString('uz-UZ', { timeZone: 'Asia/Tashkent' })}
                   </span>
                 )}
               </div>

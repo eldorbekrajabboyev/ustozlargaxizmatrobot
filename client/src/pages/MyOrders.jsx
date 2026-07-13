@@ -73,7 +73,7 @@ function MyOrders({ user }) {
               <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
                 <p className="font-bold text-primary-600">{order.total_price.toLocaleString()} so'm</p>
                 <p className="text-xs text-gray-400">
-                  {new Date(order.created_at).toLocaleDateString('uz-UZ')}
+                  {new Date(order.created_at).toLocaleDateString('uz-UZ', { timeZone: 'Asia/Tashkent' })}
                 </p>
               </div>
             </div>
