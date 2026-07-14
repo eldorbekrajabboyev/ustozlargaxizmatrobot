@@ -393,27 +393,48 @@ async function startBot(app) {
     const telegramId = msg.from.id;
 
     if (msg.contact) {
-      const user = await queryOne('SELECT * FROM users WHERE telegram_id = ?', [telegramId]);
-      if (user && !user.phone) {
-        await run('UPDATE users SET phone = ? WHERE telegram_id = ?', [msg.contact.phone_number, telegramId]);
-        bot.sendMessage(chatId,
-          `✅ *Ro'yxatdan o'tish yakunlandi!*\n\n` +
-          `Telefon: ${msg.contact.phone_number}\n\n` +
-          `Endi botni to'liq ishlatishingiz mumkin.`,
-          { parse_mode: 'Markdown', reply_markup: { keyboard: [], remove_keyboard: true } }
-        );
-        setTimeout(() => {
-          bot.sendMessage(chatId,
-            `🎓 *Metodikish* ga xush kelibsiz!\n\n` +
-            `Quyidagi tugmalardan birini tanlang:`,
-            { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [
-              [{ text: '📚 Xizmatlar', callback_data: 'services' }],
-              [{ text: '📱 Xizmatlar App', web_app: { url: 'https://metodikish.fly.dev/' } }],
-              [{ text: '📦 Buyurtmalarim', callback_data: 'my_orders' }],
-              [{ text: "ℹ️ Ma'lumot", callback_data: 'info' }],
-            ]}}
+      try {
+        const user = await queryOne('SELECT * FROM users WHERE telegram_id = ?', [telegramId]);
+        if (user && !user.phone) {
+          await run('UPDATE users SET phone = ? WHERE telegram_id = ?', [msg.contact.phone_number, telegramId]);
+          await bot.sendMessage(chatId,
+            `✅ *Ro'yxatdan o'tish yakunlandi!*\n\n` +
+            `Telefon: ${msg.contact.phone_number}\n\n` +
+            `Endi botni to'liq ishlatishingiz mumkin.`,
+            { parse_mode: 'Markdown', reply_markup: { remove_keyboard: true } }
           );
-        }, 1000);
+          setTimeout(() => {
+            bot.sendMessage(chatId,
+              `🎓 *Metodikish* ga xush kelibsiz!\n\n` +
+              `Quyidagi tugmalardan birini tanlang:`,
+              { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [
+                [{ text: '📚 Xizmatlar', callback_data: 'services' }],
+                [{ text: '📱 Xizmatlar App', web_app: { url: 'https://metodikish.fly.dev/' } }],
+                [{ text: '📦 Buyurtmalarim', callback_data: 'my_orders' }],
+                [{ text: "ℹ️ Ma'lumot", callback_data: 'info' }],
+              ]}}
+            );
+          }, 1000);
+        } else if (user && user.phone) {
+          await bot.sendMessage(chatId,
+            `✅ Siz allaqachon ro'yxatdan o'tgansiz.\nTelefon: ${user.phone}`,
+            { reply_markup: { remove_keyboard: true } }
+          );
+          setTimeout(() => {
+            bot.sendMessage(chatId,
+              `🎓 *Metodikish* ga xush kelibsiz!`,
+              { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [
+                [{ text: '📚 Xizmatlar', callback_data: 'services' }],
+                [{ text: '📱 Xizmatlar App', web_app: { url: 'https://metodikish.fly.dev/' } }],
+                [{ text: '📦 Buyurtmalarim', callback_data: 'my_orders' }],
+                [{ text: "ℹ️ Ma'lumot", callback_data: 'info' }],
+              ]}}
+            );
+          }, 1000);
+        }
+      } catch (err) {
+        console.error('Contact handler error:', err.message);
+        bot.sendMessage(chatId, '❌ Xatolik yuz berdi. Qaytadan urinib ko\'ring.');
       }
       return;
     }
