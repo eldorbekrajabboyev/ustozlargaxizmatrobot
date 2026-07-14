@@ -20,6 +20,29 @@ async function deleteOrderImages(orderId) {
   await run('DELETE FROM order_images WHERE order_id = ?', [orderId]);
 }
 
+async function getChannels() {
+  const row = await queryOne("SELECT value FROM settings WHERE key = 'channels'");
+  if (!row || !row.value) return [];
+  return row.value.split('|').filter(c => c.trim()).reduce((acc, _, i, arr) => {
+    if (i % 3 === 0) acc.push({ name: arr[i], link: arr[i + 1] || '', updated_at: arr[i + 2] || '' });
+    return acc;
+  }, []);
+}
+
+async function checkSubscription(bot, userId) {
+  const channels = await getChannels();
+  if (channels.length === 0) return true;
+  for (const ch of channels) {
+    try {
+      const member = await bot.getChatMember(ch.link, userId);
+      if (['left', 'kicked'].includes(member.status)) return false;
+    } catch (e) {
+      console.error(`Subscription check failed for ${ch.link}:`, e.message);
+    }
+  }
+  return true;
+}
+
 const PAYMENT_TIMEOUT_MS = 4 * 60 * 1000; // 4 minutes
 const COUNTDOWN_EDIT_MS = 5 * 1000; // edit every 5 seconds
 
@@ -139,17 +162,48 @@ async function startBot(app) {
 
   bot.onText(/\/start/, async (msg) => {
     const chatId = msg.chat.id;
-    await ensureUser(msg.from);
+    const user = await ensureUser(msg.from);
+
+    if (user.phone) {
+      bot.sendMessage(chatId,
+        `🎓 *Metodikish* ga xush kelibsiz!\n\n` +
+        `Biz sizga metodik qo'llanma va metodik tavsiya hujjatlarini tayyorlab beramiz.\n\n` +
+        `Quyidagi tugmalardan birini tanlang:`,
+        { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [
+          [{ text: '📚 Xizmatlar', callback_data: 'services' }],
+          [{ text: '📱 Xizmatlar App', web_app: { url: 'https://metodikish.fly.dev/' } }],
+          [{ text: '📦 Buyurtmalarim', callback_data: 'my_orders' }],
+          [{ text: "ℹ️ Ma'lumot", callback_data: 'info' }],
+        ]}}
+      );
+      return;
+    }
+
+    const channels = await getChannels();
+    if (channels.length > 0) {
+      const isSubscribed = await checkSubscription(bot, msg.from.id);
+      if (!isSubscribed) {
+        const channelList = channels.map((ch, i) => `${i + 1}. ${ch.name}`).join('\n');
+        bot.sendMessage(chatId,
+          `👋 *Ro'yxatdan o'tish*\n\n` +
+          `Botni ishlatish uchun quyidagi kanallarga obuna bo'ling:\n\n` +
+          `${channelList}\n\n` +
+          `Obuna bo'lgandan keyin "✅ Obunani tekshirish" tugmasini bosing.`,
+          { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [
+            ...channels.map(ch => [{ text: `📢 ${ch.name}`, url: ch.link }]),
+            [{ text: '✅ Obunani tekshirish', callback_data: 'check_subscription' }],
+          ]}}
+        );
+        return;
+      }
+    }
+
     bot.sendMessage(chatId,
-      `🎓 *Metodikish* ga xush kelibsiz!\n\n` +
-      `Biz sizga metodik qo'llanma va metodik tavsiya hujjatlarini tayyorlab beramiz.\n\n` +
-      `Quyidagi tugmalardan birini tanlang:`,
-      { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [
-        [{ text: '📚 Xizmatlar', callback_data: 'services' }],
-        [{ text: '📱 Xizmatlar App', web_app: { url: 'https://metodikish.fly.dev/' } }],
-        [{ text: '📦 Buyurtmalarim', callback_data: 'my_orders' }],
-        [{ text: "ℹ️ Ma'lumot", callback_data: 'info' }],
-      ]}}
+      `👋 *Ro'yxatdan o'tish*\n\n` +
+      `Iltimos, telefon raqamingizni yuboring:`,
+      { parse_mode: 'Markdown', reply_markup: { keyboard: [
+        [{ text: '📱 Telefon raqamni yuborish', request_contact: true }],
+      ], one_time_keyboard: true, resize_keyboard: true }}
     );
   });
 
@@ -159,6 +213,34 @@ async function startBot(app) {
     const telegramId = query.from.id;
 
     await ensureUser(query.from);
+
+    if (data === 'check_subscription') {
+      const isSubscribed = await checkSubscription(bot, telegramId);
+      if (isSubscribed) {
+        bot.sendMessage(chatId,
+          `👋 *Ro'yxatdan o'tish*\n\n` +
+          `Iltimos, telefon raqamingizni yuboring:`,
+          { parse_mode: 'Markdown', reply_markup: { keyboard: [
+            [{ text: '📱 Telefon raqamni yuborish', request_contact: true }],
+          ], one_time_keyboard: true, resize_keyboard: true }}
+        );
+      } else {
+        const channels = await getChannels();
+        const channelList = channels.map((ch, i) => `${i + 1}. ${ch.name}`).join('\n');
+        bot.sendMessage(chatId,
+          `❌ *Siz hali barcha kanallarga obuna bo'lmagansiz!*\n\n` +
+          `Quyidagi kanallarga obuna bo'ling:\n\n` +
+          `${channelList}\n\n` +
+          `Obuna bo'lgandan keyin "✅ Obunani tekshirish" tugmasini bosing.`,
+          { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [
+            ...channels.map(ch => [{ text: `📢 ${ch.name}`, url: ch.link }]),
+            [{ text: '✅ Obunani tekshirish', callback_data: 'check_subscription' }],
+          ]}}
+        );
+      }
+      bot.answerCallbackQuery(query.id);
+      return;
+    }
 
     if (data.startsWith('send_receipt_')) {
       const orderId = data.split('_')[2];
@@ -299,6 +381,33 @@ async function startBot(app) {
   bot.on('message', async (msg) => {
     const chatId = msg.chat.id;
     const telegramId = msg.from.id;
+
+    if (msg.contact) {
+      const user = await queryOne('SELECT * FROM users WHERE telegram_id = ?', [telegramId]);
+      if (user && !user.phone) {
+        await run('UPDATE users SET phone = ? WHERE telegram_id = ?', [msg.contact.phone_number, telegramId]);
+        bot.sendMessage(chatId,
+          `✅ *Ro'yxatdan o'tish yakunlandi!*\n\n` +
+          `Telefon: ${msg.contact.phone_number}\n\n` +
+          `Endi botni to'liq ishlatishingiz mumkin.`,
+          { parse_mode: 'Markdown', reply_markup: { keyboard: [], remove_keyboard: true } }
+        );
+        setTimeout(() => {
+          bot.sendMessage(chatId,
+            `🎓 *Metodikish* ga xush kelibsiz!\n\n` +
+            `Quyidagi tugmalardan birini tanlang:`,
+            { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [
+              [{ text: '📚 Xizmatlar', callback_data: 'services' }],
+              [{ text: '📱 Xizmatlar App', web_app: { url: 'https://metodikish.fly.dev/' } }],
+              [{ text: '📦 Buyurtmalarim', callback_data: 'my_orders' }],
+              [{ text: "ℹ️ Ma'lumot", callback_data: 'info' }],
+            ]}}
+          );
+        }, 1000);
+      }
+      return;
+    }
+
     if (!global.userStates || !global.userStates[telegramId]) return;
     const state = global.userStates[telegramId];
     if (msg.text && msg.text.startsWith('/')) return;

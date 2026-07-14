@@ -460,6 +460,57 @@ app.put('/api/settings', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+app.get('/api/settings/channels', async (req, res) => {
+  try {
+    const row = await queryOne("SELECT value FROM settings WHERE key = 'channels'");
+    if (!row || !row.value) return res.json([]);
+    const parts = row.value.split('|').filter(c => c.trim());
+    const channels = [];
+    for (let i = 0; i < parts.length; i += 3) {
+      channels.push({ name: parts[i], link: parts[i + 1] || '', updated_at: parts[i + 2] || '' });
+    }
+    res.json(channels);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post('/api/settings/channels', async (req, res) => {
+  try {
+    const { name, link } = req.body;
+    if (!name || !link) return res.status(400).json({ error: 'Nomi va link kiritilishi shart' });
+    const row = await queryOne("SELECT value FROM settings WHERE key = 'channels'");
+    let channels = [];
+    if (row && row.value) {
+      const parts = row.value.split('|').filter(c => c.trim());
+      for (let i = 0; i < parts.length; i += 3) {
+        channels.push({ name: parts[i], link: parts[i + 1] || '', updated_at: parts[i + 2] || '' });
+      }
+    }
+    if (channels.length >= 5) return res.status(400).json({ error: 'Maksimal 5 ta kanal qo\'shish mumkin' });
+    channels.push({ name, link, updated_at: nowUZ() });
+    const value = channels.map(c => `|${c.name}|${c.link}|${c.updated_at}`).join('') + '|';
+    await run("UPDATE settings SET value = ?, updated_at = ? WHERE key = ?", [value, nowUZ(), 'channels']);
+    res.json({ success: true, channels });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.delete('/api/settings/channels/:index', async (req, res) => {
+  try {
+    const idx = parseInt(req.params.index);
+    const row = await queryOne("SELECT value FROM settings WHERE key = 'channels'");
+    if (!row || !row.value) return res.status(404).json({ error: 'Kanallar topilmadi' });
+    const parts = row.value.split('|').filter(c => c.trim());
+    const channels = [];
+    for (let i = 0; i < parts.length; i += 3) {
+      channels.push({ name: parts[i], link: parts[i + 1] || '', updated_at: parts[i + 2] || '' });
+    }
+    if (idx < 0 || idx >= channels.length) return res.status(400).json({ error: 'Noto\'g\'ri index' });
+    channels.splice(idx, 1);
+    const value = channels.length > 0 ? channels.map(c => `|${c.name}|${c.link}|${c.updated_at}`).join('') + '|' : '';
+    await run("UPDATE settings SET value = ?, updated_at = ? WHERE key = ?", [value, nowUZ(), 'channels']);
+    res.json({ success: true, channels });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 app.get('/api/user/orders/:telegram_id', async (req, res) => {
   try {
     const user = await queryOne('SELECT id FROM users WHERE telegram_id = ?', [parseInt(req.params.telegram_id)]);

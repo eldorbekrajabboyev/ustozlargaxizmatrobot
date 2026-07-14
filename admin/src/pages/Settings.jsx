@@ -3,14 +3,21 @@ import axios from 'axios'
 
 function Settings() {
   const [settings, setSettings] = useState({})
+  const [channels, setChannels] = useState([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [newChannel, setNewChannel] = useState({ name: '', link: '' })
+  const [addingChannel, setAddingChannel] = useState(false)
 
   useEffect(() => {
-    axios.get('/api/settings')
-      .then(res => setSettings(res.data))
-      .catch(console.error)
-      .finally(() => setLoading(false))
+    Promise.all([
+      axios.get('/api/settings'),
+      axios.get('/api/settings/channels'),
+    ]).then(([settingsRes, channelsRes]) => {
+      setSettings(settingsRes.data)
+      setChannels(channelsRes.data)
+    }).catch(console.error)
+    .finally(() => setLoading(false))
   }, [])
 
   const handleChange = (key, value) => {
@@ -29,6 +36,35 @@ function Settings() {
     }
   }
 
+  const handleAddChannel = async () => {
+    if (!newChannel.name || !newChannel.link) {
+      alert('Nomi va link kiritilishi shart')
+      return
+    }
+    setAddingChannel(true)
+    try {
+      await axios.post('/api/settings/channels', newChannel)
+      const res = await axios.get('/api/settings/channels')
+      setChannels(res.data)
+      setNewChannel({ name: '', link: '' })
+    } catch (err) {
+      alert(err.response?.data?.error || 'Xatolik')
+    } finally {
+      setAddingChannel(false)
+    }
+  }
+
+  const handleDeleteChannel = async (index) => {
+    if (!confirm('Kanalni o\'chirishni xohlaysizmi?')) return
+    try {
+      await axios.delete(`/api/settings/channels/${index}`)
+      const res = await axios.get('/api/settings/channels')
+      setChannels(res.data)
+    } catch (err) {
+      alert('Xatolik')
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -41,12 +77,15 @@ function Settings() {
     <div>
       <h1 className="text-2xl font-bold mb-6">Sozlamalar</h1>
 
-      <div className="max-w-2xl">
+      <div className="max-w-2xl space-y-6">
+        {/* Bot Settings */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-6">
+          <h2 className="text-lg font-semibold">🤖 Bot sozlamalari</h2>
+          
           {/* Bot Token */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              🤖 Bot Token
+              Bot Token
             </label>
             <input
               type="password"
@@ -55,9 +94,6 @@ function Settings() {
               placeholder="123456789:ABCdefGHIjklMNOpqrsTUVwxyz"
               className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             />
-            <p className="text-xs text-gray-500 mt-1">
-              BotFather dan olingan token
-            </p>
           </div>
 
           {/* Admin Chat ID */}
@@ -72,9 +108,6 @@ function Settings() {
               placeholder="123456789"
               className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             />
-            <p className="text-xs text-gray-500 mt-1">
-              Botdan foydalanuvchi sifatida /start yuboring va ID ni kiriting
-            </p>
           </div>
 
           {/* Min Prep Time */}
@@ -102,12 +135,8 @@ function Settings() {
               rows={4}
               placeholder="To'lov haqida ko'rsatmalar..."
             />
-            <p className="text-xs text-gray-500 mt-1">
-              Foydalanuvchilarga ko'rsatiladigan to'lov yo'riqnomasi
-            </p>
           </div>
 
-          {/* Save Button */}
           <button
             onClick={handleSave}
             disabled={saving}
@@ -117,13 +146,75 @@ function Settings() {
           </button>
         </div>
 
+        {/* Channels Management */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <h2 className="text-lg font-semibold mb-4">📢 Majburiy obuna kanallari</h2>
+          <p className="text-sm text-gray-500 mb-4">
+            Botni ishlatishdan oldin foydalanuvchi ushbu kanallarga obuna bo'lishi kerak. (Maksimal 5 ta)
+          </p>
+
+          {/* Channel List */}
+          {channels.length > 0 && (
+            <div className="space-y-2 mb-4">
+              {channels.map((ch, idx) => (
+                <div key={idx} className="flex items-center justify-between bg-gray-50 rounded-lg p-3">
+                  <div>
+                    <p className="font-medium">{ch.name}</p>
+                    <p className="text-xs text-gray-500">{ch.link}</p>
+                  </div>
+                  <button
+                    onClick={() => handleDeleteChannel(idx)}
+                    className="text-red-500 hover:text-red-700 px-3 py-1 rounded"
+                  >
+                    🗑️
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {channels.length === 0 && (
+            <p className="text-gray-400 text-sm mb-4">Hali kanal qo'shilmagan</p>
+          )}
+
+          {/* Add Channel Form */}
+          <div className="border-t pt-4">
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={newChannel.name}
+                onChange={(e) => setNewChannel({ ...newChannel, name: e.target.value })}
+                placeholder="Kanal nomi"
+                className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500"
+              />
+              <input
+                type="text"
+                value={newChannel.link}
+                onChange={(e) => setNewChannel({ ...newChannel, link: e.target.value })}
+                placeholder="https://t.me/..."
+                className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500"
+              />
+              <button
+                onClick={handleAddChannel}
+                disabled={addingChannel || channels.length >= 5}
+                className="bg-primary-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-600 disabled:opacity-50"
+              >
+                {addingChannel ? '...' : '+ Qo\'shish'}
+              </button>
+            </div>
+            {channels.length >= 5 && (
+              <p className="text-xs text-orange-500 mt-2">Maksimal 5 ta kanal qo'shilgan</p>
+            )}
+          </div>
+        </div>
+
         {/* Help */}
-        <div className="bg-yellow-50 rounded-xl p-4 mt-6">
+        <div className="bg-yellow-50 rounded-xl p-4">
           <h3 className="font-semibold text-yellow-800 mb-2">ℹ️ Yordam</h3>
           <div className="text-sm text-yellow-700 space-y-2">
+            <p><strong>Majburiy obuna kanallari:</strong> Foydalanuvchi /start bosganida avval kanallarga obuna bo'lishi kerak. Kanal linkini @dan oling.</p>
             <p><strong>Bot Token:</strong> @BotFather dan /newproduct buyrug'i orqali olingan token.</p>
             <p><strong>Admin Chat ID:</strong> Botga /start yuborganingizdan so'ng, @userinfobot dan ID ni olishingiz mumkin.</p>
-            <p><strong>HTTPS:</strong> MiniApp ishlashi uchun HTTPS kerak. Render.com, Railway.app kabi xizmatlardan foydalaning.</p>
           </div>
         </div>
       </div>
