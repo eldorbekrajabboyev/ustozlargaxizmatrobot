@@ -488,7 +488,7 @@ app.post('/api/settings/channels', async (req, res) => {
     if (channels.length >= 5) return res.status(400).json({ error: 'Maksimal 5 ta kanal qo\'shish mumkin' });
     channels.push({ name, link, updated_at: nowUZ() });
     const value = channels.map(c => `|${c.name}|${c.link}|${c.updated_at}`).join('') + '|';
-    await run("UPDATE settings SET value = ?, updated_at = ? WHERE key = ?", [value, nowUZ(), 'channels']);
+    await run("INSERT OR REPLACE INTO settings (key, value, updated_at) VALUES (?, ?, ?)", ['channels', value, nowUZ()]);
     res.json({ success: true, channels });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -506,7 +506,7 @@ app.delete('/api/settings/channels/:index', async (req, res) => {
     if (idx < 0 || idx >= channels.length) return res.status(400).json({ error: 'Noto\'g\'ri index' });
     channels.splice(idx, 1);
     const value = channels.length > 0 ? channels.map(c => `|${c.name}|${c.link}|${c.updated_at}`).join('') + '|' : '';
-    await run("UPDATE settings SET value = ?, updated_at = ? WHERE key = ?", [value, nowUZ(), 'channels']);
+    await run("INSERT OR REPLACE INTO settings (key, value, updated_at) VALUES (?, ?, ?)", ['channels', value, nowUZ()]);
     res.json({ success: true, channels });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });

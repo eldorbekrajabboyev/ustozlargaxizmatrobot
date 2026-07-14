@@ -111,6 +111,8 @@ async function initDatabase() {
       ["payment_instructions", "Kartaga pul o'tkazing va chekni yuklang."]);
     await db.execute("INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)",
       ["min_prep_time_hours", "6"]);
+    await db.execute("INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)",
+      ["channels", ""]);
   }
 
   // Add columns if not exists
