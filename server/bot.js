@@ -29,15 +29,25 @@ async function getChannels() {
   }, []);
 }
 
+function normalizeChannelLink(link) {
+  if (link.match(/^-?\d+$/)) return link;
+  const match = link.match(/(?:t\.me|telegram\.me)\/(.+)/);
+  if (match) return '@' + match[1];
+  if (link.startsWith('@')) return link;
+  return '@' + link;
+}
+
 async function checkSubscription(bot, userId) {
   const channels = await getChannels();
   if (channels.length === 0) return true;
   for (const ch of channels) {
+    const chatId = normalizeChannelLink(ch.link);
     try {
-      const member = await bot.getChatMember(ch.link, userId);
+      const member = await bot.getChatMember(chatId, userId);
       if (['left', 'kicked'].includes(member.status)) return false;
     } catch (e) {
-      console.error(`Subscription check failed for ${ch.link}:`, e.message);
+      console.error(`Subscription check failed for ${ch.link} (${chatId}):`, e.message);
+      return false;
     }
   }
   return true;
