@@ -164,21 +164,6 @@ async function startBot(app) {
     const chatId = msg.chat.id;
     const user = await ensureUser(msg.from);
 
-    if (user.phone) {
-      bot.sendMessage(chatId,
-        `🎓 *Metodikish* ga xush kelibsiz!\n\n` +
-        `Biz sizga metodik qo'llanma va metodik tavsiya hujjatlarini tayyorlab beramiz.\n\n` +
-        `Quyidagi tugmalardan birini tanlang:`,
-        { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [
-          [{ text: '📚 Xizmatlar', callback_data: 'services' }],
-          [{ text: '📱 Xizmatlar App', web_app: { url: 'https://metodikish.fly.dev/' } }],
-          [{ text: '📦 Buyurtmalarim', callback_data: 'my_orders' }],
-          [{ text: "ℹ️ Ma'lumot", callback_data: 'info' }],
-        ]}}
-      );
-      return;
-    }
-
     const channels = await getChannels();
     if (channels.length > 0) {
       const isSubscribed = await checkSubscription(bot, msg.from.id);
@@ -198,12 +183,27 @@ async function startBot(app) {
       }
     }
 
+    if (!user.phone) {
+      bot.sendMessage(chatId,
+        `👋 *Ro'yxatdan o'tish*\n\n` +
+        `Iltimos, telefon raqamingizni yuboring:`,
+        { parse_mode: 'Markdown', reply_markup: { keyboard: [
+          [{ text: '📱 Telefon raqamni yuborish', request_contact: true }],
+        ], one_time_keyboard: true, resize_keyboard: true }}
+      );
+      return;
+    }
+
     bot.sendMessage(chatId,
-      `👋 *Ro'yxatdan o'tish*\n\n` +
-      `Iltimos, telefon raqamingizni yuboring:`,
-      { parse_mode: 'Markdown', reply_markup: { keyboard: [
-        [{ text: '📱 Telefon raqamni yuborish', request_contact: true }],
-      ], one_time_keyboard: true, resize_keyboard: true }}
+      `🎓 *Metodikish* ga xush kelibsiz!\n\n` +
+      `Biz sizga metodik qo'llanma va metodik tavsiya hujjatlarini tayyorlab beramiz.\n\n` +
+      `Quyidagi tugmalardan birini tanlang:`,
+      { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [
+        [{ text: '📚 Xizmatlar', callback_data: 'services' }],
+        [{ text: '📱 Xizmatlar App', web_app: { url: 'https://metodikish.fly.dev/' } }],
+        [{ text: '📦 Buyurtmalarim', callback_data: 'my_orders' }],
+        [{ text: "ℹ️ Ma'lumot", callback_data: 'info' }],
+      ]}}
     );
   });
 
