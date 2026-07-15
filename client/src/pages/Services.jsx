@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
+import Header from '../components/Header'
 
 function Services({ user }) {
   const navigate = useNavigate()
@@ -16,59 +17,55 @@ function Services({ user }) {
 
   if (loading) {
     return (
-      <div className="p-4 flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
+      <div className="animate-fade-in">
+        <Header title="Xizmatlar" />
+        <div className="p-4 flex items-center justify-center min-h-[60vh]">
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary-500 border-t-transparent"></div>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="p-4">
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-6">
-        <button
-          onClick={() => navigate('/')}
-          className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center"
-        >
-          ←
-        </button>
-        <h1 className="text-xl font-bold">Xizmatlar</h1>
-      </div>
+    <div className="animate-fade-in min-h-screen">
+      <Header title="Xizmatlar" subtitle="Metodik hujjat turlari" />
 
-      {/* Services List */}
-      <div className="space-y-3">
+      <div className="p-4 space-y-3">
         {services.map(service => (
-          <div
+          <button
             key={service.id}
-            className="bg-white rounded-xl p-4 shadow-sm border border-gray-100"
+            onClick={() => navigate(`/order/${service.id}`)}
+            className="w-full text-left bg-tg-secondary rounded-2xl p-4 shadow-card border border-black/5 active:scale-[0.99] transition-transform"
           >
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <h3 className="font-semibold text-lg text-gray-800">{service.name}</h3>
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h3 className="font-semibold text-lg text-tg-text">{service.name}</h3>
                 {service.description && (
-                  <p className="text-gray-500 text-sm mt-1">{service.description}</p>
+                  <p className="text-tg-hint text-sm mt-1 leading-snug">{service.description}</p>
                 )}
-                <p className="text-primary-600 font-bold text-xl mt-2">
-                  {service.price.toLocaleString()} so'm
-                </p>
+              </div>
+              <div className="shrink-0 w-11 h-11 rounded-xl bg-primary-50 text-primary-600 flex items-center justify-center text-xl">
+                📄
               </div>
             </div>
-            <button
-              onClick={() => navigate(`/order/${service.id}`)}
-              className="w-full mt-3 bg-primary-500 text-white rounded-lg py-2 font-medium active:bg-primary-600 transition-colors"
-            >
-              Buyurtma berish
-            </button>
-          </div>
+            <div className="flex items-center justify-between mt-4 pt-3 border-t border-black/5">
+              <p className="text-primary-600 font-bold text-xl">
+                {service.price.toLocaleString()} <span className="text-sm font-medium">so'm</span>
+              </p>
+              <span className="text-sm font-medium text-primary-600 bg-primary-50 px-3 py-1.5 rounded-lg">
+                Tanlash →
+              </span>
+            </div>
+          </button>
         ))}
-      </div>
 
-      {services.length === 0 && (
-        <div className="text-center py-12 text-gray-500">
-          <p className="text-4xl mb-2">📭</p>
-          <p>Hozircha xizmatlar mavjud emas</p>
-        </div>
-      )}
+        {services.length === 0 && (
+          <div className="text-center py-16 text-tg-hint">
+            <p className="text-5xl mb-3">📭</p>
+            <p>Hozircha xizmatlar mavjud emas</p>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

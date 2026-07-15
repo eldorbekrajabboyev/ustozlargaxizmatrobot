@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import axios from 'axios'
+import Header from '../components/Header'
 
 const REGIONS = [
   'Andijon viloyati', 'Buxoro viloyati', 'Jizzax viloyati',
@@ -118,16 +119,23 @@ function OrderForm({ user }) {
 
   if (loading) {
     return (
-      <div className="p-4 flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
+      <div className="animate-fade-in">
+        <Header title="Buyurtma" />
+        <div className="p-4 flex items-center justify-center min-h-[60vh]">
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary-500 border-t-transparent"></div>
+        </div>
       </div>
     )
   }
 
   if (!service) {
     return (
-      <div className="p-4 text-center py-12">
-        <p className="text-gray-500">Xizmat topilmadi</p>
+      <div className="animate-fade-in">
+        <Header title="Buyurtma" />
+        <div className="p-4 text-center py-16 text-tg-hint">
+          <p className="text-4xl mb-2">🔍</p>
+          <p>Xizmat topilmadi</p>
+        </div>
       </div>
     )
   }
@@ -158,29 +166,22 @@ function OrderForm({ user }) {
   const goNext = () => { if (canNext()) setStep(step + 1) }
 
   return (
-    <div className="p-4">
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-4">
-        <button
-          onClick={() => step > 1 ? setStep(step - 1) : navigate(-1)}
-          className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center text-lg"
-        >
-          ←
-        </button>
-        <div>
-          <h1 className="text-xl font-bold">{service.name}</h1>
-          <p className="text-primary-600 font-semibold">{service.price.toLocaleString()} so'm</p>
-        </div>
-      </div>
+    <div className="animate-fade-in min-h-screen">
+      <Header
+        title={service.name}
+        subtitle={`${service.price.toLocaleString()} so'm`}
+        onBack={() => step > 1 ? setStep(step - 1) : navigate(-1)}
+      />
 
-      {/* Progress */}
-      <div className="flex gap-1 mb-6">
-        {steps.map(s => (
-          <div key={s.num} className="flex-1">
-            <div className={`h-1 rounded-full ${step >= s.num ? 'bg-primary-500' : 'bg-gray-200'}`}></div>
-          </div>
-        ))}
-      </div>
+      <div className="p-4 space-y-3">
+        {/* Progress */}
+        <div className="flex gap-1.5 mb-2">
+          {steps.map(s => (
+            <div key={s.num} className="flex-1">
+              <div className={`h-1.5 rounded-full transition-colors ${step >= s.num ? 'bg-primary-500' : 'bg-black/5'}`}></div>
+            </div>
+          ))}
+        </div>
 
       {/* Step 1: Full Name */}
       {step === 1 && (
@@ -191,11 +192,11 @@ function OrderForm({ user }) {
             value={form.full_name}
             onChange={(e) => setForm({ ...form, full_name: e.target.value })}
             placeholder="Masalan: Karimov Valijon"
-            className="w-full border border-gray-300 rounded-lg px-4 py-3 text-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            className="w-full border border-black/10 rounded-2xl px-4 py-3.5 text-lg bg-tg-secondary focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
             autoFocus
           />
           <button onClick={goNext} disabled={!canNext()}
-            className="w-full bg-primary-500 text-white rounded-lg py-3 font-medium disabled:bg-gray-300 active:bg-primary-600 transition-colors">
+            className="w-full bg-primary-600 text-white rounded-2xl py-3.5 font-medium disabled:bg-black/10 disabled:text-tg-hint active:bg-primary-700 transition-colors">
             Keyingisi →
           </button>
         </div>
@@ -213,7 +214,7 @@ function OrderForm({ user }) {
                 className={`p-3 rounded-lg text-sm font-medium border-2 transition-all text-left ${
                   form.region === region
                     ? 'border-primary-500 bg-primary-50 text-primary-700'
-                    : 'border-gray-200 bg-white text-gray-700 active:bg-gray-50'
+                    : '                  border-gray-200 bg-tg-secondary text-tg-text active:bg-black/5'
                 }`}
               >
                 {region}
@@ -221,7 +222,7 @@ function OrderForm({ user }) {
             ))}
           </div>
           <button onClick={goNext} disabled={!canNext()}
-            className="w-full bg-primary-500 text-white rounded-lg py-3 font-medium disabled:bg-gray-300 active:bg-primary-600 transition-colors">
+            className="w-full bg-primary-600 text-white rounded-2xl py-3.5 font-medium disabled:bg-black/10 disabled:text-tg-hint active:bg-primary-700 transition-colors">
             Keyingisi →
           </button>
         </div>
@@ -237,11 +238,11 @@ function OrderForm({ user }) {
             value={form.district}
             onChange={(e) => setForm({ ...form, district: e.target.value })}
             placeholder="Masalan: Chilonzor tumani"
-            className="w-full border border-gray-300 rounded-lg px-4 py-3 text-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            className="w-full border border-black/10 rounded-2xl px-4 py-3.5 text-lg bg-tg-secondary focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
             autoFocus
           />
           <button onClick={goNext} disabled={!canNext()}
-            className="w-full bg-primary-500 text-white rounded-lg py-3 font-medium disabled:bg-gray-300 active:bg-primary-600 transition-colors">
+            className="w-full bg-primary-600 text-white rounded-2xl py-3.5 font-medium disabled:bg-black/10 disabled:text-tg-hint active:bg-primary-700 transition-colors">
             Keyingisi →
           </button>
         </div>
@@ -257,11 +258,11 @@ function OrderForm({ user }) {
             value={form.school}
             onChange={(e) => setForm({ ...form, school: e.target.value })}
             placeholder="Masalan: 1-maktab"
-            className="w-full border border-gray-300 rounded-lg px-4 py-3 text-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            className="w-full border border-black/10 rounded-2xl px-4 py-3.5 text-lg bg-tg-secondary focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
             autoFocus
           />
           <button onClick={goNext} disabled={!canNext()}
-            className="w-full bg-primary-500 text-white rounded-lg py-3 font-medium disabled:bg-gray-300 active:bg-primary-600 transition-colors">
+            className="w-full bg-primary-600 text-white rounded-2xl py-3.5 font-medium disabled:bg-black/10 disabled:text-tg-hint active:bg-primary-700 transition-colors">
             Keyingisi →
           </button>
         </div>
@@ -279,7 +280,7 @@ function OrderForm({ user }) {
                 className={`py-3 rounded-lg text-lg font-semibold border-2 transition-all ${
                   form.grade === String(g)
                     ? 'border-primary-500 bg-primary-50 text-primary-700'
-                    : 'border-gray-200 bg-white text-gray-700 active:bg-gray-50'
+                    : '                  border-gray-200 bg-tg-secondary text-tg-text active:bg-black/5'
                 }`}
               >
                 {g}
@@ -287,7 +288,7 @@ function OrderForm({ user }) {
             ))}
           </div>
           <button onClick={goNext} disabled={!canNext()}
-            className="w-full bg-primary-500 text-white rounded-lg py-3 font-medium disabled:bg-gray-300 active:bg-primary-600 transition-colors">
+            className="w-full bg-primary-600 text-white rounded-2xl py-3.5 font-medium disabled:bg-black/10 disabled:text-tg-hint active:bg-primary-700 transition-colors">
             Keyingisi →
           </button>
         </div>
@@ -306,7 +307,7 @@ function OrderForm({ user }) {
                 className={`p-3 rounded-lg text-sm font-medium border-2 transition-all text-left ${
                   form.subject === subject
                     ? 'border-primary-500 bg-primary-50 text-primary-700'
-                    : 'border-gray-200 bg-white text-gray-700 active:bg-gray-50'
+                    : '                  border-gray-200 bg-tg-secondary text-tg-text active:bg-black/5'
                 }`}
               >
                 {subject}
@@ -314,7 +315,7 @@ function OrderForm({ user }) {
             ))}
           </div>
           <button onClick={goNext} disabled={!canNext()}
-            className="w-full bg-primary-500 text-white rounded-lg py-3 font-medium disabled:bg-gray-300 active:bg-primary-600 transition-colors">
+            className="w-full bg-primary-600 text-white rounded-2xl py-3.5 font-medium disabled:bg-black/10 disabled:text-tg-hint active:bg-primary-700 transition-colors">
             Keyingisi →
           </button>
         </div>
@@ -329,7 +330,7 @@ function OrderForm({ user }) {
             value={form.topic}
             onChange={(e) => setForm({ ...form, topic: e.target.value })}
             placeholder="Masalan: Kasr sonlar"
-            className="w-full border border-gray-300 rounded-lg px-4 py-3 text-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            className="w-full border border-black/10 rounded-2xl px-4 py-3.5 text-lg bg-tg-secondary focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
             autoFocus
           />
 
@@ -337,7 +338,7 @@ function OrderForm({ user }) {
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Rasmlar (ixtiyoriy, 5 tagacha)
             </label>
-            <label className="block w-full border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-primary-500 transition-colors">
+              <label className="block w-full border-2 border-dashed border-primary-300 rounded-2xl p-4 text-center cursor-pointer hover:border-primary-500 transition-colors">
               <span className="text-gray-500">📷 Rasm yuklash</span>
               <input
                 type="file"
@@ -369,7 +370,7 @@ function OrderForm({ user }) {
           </div>
 
           {/* Summary */}
-          <div className="bg-gray-50 rounded-lg p-4">
+            <div className="bg-tg-secondary rounded-2xl p-4 border border-black/5">
             <h3 className="font-semibold mb-2">📋 Buyurtma ma'lumotlari:</h3>
             <div className="text-sm text-gray-600 space-y-1">
               <p><strong>F.I.Sh:</strong> {form.full_name}</p>
@@ -385,12 +386,13 @@ function OrderForm({ user }) {
           <button
             onClick={handleSubmit}
             disabled={!form.topic.trim() || submitting}
-            className="w-full bg-primary-500 text-white rounded-lg py-3 font-medium disabled:bg-gray-300 active:bg-primary-600 transition-colors"
+            className="w-full bg-primary-600 text-white rounded-2xl py-3.5 font-medium disabled:bg-black/10 disabled:text-tg-hint active:bg-primary-700 transition-colors"
           >
             {submitting ? 'Yuborilmoqda...' : '✅ Buyurtma berish'}
           </button>
         </div>
       )}
+      </div>
     </div>
   )
 }

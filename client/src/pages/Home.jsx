@@ -1,64 +1,102 @@
 import { useNavigate } from 'react-router-dom'
 
+function StatPill({ icon, label, value }) {
+  return (
+    <div className="flex items-center gap-2 bg-white/15 rounded-xl px-3 py-2 backdrop-blur-sm">
+      <span className="text-lg">{icon}</span>
+      <div className="leading-tight">
+        <p className="text-xs text-white/80">{label}</p>
+        <p className="text-sm font-semibold text-white">{value}</p>
+      </div>
+    </div>
+  )
+}
+
 function Home({ user }) {
   const navigate = useNavigate()
+  const firstName = user?.first_name || 'Foydalanuvchi'
+
+  const actions = [
+    {
+      key: 'order',
+      title: 'Buyurtma berish',
+      desc: 'Metodik hujjat buyurtma qilish',
+      icon: '📝',
+      onClick: () => navigate('/services'),
+      accent: 'bg-primary-600',
+      iconBg: 'bg-white/20',
+    },
+    {
+      key: 'orders',
+      title: 'Buyurtmalarim',
+      desc: 'Buyurtmalar holatini kuzatish',
+      icon: '📦',
+      onClick: () => navigate('/my-orders'),
+      accent: 'bg-tg-secondary text-tg-text border border-black/5',
+      iconBg: 'bg-primary-50 text-primary-600',
+      dark: true,
+    },
+  ]
 
   return (
-    <div className="p-4">
-      {/* Header */}
-      <div className="text-center py-8">
-        <div className="w-20 h-20 bg-primary-500 rounded-full flex items-center justify-center mx-auto mb-4">
-          <span className="text-3xl">📚</span>
+    <div className="animate-fade-in">
+      {/* Hero */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-primary-500 via-primary-600 to-indigo-700 px-5 pt-10 pb-7 text-white">
+        <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white/10" />
+        <div className="absolute bottom-[-20px] left-[-20px] w-28 h-28 rounded-full bg-white/5" />
+        <div className="relative">
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center text-3xl backdrop-blur-sm">
+              📚
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold leading-tight">Metodikish</h1>
+              <p className="text-sm text-white/80">Metodik hujjatlar tayyorlash</p>
+            </div>
+          </div>
+          <p className="text-white/90 mb-4">
+            Assalomu alaykum, <span className="font-semibold">{firstName}</span>! 🎓
+          </p>
+          <div className="flex gap-2 flex-wrap">
+            <StatPill icon="⏱" label="Tayyorlash" value="5–6 soat" />
+            <StatPill icon="💳" label="To'lov" value="Karta orqali" />
+          </div>
         </div>
-        <h1 className="text-2xl font-bold text-gray-800">Metodikish</h1>
-        <p className="text-gray-500 mt-2">Metodik hujjatlar tayyorlash xizmati</p>
       </div>
 
-      {/* Welcome */}
-      {user && (
-        <div className="bg-white rounded-xl p-4 shadow-sm mb-4">
-          <p className="text-gray-600">Assalomu alaykum,</p>
-          <p className="font-semibold text-lg">{user.first_name || 'Foydalanuvchi'}</p>
-        </div>
-      )}
-
-      {/* Services Preview */}
-      <div className="space-y-3">
-        <button
-          onClick={() => navigate('/services')}
-          className="w-full bg-primary-500 text-white rounded-xl p-4 shadow-sm flex items-center gap-3 active:bg-primary-600 transition-colors"
-        >
-          <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
-            <span className="text-2xl">📝</span>
-          </div>
-          <div className="text-left">
-            <p className="font-semibold text-lg">Buyurtma berish</p>
-            <p className="text-white/80 text-sm">Metodik hujjat buyurtma qilish</p>
-          </div>
-        </button>
-
-        <button
-          onClick={() => navigate('/my-orders')}
-          className="w-full bg-white text-gray-800 rounded-xl p-4 shadow-sm flex items-center gap-3 active:bg-gray-50 transition-colors"
-        >
-          <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-            <span className="text-2xl">📦</span>
-          </div>
-          <div className="text-left">
-            <p className="font-semibold text-lg">Buyurtmalarim</p>
-            <p className="text-gray-500 text-sm">Buyurtmalar holatini ko'rish</p>
-          </div>
-        </button>
+      {/* Actions */}
+      <div className="px-4 -mt-4 relative space-y-3">
+        {actions.map(a => (
+          <button
+            key={a.key}
+            onClick={a.onClick}
+            className={`w-full rounded-2xl p-4 shadow-card flex items-center gap-4 text-left active:scale-[0.99] transition-transform ${a.accent}`}
+          >
+            <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0 ${a.iconBg}`}>
+              {a.icon}
+            </div>
+            <div className="flex-1">
+              <p className="font-semibold text-lg">{a.title}</p>
+              <p className={`text-sm ${a.dark ? 'text-tg-hint' : 'text-white/80'}`}>{a.desc}</p>
+            </div>
+            <span className={`text-xl ${a.dark ? 'text-tg-hint' : 'text-white/70'}`}>›</span>
+          </button>
+        ))}
       </div>
 
       {/* Info */}
-      <div className="mt-6 bg-blue-50 rounded-xl p-4">
-        <h3 className="font-semibold text-blue-800 mb-2">ℹ️ Ma'lumot</h3>
-        <ul className="text-sm text-blue-700 space-y-1">
-          <li>• Tayyorlash muddati: 5-6 soat</li>
-          <li>• To'lov: Kartaga o'tkazma orqali</li>
-          <li>• Natija: Bot orqali yuboriladi</li>
-        </ul>
+      <div className="px-4 mt-4">
+        <div className="bg-tg-secondary rounded-2xl p-4 border border-black/5">
+          <h3 className="font-semibold text-tg-text mb-2 flex items-center gap-2">
+            <span>💡</span> Qanday ishlaydi?
+          </h3>
+          <ol className="text-sm text-tg-hint space-y-1.5 list-decimal list-inside">
+            <li>Xizmatni tanlang va buyurtma bering</li>
+            <li>To'lovni amalga oshiring va chekni yuklang</li>
+            <li>Admin tasdiqlagach, hujjat tayyor bo'ladi</li>
+            <li>Natija bot orqali sizga yuboriladi</li>
+          </ol>
+        </div>
       </div>
     </div>
   )

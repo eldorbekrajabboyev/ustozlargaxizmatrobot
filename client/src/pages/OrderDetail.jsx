@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import axios from 'axios'
+import Header from '../components/Header'
 
 const PAYMENT_TIMEOUT_MS = 4 * 60 * 1000
 
@@ -39,12 +40,12 @@ function useCountdown(createdAt) {
 }
 
 const statusMap = {
-  pending_payment: { label: "To'lov kutilmoqda", color: 'text-yellow-600 bg-yellow-50', icon: '💳', desc: "Iltimos, to'lovni amalga oshiring" },
-  pending_confirmation: { label: "Tekshirilmoqda", color: 'text-blue-600 bg-blue-50', icon: '🔍', desc: "To'lovingiz tekshirilmoqda" },
-  in_progress: { label: 'Tayyorlanmoqda', color: 'text-purple-600 bg-purple-50', icon: '📝', desc: "Hujjat tayyorlanmoqda" },
-  ready: { label: 'Tayyor', color: 'text-green-600 bg-green-50', icon: '✅', desc: "Hujjat tayyor! Tez orada yuboriladi" },
-  sent: { label: 'Yuborildi', color: 'text-green-600 bg-green-50', icon: '📤', desc: "Hujjat sizga yuborildi" },
-  rejected: { label: 'Rad etildi', color: 'text-red-600 bg-red-50', icon: '❌', desc: "To'lov rad etildi" },
+  pending_payment: { label: "To'lov kutilmoqda", color: 'bg-amber-100 text-amber-700', icon: '💳', desc: "Iltimos, to'lovni amalga oshiring" },
+  pending_confirmation: { label: "Tekshirilmoqda", color: 'bg-sky-100 text-sky-700', icon: '🔍', desc: "To'lovingiz tekshirilmoqda" },
+  in_progress: { label: 'Tayyorlanmoqda', color: 'bg-violet-100 text-violet-700', icon: '📝', desc: "Hujjat tayyorlanmoqda" },
+  ready: { label: 'Tayyor', color: 'bg-emerald-100 text-emerald-700', icon: '✅', desc: "Hujjat tayyor! Tez orada yuboriladi" },
+  sent: { label: 'Yuborildi', color: 'bg-emerald-100 text-emerald-700', icon: '📤', desc: "Hujjat sizga yuborildi" },
+  rejected: { label: 'Rad etildi', color: 'bg-rose-100 text-rose-700', icon: '❌', desc: "To'lov rad etildi" },
 }
 
 function OrderDetail({ user }) {
@@ -112,131 +113,141 @@ function OrderDetail({ user }) {
 
   if (loading) {
     return (
-      <div className="p-4 flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
+      <div className="animate-fade-in">
+        <Header title="Buyurtma" />
+        <div className="p-4 flex items-center justify-center min-h-[60vh]">
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary-500 border-t-transparent"></div>
+        </div>
       </div>
     )
   }
 
   if (!order) {
     return (
-      <div className="p-4 text-center py-12">
-        <p className="text-gray-500">Buyurtma topilmadi</p>
+      <div className="animate-fade-in">
+        <Header title="Buyurtma" />
+        <div className="p-4 text-center py-16 text-tg-hint">
+          <p className="text-4xl mb-2">🔍</p>
+          <p>Buyurtma topilmadi</p>
+        </div>
       </div>
     )
   }
 
-  const status = statusMap[order.status] || { label: order.status, color: 'text-gray-600 bg-gray-50', icon: '❓', desc: '' }
+  const status = statusMap[order.status] || { label: order.status, color: 'bg-gray-100 text-gray-600', icon: '❓', desc: '' }
 
   return (
-    <div className="p-4">
-      <div className="flex items-center gap-3 mb-4">
-        <button onClick={() => navigate('/my-orders')} className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">←</button>
-        <div>
-          <h1 className="text-xl font-bold">Buyurtma</h1>
-          <p className="text-sm text-gray-500 font-mono">{order.order_code}</p>
-        </div>
-      </div>
+    <div className="animate-fade-in min-h-screen">
+      <Header title="Buyurtma" subtitle={order.order_code} onBack={() => navigate('/my-orders')} />
 
-      <div className={`rounded-xl p-4 mb-4 ${status.color}`}>
-        <div className="flex items-center gap-2">
-          <span className="text-2xl">{status.icon}</span>
+      <div className="p-4 space-y-3">
+        <div className={`rounded-2xl p-4 ${status.color} flex items-center gap-3`}>
+          <span className="text-3xl">{status.icon}</span>
           <div>
             <p className="font-semibold">{status.label}</p>
-            <p className="text-sm opacity-80">{status.desc}</p>
+            <p className="text-sm opacity-80 mt-0.5">{status.desc}</p>
           </div>
         </div>
-      </div>
 
-      <div className="bg-white rounded-xl p-4 shadow-sm mb-4">
-        <h3 className="font-semibold mb-3">Buyurtma malumotlari</h3>
-        <div className="space-y-2 text-sm">
-          <div className="flex justify-between"><span className="text-gray-500">Xizmat:</span><span className="font-medium">{order.service_name}</span></div>
-          <div className="flex justify-between"><span className="text-gray-500">Narx:</span><span className="font-bold text-primary-600">{order.total_price?.toLocaleString()} so'm</span></div>
-          <div className="flex justify-between"><span className="text-gray-500">F.I.Sh:</span><span className="font-medium">{order.full_name}</span></div>
-          <div className="flex justify-between"><span className="text-gray-500">Maktab:</span><span className="font-medium">{order.school}</span></div>
-          <div className="flex justify-between"><span className="text-gray-500">Fan:</span><span className="font-medium">{order.subject}</span></div>
-          <div className="flex justify-between"><span className="text-gray-500">Sinf:</span><span className="font-medium">{order.grade}</span></div>
-          <div className="flex justify-between"><span className="text-gray-500">Mavzu:</span><span className="font-medium">{order.topic}</span></div>
-        </div>
-      </div>
-
-      {order.images && order.images.length > 0 && (
-        <div className="bg-white rounded-xl p-4 shadow-sm mb-4">
-          <h3 className="font-semibold mb-3">Rasmlar</h3>
-          <div className="flex gap-2 flex-wrap">
-            {order.images.map((img, idx) => (
-              <img key={idx} src={img.image_path} alt="" className="w-20 h-20 object-cover rounded-lg" />
-            ))}
+        <div className="bg-tg-secondary rounded-2xl p-4 shadow-card border border-black/5">
+          <h3 className="font-semibold text-tg-text mb-3">Buyurtma ma'lumotlari</h3>
+          <div className="space-y-2.5 text-sm">
+            <Row label="Xizmat" value={order.service_name} />
+            <Row label="Narx" value={`${order.total_price?.toLocaleString()} so'm`} accent />
+            <Row label="F.I.Sh" value={order.full_name} />
+            <Row label="Maktab" value={order.school} />
+            <Row label="Fan" value={order.subject} />
+            <Row label="Sinf" value={`${order.grade}-sinf`} />
+            <Row label="Mavzu" value={order.topic} />
           </div>
         </div>
-      )}
 
-      {order.status === 'pending_payment' && (
-        <div className="bg-white rounded-xl p-4 shadow-sm mb-4">
-          <div className={`rounded-lg p-3 mb-3 text-center ${countdown.expired ? 'bg-red-50 border border-red-200' : 'bg-yellow-50 border border-yellow-200'}`}>
-            {countdown.expired ? (
-              <>
-                <p className="text-red-600 font-bold text-lg">Vaqt tugadi!</p>
-                <p className="text-red-500 text-sm">Buyurtma avtomatik bekor qilindi</p>
-              </>
+        {order.images && order.images.length > 0 && (
+          <div className="bg-tg-secondary rounded-2xl p-4 shadow-card border border-black/5">
+            <h3 className="font-semibold text-tg-text mb-3">Rasmlar</h3>
+            <div className="flex gap-2 flex-wrap">
+              {order.images.map((img, idx) => (
+                <img key={idx} src={img.image_path} alt="" className="w-20 h-20 object-cover rounded-xl" />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {order.status === 'pending_payment' && (
+          <div className="bg-tg-secondary rounded-2xl p-4 shadow-card border border-black/5">
+            <div className={`rounded-xl p-4 mb-4 text-center ${countdown.expired ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-800'}`}>
+              {countdown.expired ? (
+                <>
+                  <p className="font-bold text-lg">Vaqt tugadi!</p>
+                  <p className="text-sm mt-0.5">Buyurtma avtomatik bekor qilindi</p>
+                </>
+              ) : (
+                <>
+                  <p className="font-medium">Chekni yuklash uchun qolgan vaqt:</p>
+                  <p className="text-3xl font-bold font-mono mt-1">
+                    {countdown.mins}:{countdown.secs.toString().padStart(2, '0')}
+                  </p>
+                </>
+              )}
+            </div>
+
+            <h3 className="font-semibold text-tg-text mb-3">To'lov</h3>
+            {cards.length > 0 && (
+              <div className="bg-black/5 rounded-xl p-3 mb-4">
+                <p className="text-xs text-tg-hint">Karta raqami</p>
+                <p className="font-mono font-bold text-lg text-tg-text mt-0.5">{cards[0].card_number}</p>
+                <p className="text-sm text-tg-text">{cards[0].card_holder}</p>
+                {cards[0].bank_name && <p className="text-xs text-tg-hint">{cards[0].bank_name}</p>}
+              </div>
+            )}
+            {!countdown.expired ? (
+              <label className="block w-full">
+                <div className={`border-2 border-dashed border-primary-300 rounded-xl p-5 text-center cursor-pointer hover:border-primary-500 transition-colors ${uploading ? 'opacity-50' : ''}`}>
+                  {uploading ? (
+                    <div className="animate-spin rounded-full h-6 w-6 border-2 border-primary-500 border-t-transparent mx-auto"></div>
+                  ) : (
+                    <>
+                      <span className="text-3xl">📸</span>
+                      <p className="text-tg-hint mt-1 text-sm">Chek rasmini yuklash</p>
+                    </>
+                  )}
+                </div>
+                <input type="file" accept="image/*" onChange={handleReceiptUpload} className="hidden" disabled={uploading} />
+              </label>
             ) : (
-              <>
-                <p className="text-yellow-700 font-semibold">Chekni yuklash uchun qolgan vaqt:</p>
-                <p className="text-3xl font-bold text-yellow-600 font-mono mt-1">
-                  {countdown.mins}:{countdown.secs.toString().padStart(2, '0')}
-                </p>
-              </>
+              <div className="bg-rose-100 text-rose-700 rounded-xl p-4 text-center text-sm">
+                Chek yuklash muddati tugagan
+              </div>
             )}
           </div>
+        )}
 
-          <h3 className="font-semibold mb-3">To'lov</h3>
-          {cards.length > 0 && (
-            <div className="bg-gray-50 rounded-lg p-3 mb-3">
-              <p className="text-sm text-gray-500">Karta raqami:</p>
-              <p className="font-mono font-bold text-lg">{cards[0].card_number}</p>
-              <p className="text-sm text-gray-600">{cards[0].card_holder}</p>
-              {cards[0].bank_name && <p className="text-xs text-gray-500">{cards[0].bank_name}</p>}
-            </div>
-          )}
-          {!countdown.expired ? (
-            <label className="block w-full">
-              <div className={`border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-primary-500 transition-colors ${uploading ? 'opacity-50' : ''}`}>
-                {uploading ? (
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-500 mx-auto"></div>
-                ) : (
-                  <>
-                    <span className="text-2xl">📸</span>
-                    <p className="text-gray-500 mt-1">Chek rasmini yuklash</p>
-                  </>
-                )}
-              </div>
-              <input type="file" accept="image/*" onChange={handleReceiptUpload} className="hidden" disabled={uploading} />
-            </label>
-          ) : (
-            <div className="bg-red-50 rounded-lg p-4 text-center">
-              <p className="text-red-500 text-sm">Chek yuklash muddati tugagan</p>
-            </div>
-          )}
-        </div>
-      )}
+        {order.document_file && (
+          <div className="bg-tg-secondary rounded-2xl p-4 shadow-card border border-black/5">
+            <h3 className="font-semibold text-tg-text mb-3">Hujjat</h3>
+            <a href={order.document_file} target="_blank" rel="noopener noreferrer"
+              className="block w-full bg-emerald-500 text-white rounded-xl py-3 text-center font-medium active:scale-95 transition-transform">
+              Hujjatni yuklab olish ↓
+            </a>
+          </div>
+        )}
 
-      {order.document_file && (
-        <div className="bg-white rounded-xl p-4 shadow-sm mb-4">
-          <h3 className="font-semibold mb-3">Hujjat</h3>
-          <a href={order.document_file} target="_blank" rel="noopener noreferrer"
-            className="block w-full bg-green-500 text-white rounded-lg py-3 text-center font-medium active:bg-green-600 transition-colors">
-            Hujjatni yuklab olish
-          </a>
-        </div>
-      )}
+        {order.admin_note && (
+          <div className="bg-amber-100 rounded-2xl p-4 border border-amber-200">
+            <h3 className="font-semibold text-amber-800 mb-1 flex items-center gap-2">⚠️ Eslatma</h3>
+            <p className="text-sm text-amber-700">{order.admin_note}</p>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
 
-      {order.admin_note && (
-        <div className="bg-yellow-50 rounded-xl p-4 mb-4">
-          <h3 className="font-semibold text-yellow-800 mb-1">Eslatma</h3>
-          <p className="text-sm text-yellow-700">{order.admin_note}</p>
-        </div>
-      )}
+function Row({ label, value, accent }) {
+  return (
+    <div className="flex justify-between gap-3">
+      <span className="text-tg-hint shrink-0">{label}:</span>
+      <span className={`font-medium text-right ${accent ? 'text-primary-600' : 'text-tg-text'}`}>{value}</span>
     </div>
   )
 }
