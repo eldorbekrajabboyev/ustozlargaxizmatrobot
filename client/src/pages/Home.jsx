@@ -153,7 +153,7 @@ function Home({ user }) {
       </div>
 
       {/* CTA */}
-      <div className="px-4 mt-6 mb-6">
+      <div className="px-4 mt-6 mb-24">
         <div className="bg-gradient-to-br from-primary-600 to-indigo-700 rounded-2xl p-5 text-center text-white">
           <p className="text-lg font-bold">Tayyor bo'lsangiz — boshlang!</p>
           <p className="text-white/80 text-sm mt-1">Sifatga mos narx. Ishonch. Natija.</p>
