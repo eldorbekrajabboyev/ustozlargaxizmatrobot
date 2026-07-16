@@ -1,385 +1,378 @@
 import { useNavigate } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
 
-/* ── animated counter ── */
+/* ─── animated counter on mount ─── */
 function Counter({ to, suffix = '' }) {
   const [val, setVal] = useState(0)
   useEffect(() => {
-    let start = 0
     const end = parseInt(to)
-    const dur = 1200
-    const step = dur / end
+    let cur = 0
+    const inc = Math.ceil(end / 55)
     const t = setInterval(() => {
-      start += Math.ceil(end / 60)
-      if (start >= end) { setVal(end); clearInterval(t) }
-      else setVal(start)
-    }, step)
+      cur = Math.min(cur + inc, end)
+      setVal(cur)
+      if (cur >= end) clearInterval(t)
+    }, 22)
     return () => clearInterval(t)
   }, [to])
-  return <>{val}{suffix}</>
+  return <>{val.toLocaleString()}{suffix}</>
 }
 
-/* ── floating orb ── */
+/* ─── floating glow orb ─── */
 function Orb({ style }) {
   return (
-    <div
-      className="absolute rounded-full pointer-events-none"
-      style={{
-        background: 'radial-gradient(circle, rgba(255,255,255,0.18) 0%, transparent 70%)',
-        animation: 'floatOrb 6s ease-in-out infinite',
-        ...style,
-      }}
-    />
+    <div className="absolute rounded-full pointer-events-none"
+      style={{ background: 'radial-gradient(circle,rgba(255,255,255,0.15) 0%,transparent 70%)', animation: 'floatY 7s ease-in-out infinite', ...style }} />
   )
 }
 
-/* ── iPhone sticker icon ── */
-function StickerIcon({ emoji, size = 'md', rotateZ = 0 }) {
-  const sizes = {
-    sm: 'w-10 h-10 text-lg',
-    md: 'w-12 h-12 text-2xl',
-    lg: 'w-14 h-14 text-3xl',
-    xl: 'w-16 h-16 text-4xl',
-  }
+/* ─── slide-up section ─── */
+function FadeIn({ children, delay = 0, className = '' }) {
+  const [show, setShow] = useState(false)
+  useEffect(() => { const t = setTimeout(() => setShow(true), delay); return () => clearTimeout(t) }, [delay])
   return (
-    <div
-      className={`${sizes[size]} rounded-2xl flex items-center justify-center shrink-0 cursor-pointer transition-all duration-300 hover:scale-110 active:scale-95`}
-      style={{
-        background: 'linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%)',
-        boxShadow: `
-          0 20px 40px rgba(0,0,0,0.15),
-          0 0 60px rgba(99,102,241,0.2),
-          inset 0 1px 0 rgba(255,255,255,0.8),
-          inset -1px -1px 2px rgba(0,0,0,0.05)
-        `,
-        transform: `rotateZ(${rotateZ}deg) rotateX(15deg) rotateY(-10deg)`,
-        transformStyle: 'preserve-3d',
-        animation: 'stickerFloat 3s ease-in-out infinite',
-        animationDelay: `${rotateZ * 0.05}s`,
-      }}
-    >
-      <div style={{ transform: 'translateZ(20px)' }}>{emoji}</div>
-    </div>
-  )
-}
-
-/* ── section wrapper with slide-up ── */
-function Section({ children, delay = 0, className = '' }) {
-  const ref = useRef()
-  const [vis, setVis] = useState(false)
-  useEffect(() => {
-    const t = setTimeout(() => setVis(true), delay)
-    return () => clearTimeout(t)
-  }, [delay])
-  return (
-    <div
-      ref={ref}
-      className={`px-4 transition-all duration-700 ${vis ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'} ${className}`}
-    >
+    <div className={`transition-all duration-700 ease-out ${show ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'} ${className}`}>
       {children}
     </div>
   )
 }
 
+/* ─── iPhone-style sticker ─── */
+function Sticker({ e, rotZ = 0, sz = 44, fontSize = 22, animDelay = '0s' }) {
+  return (
+    <div className="shrink-0 flex items-center justify-center rounded-[14px]" style={{
+      width: sz, height: sz, fontSize,
+      background: 'linear-gradient(160deg,#fff 0%,#f1f1f3 100%)',
+      boxShadow: '0 6px 20px rgba(0,0,0,0.12),0 0 0 1px rgba(0,0,0,0.04),inset 0 1px 0 rgba(255,255,255,0.9)',
+      transform: `rotate(${rotZ}deg)`,
+      animation: `stickerPop 0.4s ease both, stickerHover 3s ${animDelay} ease-in-out infinite`,
+    }}>
+      {e}
+    </div>
+  )
+}
+
+/* ─── section label ─── */
+function Label({ children, color = '#6366f1' }) {
+  return (
+    <div className="flex items-center gap-2 mb-3">
+      <div className="w-1 h-4 rounded-full" style={{ background: color }} />
+      <p className="text-[11px] font-bold uppercase tracking-widest" style={{ color }}>{children}</p>
+    </div>
+  )
+}
+
 export default function Home({ user }) {
-  const navigate = useNavigate()
+  const nav = useNavigate()
 
   return (
     <>
       <style>{`
-        @keyframes floatOrb {
-          0%,100% { transform: translateY(0) scale(1); }
-          50% { transform: translateY(-18px) scale(1.08); }
-        }
-        @keyframes shimmer {
-          0% { background-position: -200% center; }
-          100% { background-position: 200% center; }
-        }
-        @keyframes pulseRing {
-          0%,100% { box-shadow: 0 0 0 0 rgba(99,102,241,0.5); }
-          50% { box-shadow: 0 0 0 14px rgba(99,102,241,0); }
-        }
-        @keyframes spin3d {
-          0%   { transform: rotateY(0deg) rotateX(8deg); }
-          100% { transform: rotateY(360deg) rotateX(8deg); }
-        }
-        @keyframes badgePop {
-          0%   { transform: scale(0.7); opacity: 0; }
-          70%  { transform: scale(1.1); }
-          100% { transform: scale(1); opacity: 1; }
-        }
-        @keyframes stickerFloat {
-          0%,100% { transform: rotateZ(var(--rz)) rotateX(15deg) rotateY(-10deg) translateY(0); }
-          50% { transform: rotateZ(var(--rz)) rotateX(15deg) rotateY(-10deg) translateY(-8px); }
-        }
-        .badge-pop { animation: badgePop 0.5s ease forwards; }
-        .shimmer-text {
-          background: linear-gradient(90deg,#fff 25%,rgba(255,255,255,0.4) 50%,#fff 75%);
-          background-size: 200% auto;
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          animation: shimmer 3s linear infinite;
-        }
-        .card-glow:hover {
-          box-shadow: 0 0 0 2px rgba(99,102,241,0.4), 0 8px 24px rgba(99,102,241,0.15);
-          transform: translateY(-2px);
-        }
-        .card-glow { transition: all 0.25s ease; }
+        @keyframes floatY   { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-16px)} }
+        @keyframes shimmer  { 0%{background-position:-200% center} 100%{background-position:200% center} }
+        @keyframes pulse    { 0%,100%{box-shadow:0 0 0 0 rgba(99,102,241,.45)} 50%{box-shadow:0 0 0 12px rgba(99,102,241,0)} }
+        @keyframes spin3d   { from{transform:rotateY(0deg) rotateX(10deg)} to{transform:rotateY(360deg) rotateX(10deg)} }
+        @keyframes popIn    { 0%{opacity:0;transform:scale(.6)} 70%{transform:scale(1.1)} 100%{opacity:1;transform:scale(1)} }
+        @keyframes stickerPop  { 0%{opacity:0;transform:scale(.5)} 80%{transform:scale(1.08)} 100%{opacity:1;transform:scale(1)} }
+        @keyframes stickerHover{ 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
+        .shimmer { background:linear-gradient(90deg,#fff 20%,rgba(255,255,255,.35) 50%,#fff 80%);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:shimmer 3s linear infinite; }
+        .hcard   { transition:transform .22s,box-shadow .22s; }
+        .hcard:hover { transform:translateY(-2px); }
+        .pop-1{animation:popIn .45s .1s ease both}
+        .pop-2{animation:popIn .45s .25s ease both}
+        .pop-3{animation:popIn .45s .4s ease both}
       `}</style>
 
-      <div className="animate-fade-in pb-24">
+      <div className="pb-24">
 
-        {/* ── HERO ── */}
-        <div
-          className="relative overflow-hidden text-white text-center px-5 pt-12 pb-10"
-          style={{ background: 'linear-gradient(135deg,#4338ca 0%,#5b21b6 40%,#1e1b4b 100%)' }}
-        >
-          <Orb style={{ width: 220, height: 220, top: -60, right: -60 }} />
-          <Orb style={{ width: 160, height: 160, bottom: -40, left: -40, animationDelay: '2s' }} />
-          <Orb style={{ width: 80, height: 80, top: '40%', left: '10%', animationDelay: '1s' }} />
+        {/* ══════════ HERO ══════════ */}
+        <div className="relative overflow-hidden text-white px-5 pt-12 pb-8 text-center"
+          style={{ background: 'linear-gradient(140deg,#3730a3 0%,#4f46e5 45%,#7c3aed 100%)' }}>
+          <Orb style={{ width:200,height:200,top:-70,right:-60 }} />
+          <Orb style={{ width:140,height:140,bottom:-50,left:-50,animationDelay:'2.5s' }} />
+          <Orb style={{ width:70,height:70,top:'38%',left:'8%',animationDelay:'1.2s' }} />
 
-          {/* 3D icon */}
-          <div className="relative inline-block mb-5" style={{ perspective: 400 }}>
-            <div
-              className="w-20 h-20 rounded-3xl flex items-center justify-center text-4xl mx-auto"
+          {/* Logo icon */}
+          <div className="relative inline-flex mb-4" style={{ perspective:500 }}>
+            <div className="w-20 h-20 rounded-[22px] flex items-center justify-center text-4xl"
               style={{
-                background: 'rgba(255,255,255,0.15)',
-                backdropFilter: 'blur(12px)',
-                border: '1px solid rgba(255,255,255,0.25)',
-                animation: 'spin3d 8s linear infinite',
-                transformStyle: 'preserve-3d',
-                boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2)',
-              }}
-            >
-              📘
-            </div>
+                background:'rgba(255,255,255,.13)',backdropFilter:'blur(14px)',
+                border:'1px solid rgba(255,255,255,.22)',
+                animation:'spin3d 9s linear infinite',transformStyle:'preserve-3d',
+                boxShadow:'0 12px 40px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.25)',
+              }}>📘</div>
           </div>
 
-          <h1 className="text-3xl font-black tracking-tight shimmer-text">Metodikish</h1>
-          <p className="text-white/70 mt-2 text-sm">Metodik ishlar tayyorlash va ommalashtirish</p>
+          <h1 className="text-[28px] font-black tracking-tight leading-tight shimmer">Metodikish</h1>
+          <p className="text-white/65 text-sm mt-1.5 max-w-[260px] mx-auto leading-snug">
+            O'zbekiston o'qituvchilari uchun metodik ish tayyorlash xizmati
+          </p>
 
-          {/* trust badges */}
-          <div className="flex justify-center gap-2 mt-4 flex-wrap">
+          {/* trust pills */}
+          <div className="flex justify-center flex-wrap gap-2 mt-4">
             {[
-              { label: '1850+ ish', delay: '0.1s' },
-              { label: '98% ommalashdi', delay: '0.25s' },
-              { label: '4 yil tajriba', delay: '0.4s' },
-            ].map((b, i) => (
-              <span
-                key={i}
-                className="badge-pop text-xs font-semibold px-3 py-1 rounded-full"
-                style={{
-                  background: 'rgba(255,255,255,0.15)',
-                  border: '1px solid rgba(255,255,255,0.25)',
-                  animationDelay: b.delay,
-                  opacity: 0,
-                }}
-              >
-                {b.label}
+              {t:'✅ 1 850+ tugatilgan ish',d:'0.08s'},
+              {t:'⭐ 98% ommalashdi',d:'0.22s'},
+              {t:'🏅 2021-yildan buyon',d:'0.38s'},
+            ].map((b,i)=>(
+              <span key={i} className="text-[11px] font-semibold px-3 py-1 rounded-full"
+                style={{ background:'rgba(255,255,255,.13)',border:'1px solid rgba(255,255,255,.22)',animation:`popIn .45s ${b.d} ease both`,opacity:0 }}>
+                {b.t}
               </span>
             ))}
           </div>
 
-          <button
-            onClick={() => navigate('/services')}
-            className="mt-6 font-bold px-8 py-3.5 rounded-2xl text-sm text-indigo-700 active:scale-95 transition-transform"
-            style={{
-              background: 'white',
-              animation: 'pulseRing 2.5s ease-in-out infinite',
-              boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
-            }}
-          >
+          <button onClick={()=>nav('/services')}
+            className="mt-6 font-bold px-8 py-3.5 rounded-2xl text-indigo-700 text-sm active:scale-95 transition-transform inline-block"
+            style={{ background:'#fff',animation:'pulse 2.4s ease-in-out infinite',boxShadow:'0 4px 18px rgba(0,0,0,.2)' }}>
             Buyurtma berish →
           </button>
+
+          {/* bottom wave */}
+          <svg viewBox="0 0 400 28" className="absolute bottom-0 left-0 w-full" style={{ display:'block' }}>
+            <path d="M0 28 Q100 0 200 14 Q300 28 400 8 L400 28 Z" fill="var(--tg-theme-bg-color,#ffffff)" />
+          </svg>
         </div>
 
-        {/* ── STATS ── */}
-        <Section delay={100} className="mt-4">
-          <div
-            className="rounded-2xl p-4 grid grid-cols-3 gap-3 text-center"
-            style={{ background: 'var(--tg-theme-secondary-bg-color)', boxShadow: '0 4px 24px rgba(0,0,0,0.06)' }}
-          >
+        {/* ══════════ STATS BAR ══════════ */}
+        <FadeIn delay={80} className="px-4 mt-2">
+          <div className="rounded-2xl p-4 grid grid-cols-4 gap-2 text-center hcard"
+            style={{ background:'var(--tg-theme-secondary-bg-color)', boxShadow:'0 2px 16px rgba(0,0,0,.06)' }}>
             {[
-              { to: '1850', suffix: '+', label: 'Tugatilgan', color: '#6366f1' },
-              { to: '98', suffix: '%', label: 'Ommalashgan', color: '#10b981' },
-              { to: '4', suffix: ' yil', label: 'Tajriba', color: '#f59e0b' },
-            ].map((s, i) => (
+              {n:'1 850',s:'+',l:"Buyurtma",c:'#6366f1'},
+              {n:'98',s:'%',l:'Ommalashdi',c:'#10b981'},
+              {n:'4',s:' yil',l:'Tajriba',c:'#f59e0b'},
+              {n:'12',s:'h',l:'O\'rtacha mudd.',c:'#ec4899'},
+            ].map((s,i)=>(
               <div key={i}>
-                <p className="text-2xl font-black" style={{ color: s.color }}>
-                  <Counter to={s.to} suffix={s.suffix} />
+                <p className="text-xl font-black leading-none" style={{ color:s.c }}>
+                  <Counter to={s.n.replace(/\s/g,'')} suffix={s.s} />
                 </p>
-                <p className="text-[11px] text-tg-hint mt-0.5">{s.label}</p>
+                <p className="text-[10px] text-tg-hint mt-0.5 leading-tight">{s.l}</p>
               </div>
             ))}
           </div>
-        </Section>
+        </FadeIn>
 
-        {/* ── WHY ── */}
-        <Section delay={200} className="mt-6">
-          <h2 className="text-lg font-bold text-tg-text mb-3">Nega ommalashtirish kerak?</h2>
-          <div className="space-y-2.5">
+        {/* ══════════ MUAMMO → YECHIM ══════════ */}
+        <FadeIn delay={160} className="px-4 mt-6">
+          <Label color="#ef4444">Ko'pchilik o'qituvchilar duch keladigan muammo</Label>
+          <div className="rounded-2xl overflow-hidden border border-rose-100">
             {[
-              { emoji: '💰', text: 'Malaka toifangiz oshadi — oyligingiz sezilarli ko\'tariladi', color: '#fef9c3', border: '#fde68a', rotZ: -3 },
-              { emoji: '📜', text: 'Sertifikat va guvohnoma — attestatsiyada katta ustunlik', color: '#ede9fe', border: '#c4b5fd', rotZ: 2 },
-              { emoji: '🏆', text: 'Mukofot va rag\'bat pullari olish imkoniyati', color: '#dcfce7', border: '#86efac', rotZ: -2 },
-              { emoji: '📈', text: 'Obro\' oshadi — kelajakda yuqori lavozim va daromad', color: '#dbeafe', border: '#93c5fd', rotZ: 3 },
-            ].map((item, i) => (
-              <div
-                key={i}
-                className="card-glow flex items-start gap-3 rounded-xl p-3.5"
-                style={{
-                  background: item.color,
-                  border: `1px solid ${item.border}`,
-                  animationDelay: `${i * 0.1}s`,
-                }}
-              >
-                <StickerIcon emoji={item.emoji} size="md" rotateZ={item.rotZ} />
-                <p className="text-sm font-medium text-gray-800 leading-snug">{item.text}</p>
+              {e:'⏳',rz:-3,t:'Metodik ish yozish haftalar, ba\'zan oylar vaqt oladi',ad:'0s'},
+              {e:'📭',rz:2,t:'Tayyor ish ko\'p marta qaytariladi — talablar o\'zgarib turadi',ad:'0.1s'},
+              {e:'⚠️',rz:-2,t:'Antiplagiat tekshiruvidan o\'ta olmay, to\'liq bekor qilinadi',ad:'0.2s'},
+              {e:'📉',rz:3,t:'Ball, ustama va malaka toifasi yillab kutiladi',ad:'0.3s'},
+            ].map((item,i)=>(
+              <div key={i} className={`flex items-center gap-3 px-4 py-3 ${i<3?'border-b border-rose-100':''}`}
+                style={{ background:i%2===0?'#fff7f7':'#fff1f2' }}>
+                <Sticker e={item.e} rotZ={item.rz} sz={38} fontSize={18} animDelay={item.ad} />
+                <p className="text-sm text-rose-800 leading-snug">{item.t}</p>
               </div>
             ))}
           </div>
-        </Section>
-
-        {/* ── PAIN ── */}
-        <Section delay={300} className="mt-6">
-          <h2 className="text-lg font-bold text-tg-text mb-3">Tanish muammolar?</h2>
-          <div
-            className="rounded-2xl p-4 border"
-            style={{ background: '#fff1f2', borderColor: '#fecdd3' }}
-          >
-            {[
-              { emoji: '⏳', text: 'Metodik ish juda ko\'p vaqt oladi', rotZ: 0 },
-              { emoji: '📄', text: 'Yoziladi — lekin qaytariladi', rotZ: -4 },
-              { emoji: '🚫', text: 'Antiplagiatdan o\'tmay qoladi', rotZ: 3 },
-              { emoji: '😓', text: 'Ball va ustama cho\'zilib ketadi', rotZ: -2 },
-            ].map((item, i) => (
-              <div key={i} className="flex items-center gap-3 py-1.5">
-                <StickerIcon emoji={item.emoji} size="sm" rotateZ={item.rotZ} />
-                <p className="text-sm text-rose-700">{item.text}</p>
-              </div>
-            ))}
-            <p className="text-xs text-rose-400 mt-2 text-center font-medium">Siz yolg'iz emassiz — biz yordamga tayyormiz</p>
+          {/* arrow */}
+          <div className="flex justify-center mt-2">
+            <div className="flex flex-col items-center gap-0.5 opacity-40">
+              <div className="w-0.5 h-4 bg-indigo-400 rounded" />
+              <div className="w-0 h-0 border-l-[5px] border-r-[5px] border-t-[7px] border-l-transparent border-r-transparent border-t-indigo-400" />
+            </div>
           </div>
-        </Section>
+          <div className="mt-2 rounded-2xl px-4 py-3 text-center"
+            style={{ background:'linear-gradient(135deg,#ede9fe,#dbeafe)',border:'1px solid #c4b5fd' }}>
+            <p className="text-sm font-bold text-indigo-800">Metodikish — bularning hammasi uchun yechim</p>
+            <p className="text-xs text-indigo-600 mt-0.5">2021-yildan buyon 1 850+ o'qituvchiga xizmat qilganmiz</p>
+          </div>
+        </FadeIn>
 
-        {/* ── SERVICES ── */}
-        <Section delay={350} className="mt-6">
-          <h2 className="text-lg font-bold text-tg-text mb-3">Xizmatlarimiz</h2>
+        {/* ══════════ XIZMATLAR ══════════ */}
+        <FadeIn delay={240} className="px-4 mt-6">
+          <Label color="#6366f1">Xizmatlarimiz</Label>
           <div className="grid grid-cols-2 gap-3">
             {[
-              { emoji: '📘', title: 'Metodik qo\'llanma', desc: '25–30+ bet', color: 'from-blue-500 to-indigo-600', rotZ: -5 },
-              { emoji: '📗', title: 'Metodik tavsiya', desc: 'Talablarga mos', color: 'from-emerald-500 to-teal-600', rotZ: 5 },
-            ].map((s, i) => (
-              <div
-                key={i}
-                className={`card-glow rounded-2xl p-4 text-white text-center bg-gradient-to-br ${s.color}`}
-                style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.15)' }}
-              >
-                <StickerIcon emoji={s.emoji} size="lg" rotateZ={s.rotZ} />
-                <p className="text-sm font-bold mt-2">{s.title}</p>
-                <p className="text-xs opacity-80 mt-0.5">{s.desc}</p>
+              {
+                e:'📘', rz:-4, title:'Metodik qo\'llanma',
+                points:['25–30+ bet','5E moduli','AKT integratsiya'],
+                grad:'linear-gradient(135deg,#4338ca,#6366f1)',
+                ad:'0s',
+              },
+              {
+                e:'📗', rz:4, title:'Metodik tavsiya',
+                points:['15–20+ bet','Amaliy yo\'naltirish','Talablarga to\'liq mos'],
+                grad:'linear-gradient(135deg,#059669,#10b981)',
+                ad:'0.12s',
+              },
+            ].map((s,i)=>(
+              <div key={i} className="hcard rounded-2xl p-4 text-white"
+                style={{ background:s.grad,boxShadow:'0 6px 20px rgba(0,0,0,.18)' }}>
+                <Sticker e={s.e} rotZ={s.rz} sz={48} fontSize={24} animDelay={s.ad} />
+                <p className="text-sm font-black mt-3">{s.title}</p>
+                <ul className="mt-2 space-y-1">
+                  {s.points.map((p,j)=>(
+                    <li key={j} className="text-[11px] opacity-85 flex items-center gap-1.5">
+                      <span className="w-1 h-1 rounded-full bg-white/70 shrink-0" />{p}
+                    </li>
+                  ))}
+                </ul>
               </div>
             ))}
           </div>
-          <div className="mt-3 rounded-2xl p-4 bg-tg-secondary border border-black/5">
-            <p className="text-xs font-semibold text-tg-hint uppercase mb-2">Ommalashish darajalari</p>
-            <div className="flex flex-wrap gap-2">
+        </FadeIn>
+
+        {/* ══════════ JARAYON ══════════ */}
+        <FadeIn delay={300} className="px-4 mt-6">
+          <Label color="#8b5cf6">Qanday ishlaydi?</Label>
+          <div className="space-y-2">
+            {[
+              {n:'1',e:'📝',rz:-2,t:'Buyurtma bering',d:'Fan, sinf, ommalashish darajasini tanlang',c:'#ede9fe',bc:'#ddd6fe'},
+              {n:'2',e:'💸',rz:3,t:'To\'lovni amalga oshiring',d:'Xavfsiz to\'lov — kvitansiya Telegram orqali',c:'#dcfce7',bc:'#bbf7d0'},
+              {n:'3',e:'⚙️',rz:-1,t:'Mutaxassis ish boshlaydi',d:'O\'rtacha 12 soatda tayyor holga keltiriladi',c:'#dbeafe',bc:'#bfdbfe'},
+              {n:'4',e:'📦',rz:2,t:'Tayyor hujjatni oling',d:'Word formatida, to\'liq formatlangan holda',c:'#fef9c3',bc:'#fde68a'},
+            ].map((step,i)=>(
+              <div key={i} className="hcard flex items-start gap-3 rounded-xl p-3.5"
+                style={{ background:step.c,border:`1px solid ${step.bc}` }}>
+                <div className="flex flex-col items-center gap-1 shrink-0">
+                  <div className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-black text-white"
+                    style={{ background:'#6366f1' }}>{step.n}</div>
+                  {i<3 && <div className="w-0.5 h-3 rounded bg-indigo-200" />}
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <Sticker e={step.e} rotZ={step.rz} sz={32} fontSize={16} animDelay={`${i*0.1}s`} />
+                    <p className="text-sm font-bold text-gray-800">{step.t}</p>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1 leading-snug">{step.d}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </FadeIn>
+
+        {/* ══════════ SIFAT KAFOLATI ══════════ */}
+        <FadeIn delay={360} className="px-4 mt-6">
+          <Label color="#0891b2">Har bir ish tarkibi</Label>
+          <div className="rounded-2xl overflow-hidden" style={{ background:'var(--tg-theme-secondary-bg-color)',boxShadow:'0 2px 16px rgba(0,0,0,.06)' }}>
+            <div className="grid grid-cols-2">
               {[
-                { label: '🏫 Maktab', val: '135', color: '#dbeafe', text: '#1d4ed8', emoji: '🏫', rotZ: 2 },
-                { label: '📍 Tuman', val: '825', color: '#dcfce7', text: '#15803d', emoji: '📍', rotZ: -2 },
-                { label: '🏢 Viloyat', val: '76', color: '#fef9c3', text: '#92400e', emoji: '🏢', rotZ: 3 },
-                { label: '🇺🇿 Respublika', val: '25', color: '#ede9fe', text: '#6d28d9', emoji: '🇺🇿', rotZ: -1 },
-              ].map((s, i) => (
-                <div key={i} className="flex items-center gap-1.5">
-                  <StickerIcon emoji={s.emoji} size="sm" rotateZ={s.rotZ} />
-                  <span
-                    className="text-xs font-semibold px-2 py-1.5 rounded-lg"
-                    style={{ background: s.color, color: s.text }}
-                  >
-                    {s.val} ta
-                  </span>
+                {e:'🛡️',rz:-2,t:'Antiplagiat 90%+',sub:'kafolatlangan'},
+                {e:'🌏',rz:2,t:'Singapur modeli',sub:'5E asosida'},
+                {e:'📊',rz:-1,t:'Jadval & grafik',sub:'vizual ko\'rsatkichlar'},
+                {e:'🔬',rz:3,t:'Tadqiqot elementi',sub:'ilmiy asoslangan'},
+                {e:'💻',rz:-3,t:'AKT vositalari',sub:'zamonaviy yondashuv'},
+                {e:'📎',rz:1,t:'Word + PDF',sub:'tayyor holda beriladi'},
+              ].map((q,i)=>(
+                <div key={i} className={`flex items-center gap-2.5 p-3 ${i%2===0?'border-r border-black/5':''} ${i<4?'border-b border-black/5':''}`}>
+                  <Sticker e={q.e} rotZ={q.rz} sz={36} fontSize={17} animDelay={`${i*0.08}s`} />
+                  <div>
+                    <p className="text-xs font-bold text-tg-text">{q.t}</p>
+                    <p className="text-[10px] text-tg-hint">{q.sub}</p>
+                  </div>
                 </div>
               ))}
             </div>
           </div>
-        </Section>
+        </FadeIn>
 
-        {/* ── QUALITY ── */}
-        <Section delay={400} className="mt-6">
-          <h2 className="text-lg font-bold text-tg-text mb-3">Sifat kafolati</h2>
-          <div className="grid grid-cols-2 gap-2">
-            {[
-              { emoji: '📑', text: 'Hajmi 25–30+ bet', rotZ: 1 },
-              { emoji: '🛡️', text: 'Antiplagiat 90%+', rotZ: -3 },
-              { emoji: '💡', text: 'Interfaol metodlar', rotZ: 2 },
-              { emoji: '📚', text: '5E moduli asosi', rotZ: -2 },
-              { emoji: '💻', text: 'AKT qo\'llaniladi', rotZ: 3 },
-              { emoji: '🌏', text: 'Singapur tajribasi', rotZ: -1 },
-              { emoji: '🔬', text: 'Tadqiqotchilik', rotZ: 2 },
-              { emoji: '📊', text: 'Jadval/grafiklar', rotZ: -3 },
-            ].map((q, i) => (
-              <div
-                key={i}
-                className="card-glow flex items-center gap-2.5 rounded-xl p-3 bg-tg-secondary border border-black/5"
-              >
-                <StickerIcon emoji={q.emoji} size="sm" rotateZ={q.rotZ} />
-                <p className="text-xs font-medium text-tg-text">{q.text}</p>
-              </div>
-            ))}
-          </div>
-        </Section>
-
-        {/* ── WHO FOR ── */}
-        <Section delay={450} className="mt-6">
-          <h2 className="text-lg font-bold text-tg-text mb-3">Kimlar uchun?</h2>
+        {/* ══════════ OMMALASHISH DARAJALARI ══════════ */}
+        <FadeIn delay={400} className="px-4 mt-6">
+          <Label color="#0891b2">Ommalashish darajalari va narxlar</Label>
           <div className="space-y-2">
             {[
-              { emoji: '⏰', text: 'Vaqti yo\'q, lekin ball kerak bo\'lgan ustozlar', rotZ: -2 },
-              { emoji: '🔁', text: 'Oldin yozib, qaytarilgan ish egalari', rotZ: 3 },
-              { emoji: '📈', text: 'Attestatsiya yoki ustama uchun tayyorgarlik', rotZ: 1 },
-            ].map((item, i) => (
-              <div
-                key={i}
-                className="card-glow flex items-center gap-3 rounded-xl p-3.5 bg-tg-secondary border border-black/5"
-              >
-                <StickerIcon emoji={item.emoji} size="md" rotateZ={item.rotZ} />
-                <p className="text-sm text-tg-text">{item.text}</p>
+              {e:'🏫',rz:-2,lvl:'Maktab darajasi',cnt:'135 ta ish',price:'Eng qulayʼ narx',desc:'Maktab ichida ommalashadi, tez va arzon',c:'#dbeafe',bc:'#93c5fd',tc:'#1e40af'},
+              {e:'📍',rz:3, lvl:'Tuman darajasi', cnt:'825 ta ish',price:'Optimal narx',   desc:'Tuman metodist kengashida tasdiqlanadi',c:'#dcfce7',bc:'#6ee7b7',tc:'#065f46'},
+              {e:'🏢',rz:-1,lvl:'Viloyat darajasi',cnt:'76 ta ish', price:'Premium narx',  desc:'Viloyat ta\'lim bo\'limida ro\'yxatga olinadi',c:'#fef9c3',bc:'#fcd34d',tc:'#78350f'},
+              {e:'🇺🇿',rz:2, lvl:'Respublika darajasi',cnt:'25 ta ish',price:'Elite narx',desc:'ZiyoNET yoki respublika nashriga taqdim etiladi',c:'#ede9fe',bc:'#a78bfa',tc:'#4c1d95'},
+            ].map((s,i)=>(
+              <div key={i} className="hcard flex items-center gap-3 rounded-xl px-3.5 py-3"
+                style={{ background:s.c,border:`1px solid ${s.bc}` }}>
+                <Sticker e={s.e} rotZ={s.rz} sz={42} fontSize={22} animDelay={`${i*0.1}s`} />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-black" style={{ color:s.tc }}>{s.lvl}</p>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/60" style={{ color:s.tc }}>{s.price}</span>
+                  </div>
+                  <p className="text-[11px] mt-0.5 leading-snug text-gray-600">{s.desc}</p>
+                  <p className="text-[10px] font-semibold mt-0.5" style={{ color:s.tc }}>✔ {s.cnt} muvaffaqiyatli</p>
+                </div>
               </div>
             ))}
           </div>
-        </Section>
+          <p className="text-[11px] text-tg-hint text-center mt-2">* Aniq narx xizmat tanlash bosqichida ko'rsatiladi</p>
+        </FadeIn>
 
-        {/* ── CTA ── */}
-        <Section delay={500} className="mt-6">
-          <div
-            className="rounded-3xl p-6 text-center text-white relative overflow-hidden"
-            style={{ background: 'linear-gradient(135deg,#4338ca 0%,#7c3aed 100%)', boxShadow: '0 8px 32px rgba(99,102,241,0.4)' }}
-          >
-            <Orb style={{ width: 160, height: 160, top: -40, right: -40 }} />
-            <div className="relative">
-              <p className="text-xl font-black">Tayyor bo'lsangiz —</p>
-              <p className="text-xl font-black">boshlang! 🚀</p>
-              <p className="text-white/70 text-sm mt-1.5">Sifatga mos narx. Ishonch. Natija.</p>
-              <div className="flex gap-2 justify-center mt-4 text-xs text-white/60">
-                <span>✅ 3 yillik tajriba</span>
-                <span>·</span>
-                <span>✅ Kafolat</span>
-                <span>·</span>
-                <span>✅ Tez yetkazish</span>
+        {/* ══════════ SOCIAL PROOF ══════════ */}
+        <FadeIn delay={440} className="px-4 mt-6">
+          <Label color="#f59e0b">Mijozlarimiz fikri</Label>
+          <div className="space-y-2.5">
+            {[
+              {
+                name:"Dilnoza M.", region:"Toshkent viloyati",
+                text:"Tuman darajasida ommalashtirish uchun ish buyurtma qildim. 14 soatda tayyor bo'ldi. Antiplagiat 93% chiqdi. Juda mamnunman!",
+                stars:5, e:'👩‍🏫', rz:-3,
+              },
+              {
+                name:"Sherzod K.", region:"Samarqand shahri",
+                text:"Avval o'zim yozib, 2 marta qaytarilgan edi. Metodikishga murojaat qildim — 1 marta tekshirishdan o'tdi va qabul qilindi.",
+                stars:5, e:'👨‍🏫', rz:2,
+              },
+              {
+                name:"Maftuna R.", region:"Farg'ona viloyati",
+                text:"Viloyat darajasida ommalashtirishni xohlaydigan hamkasblarimga tavsiya qilaman. Professional yondashuv, kafolat bor.",
+                stars:5, e:'🧑‍🏫', rz:-1,
+              },
+            ].map((r,i)=>(
+              <div key={i} className="hcard rounded-2xl p-4 bg-tg-secondary border border-black/5">
+                <div className="flex items-center gap-3 mb-2">
+                  <Sticker e={r.e} rotZ={r.rz} sz={40} fontSize={20} animDelay={`${i*0.15}s`} />
+                  <div>
+                    <p className="text-sm font-bold text-tg-text">{r.name}</p>
+                    <p className="text-[11px] text-tg-hint">{r.region}</p>
+                  </div>
+                  <div className="ml-auto text-sm tracking-tight">{'⭐'.repeat(r.stars)}</div>
+                </div>
+                <p className="text-xs text-tg-text leading-relaxed border-t border-black/5 pt-2">"{r.text}"</p>
               </div>
-              <button
-                onClick={() => navigate('/services')}
-                className="mt-5 bg-white text-indigo-700 font-bold px-8 py-3.5 rounded-2xl text-sm active:scale-95 transition-transform"
-                style={{
-                  animation: 'pulseRing 2.5s ease-in-out infinite',
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
-                }}
-              >
-                Xizmatlarni ko'rish →
+            ))}
+          </div>
+        </FadeIn>
+
+        {/* ══════════ CTA ══════════ */}
+        <FadeIn delay={500} className="px-4 mt-6">
+          <div className="rounded-3xl p-6 text-center text-white relative overflow-hidden"
+            style={{ background:'linear-gradient(140deg,#3730a3 0%,#4f46e5 50%,#7c3aed 100%)',boxShadow:'0 10px 40px rgba(79,70,229,.45)' }}>
+            <Orb style={{ width:170,height:170,top:-50,right:-50 }} />
+            <Orb style={{ width:100,height:100,bottom:-30,left:-20,animationDelay:'1.8s' }} />
+            <div className="relative">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold mb-3"
+                style={{ background:'rgba(255,255,255,.15)',border:'1px solid rgba(255,255,255,.25)' }}>
+                🟢 Bugun buyurtma qabul qilinmoqda
+              </div>
+              <p className="text-xl font-black leading-tight">Kasbiy rivojlanish —<br/>bugun boshlang</p>
+              <p className="text-white/65 text-xs mt-2 max-w-[240px] mx-auto leading-relaxed">
+                Bir buyurtma bilan malaka toifangizni, oyligingizni va maqomingizni ko'taring
+              </p>
+              <div className="grid grid-cols-3 gap-2 mt-4 text-center">
+                {[
+                  {e:'⚡',l:'Tez',s:'~12 soat'},
+                  {e:'🛡️',l:'Kafolat',s:'90%+ plagiat'},
+                  {e:'💬',l:'Aloqa',s:'24/7 Telegram'},
+                ].map((f,i)=>(
+                  <div key={i} className="rounded-xl p-2" style={{ background:'rgba(255,255,255,.1)' }}>
+                    <span className="text-base">{f.e}</span>
+                    <p className="text-[11px] font-bold mt-0.5">{f.l}</p>
+                    <p className="text-[10px] opacity-60">{f.s}</p>
+                  </div>
+                ))}
+              </div>
+              <button onClick={()=>nav('/services')}
+                className="mt-5 w-full font-black py-4 rounded-2xl text-indigo-700 text-sm active:scale-[.97] transition-transform"
+                style={{ background:'#fff',animation:'pulse 2.4s ease-in-out infinite',boxShadow:'0 4px 20px rgba(0,0,0,.22)' }}>
+                Xizmatni tanlash →
               </button>
+              <p className="text-[11px] text-white/40 mt-2">To'lov faqat siz roziligu'angizdan keyin</p>
             </div>
           </div>
-        </Section>
+        </FadeIn>
 
       </div>
     </>
