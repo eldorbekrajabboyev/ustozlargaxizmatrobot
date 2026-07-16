@@ -1,101 +1,168 @@
 import { useNavigate } from 'react-router-dom'
 
-function StatPill({ icon, label, value }) {
-  return (
-    <div className="flex items-center gap-2 bg-white/15 rounded-xl px-3 py-2 backdrop-blur-sm">
-      <span className="text-lg">{icon}</span>
-      <div className="leading-tight">
-        <p className="text-xs text-white/80">{label}</p>
-        <p className="text-sm font-semibold text-white">{value}</p>
-      </div>
-    </div>
-  )
-}
-
 function Home({ user }) {
   const navigate = useNavigate()
-  const firstName = user?.first_name || 'Foydalanuvchi'
-
-  const actions = [
-    {
-      key: 'order',
-      title: 'Buyurtma berish',
-      desc: 'Metodik hujjat buyurtma qilish',
-      icon: '📝',
-      onClick: () => navigate('/services'),
-      accent: 'bg-primary-600',
-      iconBg: 'bg-white/20',
-    },
-    {
-      key: 'orders',
-      title: 'Buyurtmalarim',
-      desc: 'Buyurtmalar holatini kuzatish',
-      icon: '📦',
-      onClick: () => navigate('/my-orders'),
-      accent: 'bg-tg-secondary text-tg-text border border-black/5',
-      iconBg: 'bg-primary-50 text-primary-600',
-      dark: true,
-    },
-  ]
 
   return (
     <div className="animate-fade-in">
       {/* Hero */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-primary-500 via-primary-600 to-indigo-700 px-5 pt-10 pb-7 text-white">
-        <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white/10" />
-        <div className="absolute bottom-[-20px] left-[-20px] w-28 h-28 rounded-full bg-white/5" />
+      <div className="relative overflow-hidden bg-gradient-to-br from-primary-600 via-primary-700 to-indigo-900 px-5 pt-10 pb-8 text-white text-center">
+        <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-white/5" />
+        <div className="absolute bottom-[-30px] left-[-30px] w-36 h-36 rounded-full bg-white/5" />
         <div className="relative">
-          <div className="flex items-center gap-3 mb-5">
-            <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center text-3xl backdrop-blur-sm">
-              📚
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold leading-tight">Metodikish</h1>
-              <p className="text-sm text-white/80">Metodik hujjatlar tayyorlash</p>
-            </div>
+          <div className="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center text-3xl mx-auto mb-4 backdrop-blur-sm">
+            📘
           </div>
-          <p className="text-white/90 mb-4">
-            Assalomu alaykum, <span className="font-semibold">{firstName}</span>! 🎓
-          </p>
-          <div className="flex gap-2 flex-wrap">
-            <StatPill icon="⏱" label="Tayyorlash" value="5–6 soat" />
-            <StatPill icon="💳" label="To'lov" value="Karta orqali" />
+          <h1 className="text-2xl font-bold">Metodikish</h1>
+          <p className="text-white/80 mt-1 text-sm">Metodik ishlar tayyorlash va ommalashtirish xizmati</p>
+          <button
+            onClick={() => navigate('/services')}
+            className="mt-5 bg-white text-primary-700 font-semibold px-6 py-3 rounded-2xl text-sm active:scale-95 transition-transform shadow-lg"
+          >
+            Buyurtma berish →
+          </button>
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="px-4 -mt-5 relative">
+        <div className="bg-tg-secondary rounded-2xl p-4 shadow-card border border-black/5 grid grid-cols-3 gap-3 text-center">
+          <div>
+            <p className="text-2xl font-bold text-primary-600">1050+</p>
+            <p className="text-[11px] text-tg-hint mt-0.5">Tugatilgan ishlar</p>
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-emerald-600">98%</p>
+            <p className="text-[11px] text-tg-hint mt-0.5">Ommalashgan</p>
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-amber-600">4 yil</p>
+            <p className="text-[11px] text-tg-hint mt-0.5">Tajriba</p>
           </div>
         </div>
       </div>
 
-      {/* Actions */}
-      <div className="px-4 -mt-4 relative space-y-3">
-        {actions.map(a => (
-          <button
-            key={a.key}
-            onClick={a.onClick}
-            className={`w-full rounded-2xl p-4 shadow-card flex items-center gap-4 text-left active:scale-[0.99] transition-transform ${a.accent}`}
-          >
-            <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0 ${a.iconBg}`}>
-              {a.icon}
+      {/* Why section */}
+      <div className="px-4 mt-5">
+        <h2 className="text-lg font-bold text-tg-text mb-3">Nega ommalashtirish kerak?</h2>
+        <div className="space-y-2.5">
+          {[
+            { icon: '💰', text: 'Malaka toifangiz oshadi — oyligingiz sezilarli ko\'tariladi' },
+            { icon: '📜', text: 'Sertifikat va guvohnoma olasiz — attestatsiyada katta ustunlik' },
+            { icon: '🏆', text: 'Ilg\'or ustoz sifatida mukofot va rag\'bat pullari olish imkoniyati' },
+            { icon: '📈', text: 'Obro\' oshadi — yuqori lavozim va qo\'shimcha daromad eshigi ochiladi' },
+          ].map((item, i) => (
+            <div key={i} className="flex items-start gap-3 bg-tg-secondary rounded-xl p-3 border border-black/5">
+              <span className="text-xl shrink-0">{item.icon}</span>
+              <p className="text-sm text-tg-text leading-snug">{item.text}</p>
             </div>
-            <div className="flex-1">
-              <p className="font-semibold text-lg">{a.title}</p>
-              <p className={`text-sm ${a.dark ? 'text-tg-hint' : 'text-white/80'}`}>{a.desc}</p>
-            </div>
-            <span className={`text-xl ${a.dark ? 'text-tg-hint' : 'text-white/70'}`}>›</span>
-          </button>
-        ))}
+          ))}
+        </div>
       </div>
 
-      {/* Info */}
-      <div className="px-4 mt-4">
-        <div className="bg-tg-secondary rounded-2xl p-4 border border-black/5">
-          <h3 className="font-semibold text-tg-text mb-2 flex items-center gap-2">
-            <span>💡</span> Qanday ishlaydi?
-          </h3>
-          <ol className="text-sm text-tg-hint space-y-1.5 list-decimal list-inside">
-            <li>Xizmatni tanlang va buyurtma bering</li>
-            <li>To'lovni amalga oshiring va chekni yuklang</li>
-            <li>Admin tasdiqlagach, hujjat tayyor bo'ladi</li>
-            <li>Natija bot orqali sizga yuboriladi</li>
-          </ol>
+      {/* Pain points */}
+      <div className="px-4 mt-5">
+        <h2 className="text-lg font-bold text-tg-text mb-3">Tanish muammolar</h2>
+        <div className="bg-rose-50 rounded-2xl p-4 border border-rose-100 space-y-2">
+          {[
+            '⏳ Metodik ish juda ko\'p vaqt oladi',
+            '📄 Yoziladi — lekin qaytariladi',
+            '🚫 Antiplagiatdan o\'tmay qoladi',
+            '😓 Ball va ustama cho\'zilib ketadi',
+          ].map((t, i) => (
+            <p key={i} className="text-sm text-rose-700">{t}</p>
+          ))}
+        </div>
+        <p className="text-sm text-tg-hint mt-2 text-center">Agar tanish bo'lsa — siz yolg'iz emassiz.</p>
+      </div>
+
+      {/* What we do */}
+      <div className="px-4 mt-5">
+        <h2 className="text-lg font-bold text-tg-text mb-3">Biz nima qilamiz?</h2>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="bg-tg-secondary rounded-2xl p-4 border border-black/5 text-center">
+            <span className="text-3xl">📘</span>
+            <p className="text-sm font-semibold text-tg-text mt-2">Metodik qo'llanma</p>
+          </div>
+          <div className="bg-tg-secondary rounded-2xl p-4 border border-black/5 text-center">
+            <span className="text-3xl">📗</span>
+            <p className="text-sm font-semibold text-tg-text mt-2">Metodik tavsiya</p>
+          </div>
+        </div>
+        <div className="mt-3 bg-tg-secondary rounded-2xl p-4 border border-black/5">
+          <p className="text-xs font-semibold text-tg-hint uppercase mb-2">Ommalashish darajalari:</p>
+          <div className="flex flex-wrap gap-2">
+            {['🏫 Maktab — 135 ta', '📍 Tuman — 825 ta', '🏢 Viloyat — 76 ta', '🇺🇿 Respublika — 25 ta'].map((s, i) => (
+              <span key={i} className="text-xs bg-primary-50 text-primary-700 px-2.5 py-1 rounded-lg">{s}</span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Quality */}
+      <div className="px-4 mt-5">
+        <h2 className="text-lg font-bold text-tg-text mb-3">Sifat kafolati</h2>
+        <div className="bg-tg-secondary rounded-2xl p-4 border border-black/5 space-y-2">
+          {[
+            '📑 Hajmi: 25–30+ bet',
+            '💡 Yangi interfaol metodlar',
+            '📚 5E moduli asosida yondashuv',
+            '💻 AKTdan foydalanish yo\'llari',
+            '🌏 Singapur ta\'lim tizimi tajribasi',
+            '🔬 Tadqiqotchilik ko\'nikmalarini rivojlantirish',
+            '📊 Jadval va grafiklardan foydalanish',
+            '🛡️ Antiplagiat: 90%+ natija',
+          ].map((t, i) => (
+            <p key={i} className="text-sm text-tg-text">{t}</p>
+          ))}
+        </div>
+      </div>
+
+      {/* Trust */}
+      <div className="px-4 mt-5">
+        <h2 className="text-lg font-bold text-tg-text mb-3">Nega bizga ishonishadi?</h2>
+        <div className="grid grid-cols-3 gap-2">
+          {[
+            { val: '4 yil', label: 'Tajriba' },
+            { val: '1050+', label: 'Buyurtma' },
+            { val: '98%', label: 'Ommalashdi' },
+          ].map((s, i) => (
+            <div key={i} className="bg-emerald-50 rounded-xl p-3 text-center border border-emerald-100">
+              <p className="text-lg font-bold text-emerald-700">{s.val}</p>
+              <p className="text-[11px] text-emerald-600 mt-0.5">{s.label}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Who is it for */}
+      <div className="px-4 mt-5">
+        <h2 className="text-lg font-bold text-tg-text mb-3">Kimlar uchun?</h2>
+        <div className="space-y-2">
+          {[
+            { icon: '⏰', text: 'Vaqti yo\'q, lekin ball kerak bo\'lgan ustozlar' },
+            { icon: '🔁', text: 'Oldin yozib, qaytarilgan ish egalari' },
+            { icon: '📈', text: 'Attestatsiya yoki ustama uchun tayyorgarlik ko\'rayotganlar' },
+          ].map((item, i) => (
+            <div key={i} className="flex items-center gap-3 bg-tg-secondary rounded-xl p-3 border border-black/5">
+              <span className="text-xl">{item.icon}</span>
+              <p className="text-sm text-tg-text">{item.text}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* CTA */}
+      <div className="px-4 mt-6 mb-6">
+        <div className="bg-gradient-to-br from-primary-600 to-indigo-700 rounded-2xl p-5 text-center text-white">
+          <p className="text-lg font-bold">Tayyor bo'lsangiz — boshlang!</p>
+          <p className="text-white/80 text-sm mt-1">Sifatga mos narx. Ishonch. Natija.</p>
+          <button
+            onClick={() => navigate('/services')}
+            className="mt-4 bg-white text-primary-700 font-semibold px-8 py-3 rounded-2xl text-sm active:scale-95 transition-transform shadow-lg"
+          >
+            Xizmatlarni ko'rish →
+          </button>
         </div>
       </div>
     </div>
