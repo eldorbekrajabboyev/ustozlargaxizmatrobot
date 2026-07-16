@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
+import axios from 'axios'
 
 /* ─── animated counter on mount ─── */
 function Counter({ to, suffix = '' }) {
@@ -59,6 +60,90 @@ function Label({ children, color = '#6366f1' }) {
       <div className="w-1 h-4 rounded-full" style={{ background: color }} />
       <p className="text-[11px] font-bold uppercase tracking-widest" style={{ color }}>{children}</p>
     </div>
+  )
+}
+
+/* ─── reviews carousel ─── */
+const FALLBACK_REVIEWS = [
+  { id:1, stars:5, author_name:'Dilnoza M.', region:'Toshkent viloyati', text:"Tuman darajasida buyurtma qildim — 14 soatda tayyor bo'ldi. Antiplagiat 93% chiqdi. Juda mamnunman!" },
+  { id:2, stars:5, author_name:'Sherzod K.', region:'Samarqand shahri',  text:"O'zim 2 marta qaytarilgan edim. Metodikishga murojaat qildim — 1 tekshirishdan o'tdi, qabul qilindi." },
+  { id:3, stars:5, author_name:'Maftuna R.', region:"Farg'ona viloyati", text:"Viloyat darajasida ommalashtirishni xohlovchi hamkasblarimga tavsiya qilaman. Professional va kafolatlangan." },
+]
+
+function ReviewsCarousel() {
+  const [reviews, setReviews] = useState(FALLBACK_REVIEWS)
+  const [idx, setIdx] = useState(0)
+  const [fade, setFade] = useState(true)
+  const timerRef = useRef(null)
+
+  useEffect(() => {
+    axios.get('/api/reviews/published').then(r => {
+      if (r.data && r.data.length > 0) setReviews(r.data)
+    }).catch(() => {})
+  }, [])
+
+  const goTo = (next) => {
+    setFade(false)
+    setTimeout(() => {
+      setIdx(next)
+      setFade(true)
+    }, 220)
+  }
+
+  useEffect(() => {
+    if (reviews.length <= 1) return
+    timerRef.current = setInterval(() => {
+      goTo((prev) => (prev + 1) % reviews.length)
+    }, 4500)
+    return () => clearInterval(timerRef.current)
+  }, [reviews.length])
+
+  if (!reviews.length) return null
+  const r = reviews[idx]
+  const emojis = ['👩‍🏫','👨‍🏫','🧑‍🏫','👩‍💼','👨‍💼']
+
+  return (
+    <FadeIn delay={440} className="px-4 mt-6">
+      <Label color="#f59e0b">Mijozlarimiz fikri</Label>
+      <div className="relative">
+        {/* Card */}
+        <div
+          className="rounded-2xl p-4 bg-tg-secondary border border-black/5 transition-opacity duration-200"
+          style={{ opacity: fade ? 1 : 0, minHeight: 120 }}
+        >
+          <div className="flex items-center gap-3 mb-2">
+            <Sticker e={emojis[idx % emojis.length]} rotZ={(idx%2===0?-2:2)} sz={40} fontSize={20} animDelay="0s" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-tg-text truncate">{r.author_name || 'Foydalanuvchi'}</p>
+              {r.region && <p className="text-[11px] text-tg-hint">{r.region}</p>}
+            </div>
+            <div className="shrink-0 flex gap-0.5">
+              {[1,2,3,4,5].map(n=>(
+                <span key={n} style={{ color: n<=r.stars?'#f59e0b':'#d1d5db', fontSize:14 }}>★</span>
+              ))}
+            </div>
+          </div>
+          <p className="text-xs text-tg-text leading-relaxed border-t border-black/5 pt-2">"{r.text}"</p>
+        </div>
+
+        {/* Dots */}
+        {reviews.length > 1 && (
+          <div className="flex justify-center gap-1.5 mt-3">
+            {reviews.map((_,i) => (
+              <button
+                key={i}
+                onClick={() => { clearInterval(timerRef.current); goTo(i) }}
+                className="rounded-full transition-all duration-300"
+                style={{
+                  width: i===idx ? 18 : 6, height: 6,
+                  background: i===idx ? '#6366f1' : '#d1d5db',
+                }}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </FadeIn>
   )
 }
 
@@ -300,41 +385,8 @@ export default function Home({ user }) {
           <p className="text-[11px] text-tg-hint text-center mt-2">* Aniq narx xizmat tanlash bosqichida ko'rsatiladi</p>
         </FadeIn>
 
-        {/* ══════════ SOCIAL PROOF ══════════ */}
-        <FadeIn delay={440} className="px-4 mt-6">
-          <Label color="#f59e0b">Mijozlarimiz fikri</Label>
-          <div className="space-y-2.5">
-            {[
-              {
-                name:"Dilnoza M.", region:"Toshkent viloyati",
-                text:"Tuman darajasida ommalashtirish uchun ish buyurtma qildim. 14 soatda tayyor bo'ldi. Antiplagiat 93% chiqdi. Juda mamnunman!",
-                stars:5, e:'👩‍🏫', rz:-3,
-              },
-              {
-                name:"Sherzod K.", region:"Samarqand shahri",
-                text:"Avval o'zim yozib, 2 marta qaytarilgan edi. Metodikishga murojaat qildim — 1 marta tekshirishdan o'tdi va qabul qilindi.",
-                stars:5, e:'👨‍🏫', rz:2,
-              },
-              {
-                name:"Maftuna R.", region:"Farg'ona viloyati",
-                text:"Viloyat darajasida ommalashtirishni xohlaydigan hamkasblarimga tavsiya qilaman. Professional yondashuv, kafolat bor.",
-                stars:5, e:'🧑‍🏫', rz:-1,
-              },
-            ].map((r,i)=>(
-              <div key={i} className="hcard rounded-2xl p-4 bg-tg-secondary border border-black/5">
-                <div className="flex items-center gap-3 mb-2">
-                  <Sticker e={r.e} rotZ={r.rz} sz={40} fontSize={20} animDelay={`${i*0.15}s`} />
-                  <div>
-                    <p className="text-sm font-bold text-tg-text">{r.name}</p>
-                    <p className="text-[11px] text-tg-hint">{r.region}</p>
-                  </div>
-                  <div className="ml-auto text-sm tracking-tight">{'⭐'.repeat(r.stars)}</div>
-                </div>
-                <p className="text-xs text-tg-text leading-relaxed border-t border-black/5 pt-2">"{r.text}"</p>
-              </div>
-            ))}
-          </div>
-        </FadeIn>
+        {/* ══════════ SOCIAL PROOF — CAROUSEL ══════════ */}
+        <ReviewsCarousel />
 
         {/* ══════════ CTA ══════════ */}
         <FadeIn delay={500} className="px-4 mt-6">

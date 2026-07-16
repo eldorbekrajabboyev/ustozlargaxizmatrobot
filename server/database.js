@@ -115,6 +115,22 @@ async function initDatabase() {
       ["channels", ""]);
   }
 
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS reviews (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      order_id INTEGER NOT NULL UNIQUE,
+      user_id INTEGER NOT NULL,
+      stars INTEGER NOT NULL CHECK(stars BETWEEN 1 AND 5),
+      text TEXT NOT NULL,
+      author_name TEXT,
+      region TEXT,
+      status TEXT DEFAULT 'pending',
+      created_at DATETIME DEFAULT (datetime('now', '+5 hours')),
+      FOREIGN KEY (order_id) REFERENCES orders(id),
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    )
+  `);
+
   // Add columns if not exists
   try { await db.execute("ALTER TABLE orders ADD COLUMN receipt_uploaded_at DATETIME"); } catch (e) {}
   try { await db.execute("ALTER TABLE orders ADD COLUMN ready_at DATETIME"); } catch (e) {}

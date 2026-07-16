@@ -39,6 +39,120 @@ function useCountdown(createdAt) {
   return { mins, secs, expired }
 }
 
+/* ── Star rating component ── */
+function StarRating({ value, onChange, readonly = false }) {
+  const [hover, setHover] = useState(0)
+  return (
+    <div className="flex gap-1">
+      {[1,2,3,4,5].map(n => (
+        <button
+          key={n}
+          type="button"
+          disabled={readonly}
+          onClick={() => !readonly && onChange && onChange(n)}
+          onMouseEnter={() => !readonly && setHover(n)}
+          onMouseLeave={() => !readonly && setHover(0)}
+          className={`text-3xl transition-transform ${!readonly ? 'active:scale-90' : ''}`}
+          style={{ color: n <= (hover || value) ? '#f59e0b' : '#d1d5db', lineHeight: 1 }}
+        >
+          ★
+        </button>
+      ))}
+    </div>
+  )
+}
+
+/* ── Review Modal ── */
+function ReviewModal({ order, user, onClose, onSuccess }) {
+  const [stars, setStars] = useState(5)
+  const [text, setText] = useState('')
+  const [region, setRegion] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  const submit = async () => {
+    if (!text.trim() || text.trim().length < 10)
+      return setError('Sharh kamida 10 ta belgi bo\'lishi kerak')
+    setLoading(true)
+    setError('')
+    try {
+      await axios.post('/api/reviews', {
+        order_id: order.id,
+        telegram_id: user?.id,
+        stars,
+        text: text.trim(),
+        author_name: user ? `${user.first_name || ''}`.trim() || 'Foydalanuvchi' : 'Foydalanuvchi',
+        region: region.trim() || null,
+      })
+      onSuccess()
+    } catch (e) {
+      setError(e.response?.data?.error || 'Xatolik yuz berdi')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end" style={{ background: 'rgba(0,0,0,0.5)' }}
+      onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="w-full rounded-t-3xl p-5 bg-tg-bg animate-slide-up" style={{ maxHeight: '90vh', overflowY: 'auto' }}>
+        <div className="w-10 h-1 rounded-full bg-black/20 mx-auto mb-4" />
+        <h2 className="text-lg font-bold text-tg-text mb-1">Sharh yozing</h2>
+        <p className="text-xs text-tg-hint mb-4">Xizmatimiz haqida fikringizni bildiring</p>
+
+        {/* Stars */}
+        <div className="mb-4 text-center">
+          <p className="text-xs text-tg-hint mb-2">Baholang:</p>
+          <StarRating value={stars} onChange={setStars} />
+          <p className="text-sm font-semibold text-amber-500 mt-1">
+            {['','Juda yomon','Yomon','O\'rtacha','Yaxshi','A\'lo!'][stars]}
+          </p>
+        </div>
+
+        {/* Text */}
+        <div className="mb-3">
+          <label className="text-xs font-semibold text-tg-hint uppercase tracking-wide block mb-1.5">Sharhingiz *</label>
+          <textarea
+            className="w-full rounded-xl border border-black/10 bg-tg-secondary p-3 text-sm text-tg-text resize-none"
+            rows={4}
+            maxLength={500}
+            placeholder="Xizmat haqida fikringizni yozing..."
+            value={text}
+            onChange={e => setText(e.target.value)}
+          />
+          <p className="text-[10px] text-tg-hint text-right mt-0.5">{text.length}/500</p>
+        </div>
+
+        {/* Region */}
+        <div className="mb-4">
+          <label className="text-xs font-semibold text-tg-hint uppercase tracking-wide block mb-1.5">Viloyat/Shahar (ixtiyoriy)</label>
+          <input
+            className="w-full rounded-xl border border-black/10 bg-tg-secondary p-3 text-sm text-tg-text"
+            placeholder="Masalan: Toshkent viloyati"
+            value={region}
+            onChange={e => setRegion(e.target.value)}
+            maxLength={60}
+          />
+        </div>
+
+        {error && <p className="text-xs text-rose-500 mb-3 bg-rose-50 rounded-lg p-2">{error}</p>}
+
+        <button
+          onClick={submit}
+          disabled={loading}
+          className="w-full py-3.5 rounded-2xl font-bold text-sm text-white active:scale-[.97] transition-transform"
+          style={{ background: loading ? '#a5b4fc' : 'linear-gradient(135deg,#4f46e5,#7c3aed)' }}
+        >
+          {loading ? 'Yuklanmoqda...' : 'Sharh yuborish →'}
+        </button>
+        <button onClick={onClose} className="w-full py-2.5 mt-2 rounded-2xl text-sm text-tg-hint">
+          Bekor qilish
+        </button>
+      </div>
+    </div>
+  )
+}
+
 const statusMap = {
   pending_payment: { label: "To'lov kutilmoqda", color: 'bg-amber-100 text-amber-700', icon: '💳', desc: "Iltimos, to'lovni amalga oshiring" },
   pending_confirmation: { label: "Tekshirilmoqda", color: 'bg-sky-100 text-sky-700', icon: '🔍', desc: "To'lovingiz tekshirilmoqda" },
@@ -55,8 +169,9 @@ function OrderDetail({ user }) {
   const [cards, setCards] = useState([])
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
+  const [showReview, setShowReview] = useState(false)
+  const [reviewDone, setReviewDone] = useState(false)
 
-  // ALL hooks must be before any conditional returns
   const countdown = useCountdown(order?.status === 'pending_payment' ? order?.created_at : null)
 
   useEffect(() => {
@@ -135,12 +250,18 @@ function OrderDetail({ user }) {
   }
 
   const status = statusMap[order.status] || { label: order.status, color: 'bg-gray-100 text-gray-600', icon: '❓', desc: '' }
+  const canReview = ['sent', 'ready'].includes(order.status) && !reviewDone
 
   return (
     <div className="animate-fade-in min-h-screen">
+      <style>{`
+        @keyframes slideUp { from { transform: translateY(100%) } to { transform: translateY(0) } }
+        .animate-slide-up { animation: slideUp 0.3s ease-out }
+      `}</style>
+
       <Header title="Buyurtma" subtitle={order.order_code} onBack={() => navigate('/my-orders')} />
 
-      <div className="p-4 space-y-3">
+      <div className="p-4 space-y-3 pb-8">
         <div className={`rounded-2xl p-4 ${status.color} flex items-center gap-3`}>
           <span className="text-3xl">{status.icon}</span>
           <div>
@@ -238,7 +359,42 @@ function OrderDetail({ user }) {
             <p className="text-sm text-amber-700">{order.admin_note}</p>
           </div>
         )}
+
+        {/* ── REVIEW BLOCK ── */}
+        {reviewDone ? (
+          <div className="rounded-2xl p-4 text-center border border-emerald-200 bg-emerald-50">
+            <p className="text-2xl mb-1">🎉</p>
+            <p className="font-bold text-emerald-700">Sharhingiz uchun rahmat!</p>
+            <p className="text-xs text-emerald-600 mt-0.5">Moderatsiyadan o'tgach nashr etiladi</p>
+          </div>
+        ) : canReview ? (
+          <div className="rounded-2xl p-4 border border-indigo-100"
+            style={{ background: 'linear-gradient(135deg,#eef2ff,#f5f3ff)' }}>
+            <div className="flex items-center gap-3 mb-3">
+              <span className="text-2xl">⭐</span>
+              <div>
+                <p className="font-bold text-indigo-800 text-sm">Xizmatimizni baholang</p>
+                <p className="text-xs text-indigo-500">Fikringiz boshqalarga yordam beradi</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowReview(true)}
+              className="w-full py-3 rounded-xl font-bold text-sm text-white active:scale-[.97] transition-transform"
+              style={{ background: 'linear-gradient(135deg,#4f46e5,#7c3aed)' }}>
+              Sharh yozish →
+            </button>
+          </div>
+        ) : null}
       </div>
+
+      {showReview && (
+        <ReviewModal
+          order={order}
+          user={user}
+          onClose={() => setShowReview(false)}
+          onSuccess={() => { setShowReview(false); setReviewDone(true) }}
+        />
+      )}
     </div>
   )
 }

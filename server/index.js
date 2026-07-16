@@ -567,6 +567,84 @@ const adminBuildPath = path.join(__dirname, '..', 'admin', 'dist');
 if (fs.existsSync(clientBuildPath)) {
   app.use(express.static(clientBuildPath));
 }
+// ═══════════════════════════════════════════════
+// REVIEWS
+// ═══════════════════════════════════════════════
+
+// Public: get published reviews
+app.get('/api/reviews/published', async (req, res) => {
+  try {
+    const reviews = await queryAll(
+      `SELECT r.id, r.stars, r.text, r.author_name, r.region, r.created_at
+       FROM reviews r WHERE r.status = 'published' ORDER BY r.id DESC LIMIT 20`
+    );
+    res.json(reviews);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// MiniApp: submit review (order must be 'sent' and belong to user)
+app.post('/api/reviews', async (req, res) => {
+  try {
+    const { order_id, telegram_id, stars, text, author_name, region } = req.body;
+    if (!order_id || !telegram_id || !stars || !text)
+      return res.status(400).json({ error: 'Majburiy maydonlar yetishmayapdi' });
+    if (stars < 1 || stars > 5)
+      return res.status(400).json({ error: 'Yulduzlar 1-5 orasida bo\'lishi kerak' });
+
+    const user = await queryOne('SELECT id FROM users WHERE telegram_id = ?', [telegram_id]);
+    if (!user) return res.status(404).json({ error: 'Foydalanuvchi topilmadi' });
+
+    const order = await queryOne(
+      `SELECT id FROM orders WHERE id = ? AND user_id = ? AND status IN ('sent','ready')`,
+      [order_id, user.id]
+    );
+    if (!order) return res.status(403).json({ error: 'Sharh yozish uchun buyurtma tayyor yoki yuborilgan bo\'lishi kerak' });
+
+    const existing = await queryOne('SELECT id FROM reviews WHERE order_id = ?', [order_id]);
+    if (existing) return res.status(409).json({ error: 'Bu buyurtma uchun allaqachon sharh yozilgan' });
+
+    const result = await run(
+      `INSERT INTO reviews (order_id, user_id, stars, text, author_name, region, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [order_id, user.id, stars, text.trim(), author_name || null, region || null, nowUZ()]
+    );
+    res.json({ id: result.lastInsertRowid, message: 'Sharh qabul qilindi' });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Admin: get all reviews
+app.get('/api/admin/reviews', async (req, res) => {
+  try {
+    const reviews = await queryAll(
+      `SELECT r.*, u.first_name, u.username, o.order_code
+       FROM reviews r
+       JOIN users u ON r.user_id = u.id
+       JOIN orders o ON r.order_id = o.id
+       ORDER BY r.id DESC`
+    );
+    res.json(reviews);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Admin: publish or reject review
+app.patch('/api/admin/reviews/:id', async (req, res) => {
+  try {
+    const { status } = req.body; // 'published' | 'rejected'
+    if (!['published', 'rejected'].includes(status))
+      return res.status(400).json({ error: 'Noto\'g\'ri status' });
+    await run('UPDATE reviews SET status = ? WHERE id = ?', [status, req.params.id]);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 if (fs.existsSync(adminBuildPath)) {
   app.use('/admin', express.static(adminBuildPath));
 }
