@@ -33,6 +33,36 @@ function Orb({ style }) {
   )
 }
 
+/* ── iPhone sticker icon ── */
+function StickerIcon({ emoji, size = 'md', rotateZ = 0 }) {
+  const sizes = {
+    sm: 'w-10 h-10 text-lg',
+    md: 'w-12 h-12 text-2xl',
+    lg: 'w-14 h-14 text-3xl',
+    xl: 'w-16 h-16 text-4xl',
+  }
+  return (
+    <div
+      className={`${sizes[size]} rounded-2xl flex items-center justify-center shrink-0 cursor-pointer transition-all duration-300 hover:scale-110 active:scale-95`}
+      style={{
+        background: 'linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%)',
+        boxShadow: `
+          0 20px 40px rgba(0,0,0,0.15),
+          0 0 60px rgba(99,102,241,0.2),
+          inset 0 1px 0 rgba(255,255,255,0.8),
+          inset -1px -1px 2px rgba(0,0,0,0.05)
+        `,
+        transform: `rotateZ(${rotateZ}deg) rotateX(15deg) rotateY(-10deg)`,
+        transformStyle: 'preserve-3d',
+        animation: 'stickerFloat 3s ease-in-out infinite',
+        animationDelay: `${rotateZ * 0.05}s`,
+      }}
+    >
+      <div style={{ transform: 'translateZ(20px)' }}>{emoji}</div>
+    </div>
+  )
+}
+
 /* ── section wrapper with slide-up ── */
 function Section({ children, delay = 0, className = '' }) {
   const ref = useRef()
@@ -77,6 +107,10 @@ export default function Home({ user }) {
           0%   { transform: scale(0.7); opacity: 0; }
           70%  { transform: scale(1.1); }
           100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes stickerFloat {
+          0%,100% { transform: rotateZ(var(--rz)) rotateX(15deg) rotateY(-10deg) translateY(0); }
+          50% { transform: rotateZ(var(--rz)) rotateX(15deg) rotateY(-10deg) translateY(-8px); }
         }
         .badge-pop { animation: badgePop 0.5s ease forwards; }
         .shimmer-text {
@@ -185,10 +219,10 @@ export default function Home({ user }) {
           <h2 className="text-lg font-bold text-tg-text mb-3">Nega ommalashtirish kerak?</h2>
           <div className="space-y-2.5">
             {[
-              { icon: '💰', text: 'Malaka toifangiz oshadi — oyligingiz sezilarli ko\'tariladi', color: '#fef9c3', border: '#fde68a' },
-              { icon: '📜', text: 'Sertifikat va guvohnoma — attestatsiyada katta ustunlik', color: '#ede9fe', border: '#c4b5fd' },
-              { icon: '🏆', text: 'Mukofot va rag\'bat pullari olish imkoniyati', color: '#dcfce7', border: '#86efac' },
-              { icon: '📈', text: 'Obro\' oshadi — kelajakda yuqori lavozim va daromad', color: '#dbeafe', border: '#93c5fd' },
+              { emoji: '💰', text: 'Malaka toifangiz oshadi — oyligingiz sezilarli ko\'tariladi', color: '#fef9c3', border: '#fde68a', rotZ: -3 },
+              { emoji: '📜', text: 'Sertifikat va guvohnoma — attestatsiyada katta ustunlik', color: '#ede9fe', border: '#c4b5fd', rotZ: 2 },
+              { emoji: '🏆', text: 'Mukofot va rag\'bat pullari olish imkoniyati', color: '#dcfce7', border: '#86efac', rotZ: -2 },
+              { emoji: '📈', text: 'Obro\' oshadi — kelajakda yuqori lavozim va daromad', color: '#dbeafe', border: '#93c5fd', rotZ: 3 },
             ].map((item, i) => (
               <div
                 key={i}
@@ -199,7 +233,7 @@ export default function Home({ user }) {
                   animationDelay: `${i * 0.1}s`,
                 }}
               >
-                <span className="text-xl shrink-0">{item.icon}</span>
+                <StickerIcon emoji={item.emoji} size="md" rotateZ={item.rotZ} />
                 <p className="text-sm font-medium text-gray-800 leading-snug">{item.text}</p>
               </div>
             ))}
@@ -214,14 +248,14 @@ export default function Home({ user }) {
             style={{ background: '#fff1f2', borderColor: '#fecdd3' }}
           >
             {[
-              '⏳ Metodik ish juda ko\'p vaqt oladi',
-              '📄 Yoziladi — lekin qaytariladi',
-              '🚫 Antiplagiatdan o\'tmay qoladi',
-              '😓 Ball va ustama cho\'zilib ketadi',
-            ].map((t, i) => (
-              <div key={i} className="flex items-center gap-2 py-1.5">
-                <div className="w-1.5 h-1.5 rounded-full bg-rose-400 shrink-0" />
-                <p className="text-sm text-rose-700">{t}</p>
+              { emoji: '⏳', text: 'Metodik ish juda ko\'p vaqt oladi', rotZ: 0 },
+              { emoji: '📄', text: 'Yoziladi — lekin qaytariladi', rotZ: -4 },
+              { emoji: '🚫', text: 'Antiplagiatdan o\'tmay qoladi', rotZ: 3 },
+              { emoji: '😓', text: 'Ball va ustama cho\'zilib ketadi', rotZ: -2 },
+            ].map((item, i) => (
+              <div key={i} className="flex items-center gap-3 py-1.5">
+                <StickerIcon emoji={item.emoji} size="sm" rotateZ={item.rotZ} />
+                <p className="text-sm text-rose-700">{item.text}</p>
               </div>
             ))}
             <p className="text-xs text-rose-400 mt-2 text-center font-medium">Siz yolg'iz emassiz — biz yordamga tayyormiz</p>
@@ -233,15 +267,15 @@ export default function Home({ user }) {
           <h2 className="text-lg font-bold text-tg-text mb-3">Xizmatlarimiz</h2>
           <div className="grid grid-cols-2 gap-3">
             {[
-              { icon: '📘', title: 'Metodik qo\'llanma', desc: '25–30+ bet', color: 'from-blue-500 to-indigo-600' },
-              { icon: '📗', title: 'Metodik tavsiya', desc: 'Talablarga mos', color: 'from-emerald-500 to-teal-600' },
+              { emoji: '📘', title: 'Metodik qo\'llanma', desc: '25–30+ bet', color: 'from-blue-500 to-indigo-600', rotZ: -5 },
+              { emoji: '📗', title: 'Metodik tavsiya', desc: 'Talablarga mos', color: 'from-emerald-500 to-teal-600', rotZ: 5 },
             ].map((s, i) => (
               <div
                 key={i}
                 className={`card-glow rounded-2xl p-4 text-white text-center bg-gradient-to-br ${s.color}`}
                 style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.15)' }}
               >
-                <span className="text-4xl">{s.icon}</span>
+                <StickerIcon emoji={s.emoji} size="lg" rotateZ={s.rotZ} />
                 <p className="text-sm font-bold mt-2">{s.title}</p>
                 <p className="text-xs opacity-80 mt-0.5">{s.desc}</p>
               </div>
@@ -251,18 +285,20 @@ export default function Home({ user }) {
             <p className="text-xs font-semibold text-tg-hint uppercase mb-2">Ommalashish darajalari</p>
             <div className="flex flex-wrap gap-2">
               {[
-                { label: '🏫 Maktab', val: '135', color: '#dbeafe', text: '#1d4ed8' },
-                { label: '📍 Tuman', val: '825', color: '#dcfce7', text: '#15803d' },
-                { label: '🏢 Viloyat', val: '76', color: '#fef9c3', text: '#92400e' },
-                { label: '🇺🇿 Respublika', val: '25', color: '#ede9fe', text: '#6d28d9' },
+                { label: '🏫 Maktab', val: '135', color: '#dbeafe', text: '#1d4ed8', emoji: '🏫', rotZ: 2 },
+                { label: '📍 Tuman', val: '825', color: '#dcfce7', text: '#15803d', emoji: '📍', rotZ: -2 },
+                { label: '🏢 Viloyat', val: '76', color: '#fef9c3', text: '#92400e', emoji: '🏢', rotZ: 3 },
+                { label: '🇺🇿 Respublika', val: '25', color: '#ede9fe', text: '#6d28d9', emoji: '🇺🇿', rotZ: -1 },
               ].map((s, i) => (
-                <span
-                  key={i}
-                  className="text-xs font-semibold px-2.5 py-1.5 rounded-xl"
-                  style={{ background: s.color, color: s.text }}
-                >
-                  {s.label} — {s.val} ta
-                </span>
+                <div key={i} className="flex items-center gap-1.5">
+                  <StickerIcon emoji={s.emoji} size="sm" rotateZ={s.rotZ} />
+                  <span
+                    className="text-xs font-semibold px-2 py-1.5 rounded-lg"
+                    style={{ background: s.color, color: s.text }}
+                  >
+                    {s.val} ta
+                  </span>
+                </div>
               ))}
             </div>
           </div>
@@ -273,20 +309,20 @@ export default function Home({ user }) {
           <h2 className="text-lg font-bold text-tg-text mb-3">Sifat kafolati</h2>
           <div className="grid grid-cols-2 gap-2">
             {[
-              { icon: '📑', text: 'Hajmi 25–30+ bet' },
-              { icon: '🛡️', text: 'Antiplagiat 90%+' },
-              { icon: '💡', text: 'Interfaol metodlar' },
-              { icon: '📚', text: '5E moduli asosi' },
-              { icon: '💻', text: 'AKT qo\'llaniladi' },
-              { icon: '🌏', text: 'Singapur tajribasi' },
-              { icon: '🔬', text: 'Tadqiqotchilik' },
-              { icon: '📊', text: 'Jadval/grafiklar' },
+              { emoji: '📑', text: 'Hajmi 25–30+ bet', rotZ: 1 },
+              { emoji: '🛡️', text: 'Antiplagiat 90%+', rotZ: -3 },
+              { emoji: '💡', text: 'Interfaol metodlar', rotZ: 2 },
+              { emoji: '📚', text: '5E moduli asosi', rotZ: -2 },
+              { emoji: '💻', text: 'AKT qo\'llaniladi', rotZ: 3 },
+              { emoji: '🌏', text: 'Singapur tajribasi', rotZ: -1 },
+              { emoji: '🔬', text: 'Tadqiqotchilik', rotZ: 2 },
+              { emoji: '📊', text: 'Jadval/grafiklar', rotZ: -3 },
             ].map((q, i) => (
               <div
                 key={i}
                 className="card-glow flex items-center gap-2.5 rounded-xl p-3 bg-tg-secondary border border-black/5"
               >
-                <span className="text-lg shrink-0">{q.icon}</span>
+                <StickerIcon emoji={q.emoji} size="sm" rotateZ={q.rotZ} />
                 <p className="text-xs font-medium text-tg-text">{q.text}</p>
               </div>
             ))}
@@ -298,20 +334,15 @@ export default function Home({ user }) {
           <h2 className="text-lg font-bold text-tg-text mb-3">Kimlar uchun?</h2>
           <div className="space-y-2">
             {[
-              { icon: '⏰', text: 'Vaqti yo\'q, lekin ball kerak bo\'lgan ustozlar' },
-              { icon: '🔁', text: 'Oldin yozib, qaytarilgan ish egalari' },
-              { icon: '📈', text: 'Attestatsiya yoki ustama uchun tayyorgarlik' },
+              { emoji: '⏰', text: 'Vaqti yo\'q, lekin ball kerak bo\'lgan ustozlar', rotZ: -2 },
+              { emoji: '🔁', text: 'Oldin yozib, qaytarilgan ish egalari', rotZ: 3 },
+              { emoji: '📈', text: 'Attestatsiya yoki ustama uchun tayyorgarlik', rotZ: 1 },
             ].map((item, i) => (
               <div
                 key={i}
                 className="card-glow flex items-center gap-3 rounded-xl p-3.5 bg-tg-secondary border border-black/5"
               >
-                <div
-                  className="w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0"
-                  style={{ background: 'linear-gradient(135deg,#6366f1,#818cf8)', boxShadow: '0 4px 12px rgba(99,102,241,0.3)' }}
-                >
-                  {item.icon}
-                </div>
+                <StickerIcon emoji={item.emoji} size="md" rotateZ={item.rotZ} />
                 <p className="text-sm text-tg-text">{item.text}</p>
               </div>
             ))}
