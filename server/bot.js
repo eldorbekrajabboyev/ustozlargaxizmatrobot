@@ -2,6 +2,7 @@ const TelegramBot = require('node-telegram-bot-api');
 const { queryAll, queryOne, run } = require('./database');
 const fs = require('fs');
 const path = require('path');
+const { v4: uuidv4 } = require('uuid');
 
 let botInstance = null;
 
@@ -53,7 +54,7 @@ async function checkSubscription(bot, userId) {
   return true;
 }
 
-const PAYMENT_TIMEOUT_MS = 4 * 60 * 1000; // 4 minutes
+const PAYMENT_TIMEOUT_MS = 2 * 60 * 1000; // 2 minutes
 const COUNTDOWN_EDIT_MS = 5 * 1000; // edit every 5 seconds
 
 function startCountdown(bot, chatId, orderId, paymentMsgId, orderCode, telegramId, card) {
@@ -72,9 +73,9 @@ function startCountdown(bot, chatId, orderId, paymentMsgId, orderCode, telegramI
       const order = await queryOne('SELECT status FROM orders WHERE id = ?', [orderId]);
       if (order && order.status === 'pending_payment') {
         await deleteOrderImages(orderId);
-        await run("UPDATE orders SET status = 'rejected', admin_note = 'Avtomatik bekor qilindi: 4 daqiqada chek yuklanmadi' WHERE id = ?", [orderId]);
+        await run("UPDATE orders SET status = 'rejected', admin_note = 'Avtomatik bekor qilindi: 2 daqiqada chek yuklanmadi' WHERE id = ?", [orderId]);
         bot.deleteMessage(chatId, paymentMsgId).catch(() => {});
-        bot.sendMessage(chatId, `❌ *Buyurtma bekor qilindi!*\n\n📋 #${orderCode}\n\n⏱ 4 daqiqada chek yuklanmadi.`, { parse_mode: 'Markdown' });
+        bot.sendMessage(chatId, `❌ *Buyurtma bekor qilindi!*\n\n📋 #${orderCode}\n\n⏱ 2 daqiqada chek yuklanmadi.`, { parse_mode: 'Markdown' });
       }
       if (global.paymentTimers && global.paymentTimers[telegramId]) {
         delete global.paymentTimers[telegramId];
@@ -156,6 +157,33 @@ async function startBot(app) {
   }
   
   botInstance = bot;
+
+  // Recover stuck pending_payment orders from previous server run
+  try {
+    const staleOrders = await queryAll(
+      "SELECT id, order_code, user_id FROM orders WHERE status = 'pending_payment'",
+      []
+    );
+    const userIdMap = {};
+    for (const o of staleOrders) {
+      if (!userIdMap[o.user_id]) {
+        const u = await queryOne('SELECT telegram_id FROM users WHERE id = ?', [o.user_id]);
+        userIdMap[o.user_id] = u ? u.telegram_id : null;
+      }
+      const tid = userIdMap[o.user_id];
+      await deleteOrderImages(o.id);
+      await run(
+        "UPDATE orders SET status = 'rejected', admin_note = 'Avtomatik bekor qilindi: server qayta ishga tushganda muddati o''tgan' WHERE id = ? AND status = 'pending_payment'",
+        [o.id]
+      );
+      if (tid) {
+        bot.sendMessage(tid, `❌ *Buyurtma bekor qilindi!*\n\n📋 #${o.order_code}\n\n⏱ To'lov muddati o'tgan (server qayta ishga tushdi).`).catch(() => {});
+      }
+    }
+    if (staleOrders.length > 0) console.log(`🧹 Recovered ${staleOrders.length} stuck pending_payment orders`);
+  } catch (e) {
+    console.error('⚠️ Payment recovery error:', e.message);
+  }
   console.log('🤖 Metodikish Bot started');
 
   async function ensureUser(tgUser) {
@@ -517,7 +545,7 @@ async function startBot(app) {
     try {
       const user = await queryOne('SELECT id FROM users WHERE telegram_id = ?', [telegramId]);
       const service = await queryOne('SELECT * FROM services WHERE id = ?', [parseInt(state.service_id)]);
-      const orderCode = `MK-${Date.now().toString(36).toUpperCase()}`;
+      const orderCode = `MK-${Date.now().toString(36).toUpperCase()}${uuidv4().substring(0, 4).toUpperCase()}`;
 
       await run(`INSERT INTO orders (order_code, user_id, service_id, full_name, address, school, subject, grade, topic, total_price, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [orderCode, user.id, parseInt(state.service_id), state.full_name, state.address, state.school, state.subject, state.grade, state.topic, service.price, nowUZ()]);
@@ -604,8 +632,15 @@ async function startBot(app) {
       const filename = `${uuidv4()}.jpg`;
       fs.writeFileSync(path.join(receiptsDir, filename), response.data);
 
-      await run('UPDATE orders SET payment_receipt = ?, status = ?, receipt_uploaded_at = ? WHERE id = ?',
-        [`/uploads/receipts/${filename}`, 'pending_confirmation', nowUZ(), orderId]);
+      await run('UPDATE orders SET payment_receipt = ?, status = ?, receipt_uploaded_at = ? WHERE id = ? AND status = ?',
+        [`/uploads/receipts/${filename}`, 'pending_confirmation', nowUZ(), orderId, 'pending_payment']);
+      const orderAfter = await queryOne('SELECT status FROM orders WHERE id = ?', [orderId]);
+      if (!orderAfter || orderAfter.status !== 'pending_confirmation') {
+        fs.unlinkSync(path.join(receiptsDir, filename));
+        bot.sendMessage(chatId, "❌ Chek qabul qilinmadi — to'lov muddati o'tgan yoki status o'zgargan.");
+        delete global.receiptStates[telegramId];
+        return;
+      }
 
       // Delete payment message
       if (global.paymentMessages && global.paymentMessages[orderId]) {

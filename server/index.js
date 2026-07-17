@@ -248,7 +248,9 @@ app.post('/api/orders', async (req, res) => {
     const { user_id, service_id, full_name, address, school, subject, grade, topic, school_type, language_surcharge, geographic_level, geographic_surcharge } = req.body;
     const service = await queryOne('SELECT * FROM services WHERE id = ?', [service_id]);
     if (!service) return res.status(400).json({ error: 'Xizmat topilmadi' });
-    const orderCode = `MK-${Date.now().toString(36).toUpperCase()}`;
+    const user = await queryOne('SELECT id FROM users WHERE id = ?', [user_id]);
+    if (!user) return res.status(400).json({ error: 'Foydalanuvchi topilmadi' });
+    const orderCode = `MK-${Date.now().toString(36).toUpperCase()}${uuidv4().substring(0, 4).toUpperCase()}`;
     const totalPrice = service.price + (parseInt(language_surcharge) || 0) + (parseInt(geographic_surcharge) || 0);
     const result = await run(`
       INSERT INTO orders (order_code, user_id, service_id, full_name, address, school, subject, grade, topic, total_price, school_type, language_surcharge, geographic_level, geographic_surcharge, created_at)
