@@ -440,13 +440,13 @@ function OrderForm({ user }) {
             <div className="bg-tg-secondary rounded-2xl p-4 border border-black/5">
             <h3 className="font-semibold mb-2">📋 Buyurtma ma'lumotlari:</h3>
             <div className="text-sm text-gray-600 space-y-1">
-              <p><strong>F.I.Sh:</strong> {form.full_name}</p>
-              <p><strong>Manzil:</strong> {form.region}, {form.district}</p>
-              <p><strong>Maktab:</strong> {form.school}</p>
-              <p><strong>Maktab turi:</strong> {SCHOOL_TYPES.find(s => s.id === form.school_type)?.label || '—'}</p>
+              <p className="break-words"><strong>F.I.Sh:</strong> {form.full_name}</p>
+              <p className="break-words"><strong>Manzil:</strong> {form.region}, {form.district}</p>
+              <p className="break-words"><strong>Maktab:</strong> {form.school}</p>
+              <p className="break-words"><strong>Maktab turi:</strong> {SCHOOL_TYPES.find(s => s.id === form.school_type)?.label || '—'}</p>
               <p><strong>Sinf:</strong> {form.grade}-sinf</p>
               <p><strong>Fan:</strong> {form.subject}</p>
-              <p><strong>Mavzu:</strong> {form.topic}</p>
+              <p className="break-all"><strong>Mavzu:</strong> {form.topic}</p>
               {images.length > 0 && <p><strong>Rasmlar:</strong> {images.length} ta</p>}
               <div className="pt-2 mt-2 border-t border-black/10">
                 <p className="font-bold text-primary-600 text-base">{totalPrice.toLocaleString()} so'm</p>
