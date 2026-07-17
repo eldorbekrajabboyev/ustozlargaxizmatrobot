@@ -76,6 +76,8 @@ function OrderForm({ user }) {
     grade: '',
     subject: '',
     topic: '',
+    geo_extra: false,
+    geographic_level: 'maktab',
   })
 
   useEffect(() => {
@@ -131,6 +133,8 @@ function OrderForm({ user }) {
         grade: form.grade,
         topic: form.topic,
         language_surcharge: getLanguageSurcharge(form.school_type, form.subject),
+        geographic_level: form.geo_extra ? form.geographic_level : 'maktab',
+        geographic_surcharge: geoSurcharge,
       })
 
       if (images.length > 0) {
@@ -174,7 +178,8 @@ function OrderForm({ user }) {
   }
 
   const langSurcharge = getLanguageSurcharge(form.school_type, form.subject)
-  const totalPrice = (service ? service.price : 0) + langSurcharge
+  const geoSurcharge = form.geo_extra ? (form.geographic_level === 'viloyat' ? 60000 : form.geographic_level === 'respublika' ? 110000 : 0) : 0
+  const totalPrice = (service ? service.price : 0) + langSurcharge + geoSurcharge
 
   const steps = [
     { num: 1, title: 'F.I.Sh' },
@@ -207,8 +212,8 @@ function OrderForm({ user }) {
     <div className="animate-fade-in min-h-screen">
       <Header
         title={service.name}
-        subtitle={langSurcharge > 0
-          ? `${totalPrice.toLocaleString()} so'm (+${langSurcharge.toLocaleString()} til uchun)`
+        subtitle={totalPrice > service.price
+          ? `${totalPrice.toLocaleString()} so'm${langSurcharge > 0 ? ' (til)' : ''}${geoSurcharge > 0 ? ' (daraja)' : ''}`
           : `${totalPrice.toLocaleString()} so'm`}
         onBack={() => step > 1 ? setStep(step - 1) : navigate(-1)}
       />
@@ -436,6 +441,49 @@ function OrderForm({ user }) {
             )}
           </div>
 
+          {/* Geographic level */}
+          <div className="bg-tg-secondary rounded-2xl p-4 border border-black/5 space-y-3">
+            <label className="flex items-center gap-3 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={form.geo_extra}
+                onChange={(e) => setForm({ ...form, geo_extra: e.target.checked, geographic_level: 'maktab' })}
+                className="w-5 h-5 rounded-md border-gray-300 text-primary-600 focus:ring-primary-500"
+              />
+              <span className="text-sm font-medium text-tg-text">Viloyat yoki Respublika darajasida yozish kerak</span>
+            </label>
+            {form.geo_extra && (
+              <div className="space-y-2 pl-8">
+                <label className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${
+                  form.geographic_level === 'viloyat'
+                    ? 'border-primary-500 bg-primary-50'
+                    : 'border-gray-200 bg-white'
+                }`}>
+                  <input type="radio" name="geo" value="viloyat" checked={form.geographic_level === 'viloyat'}
+                    onChange={() => setForm({ ...form, geographic_level: 'viloyat' })} className="w-4 h-4 text-primary-600" />
+                  <div className="text-sm">
+                    <p className="font-medium text-tg-text">🏢 Viloyat darajasi</p>
+                    <p className="text-xs text-tg-hint">Viloyat miqyosida sifat kafolati</p>
+                  </div>
+                  <span className="ml-auto text-sm font-bold text-amber-600">+60,000</span>
+                </label>
+                <label className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${
+                  form.geographic_level === 'respublika'
+                    ? 'border-primary-500 bg-primary-50'
+                    : 'border-gray-200 bg-white'
+                }`}>
+                  <input type="radio" name="geo" value="respublika" checked={form.geographic_level === 'respublika'}
+                    onChange={() => setForm({ ...form, geographic_level: 'respublika' })} className="w-4 h-4 text-primary-600" />
+                  <div className="text-sm">
+                    <p className="font-medium text-tg-text">🏛 Respublika darajasi</p>
+                    <p className="text-xs text-tg-hint">Respublika miqyosida premium sifat</p>
+                  </div>
+                  <span className="ml-auto text-sm font-bold text-amber-600">+110,000</span>
+                </label>
+              </div>
+            )}
+          </div>
+
           {/* Summary */}
             <div className="bg-tg-secondary rounded-2xl p-4 border border-black/5">
             <h3 className="font-semibold mb-2">📋 Buyurtma ma'lumotlari:</h3>
@@ -457,6 +505,12 @@ function OrderForm({ user }) {
                   <div className="flex justify-between text-sm text-amber-600">
                     <span>Boshqa tilda yozish uchun:</span>
                     <span>+{langSurcharge.toLocaleString()} so'm</span>
+                  </div>
+                )}
+                {geoSurcharge > 0 && (
+                  <div className="flex justify-between text-sm text-amber-600">
+                    <span>{form.geographic_level === 'viloyat' ? 'Viloyat darajasi:' : 'Respublika darajasi:'}</span>
+                    <span>+{geoSurcharge.toLocaleString()} so'm</span>
                   </div>
                 )}
                 <div className="flex justify-between items-center pt-1 border-t border-black/10">

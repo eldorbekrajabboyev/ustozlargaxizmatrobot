@@ -245,15 +245,15 @@ app.get('/api/orders/:id', async (req, res) => {
 
 app.post('/api/orders', async (req, res) => {
   try {
-    const { user_id, service_id, full_name, address, school, subject, grade, topic, school_type, language_surcharge } = req.body;
+    const { user_id, service_id, full_name, address, school, subject, grade, topic, school_type, language_surcharge, geographic_level, geographic_surcharge } = req.body;
     const service = await queryOne('SELECT * FROM services WHERE id = ?', [service_id]);
     if (!service) return res.status(400).json({ error: 'Xizmat topilmadi' });
     const orderCode = `MK-${Date.now().toString(36).toUpperCase()}`;
-    const totalPrice = service.price + (parseInt(language_surcharge) || 0);
+    const totalPrice = service.price + (parseInt(language_surcharge) || 0) + (parseInt(geographic_surcharge) || 0);
     const result = await run(`
-      INSERT INTO orders (order_code, user_id, service_id, full_name, address, school, subject, grade, topic, total_price, school_type, language_surcharge, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `, [orderCode, user_id, service_id, full_name, address, school, subject, grade, topic, totalPrice, school_type || null, parseInt(language_surcharge) || 0, nowUZ()]);
+      INSERT INTO orders (order_code, user_id, service_id, full_name, address, school, subject, grade, topic, total_price, school_type, language_surcharge, geographic_level, geographic_surcharge, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [orderCode, user_id, service_id, full_name, address, school, subject, grade, topic, totalPrice, school_type || null, parseInt(language_surcharge) || 0, geographic_level || 'maktab', parseInt(geographic_surcharge) || 0, nowUZ()]);
     const order = await queryOne('SELECT * FROM orders WHERE id = ?', [result.lastInsertRowid]);
     res.json(fixOrderDates(order));
   } catch (err) { res.status(500).json({ error: err.message }); }

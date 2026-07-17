@@ -230,6 +230,14 @@ function OrderDetail() {
                   <p className="font-medium text-amber-600">+{order.language_surcharge.toLocaleString()} so'm</p>
                 </div>
               )}
+              {order.geographic_surcharge > 0 && (
+                <div>
+                  <p className="text-sm text-gray-500">Geografik daraja</p>
+                  <p className="font-medium text-amber-600">
+                    {order.geographic_level === 'viloyat' ? '🏢 Viloyat darajasi' : '🏛 Respublika darajasi'} — +{order.geographic_surcharge.toLocaleString()} so'm
+                  </p>
+                </div>
+              )}
               <div>
                 <p className="text-sm text-gray-500">Fan</p>
                 <p className="font-medium">{order.subject}</p>

@@ -136,6 +136,8 @@ async function initDatabase() {
   try { await db.execute("ALTER TABLE orders ADD COLUMN ready_at DATETIME"); } catch (e) {}
   try { await db.execute("ALTER TABLE orders ADD COLUMN school_type TEXT"); } catch (e) {}
   try { await db.execute("ALTER TABLE orders ADD COLUMN language_surcharge INTEGER DEFAULT 0"); } catch (e) {}
+  try { await db.execute("ALTER TABLE orders ADD COLUMN geographic_level TEXT DEFAULT 'maktab'"); } catch (e) {}
+  try { await db.execute("ALTER TABLE orders ADD COLUMN geographic_surcharge INTEGER DEFAULT 0"); } catch (e) {}
 
   console.log('📦 Database initialized (Turso)');
   return db;

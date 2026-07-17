@@ -279,7 +279,7 @@ function OrderDetail({ user }) {
 
   const status = statusMap[order.status] || { label: order.status, color: 'bg-gray-100 text-gray-600', icon: '❓', desc: '' }
   const canReview = ['sent', 'ready'].includes(order.status) && !reviewDone
-  const servicePrice = (order.total_price || 0) - (order.language_surcharge || 0)
+  const servicePrice = (order.total_price || 0) - (order.language_surcharge || 0) - (order.geographic_surcharge || 0)
 
   return (
     <div className="animate-fade-in min-h-screen">
@@ -312,6 +312,14 @@ function OrderDetail({ user }) {
                 <div className="flex justify-between gap-3 text-sm">
                   <span className="text-amber-600 shrink-0">Boshqa tilda yozish uchun:</span>
                   <span className="text-amber-600">+{order.language_surcharge.toLocaleString()} so'm</span>
+                </div>
+              )}
+              {order.geographic_surcharge > 0 && (
+                <div className="flex justify-between gap-3 text-sm">
+                  <span className="text-amber-600 shrink-0">
+                    {order.geographic_level === 'viloyat' ? 'Viloyat darajasi:' : 'Respublika darajasi:'}
+                  </span>
+                  <span className="text-amber-600">+{order.geographic_surcharge.toLocaleString()} so'm</span>
                 </div>
               )}
               <div className="flex justify-between gap-3 items-center pt-1 border-t border-black/10">
