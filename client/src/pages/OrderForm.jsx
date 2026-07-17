@@ -448,11 +448,21 @@ function OrderForm({ user }) {
               <p><strong>Fan:</strong> {form.subject}</p>
               <p className="break-all"><strong>Mavzu:</strong> {form.topic}</p>
               {images.length > 0 && <p><strong>Rasmlar:</strong> {images.length} ta</p>}
-              <div className="pt-2 mt-2 border-t border-black/10">
-                <p className="font-bold text-primary-600 text-base">{totalPrice.toLocaleString()} so'm</p>
+              <div className="pt-2 mt-2 border-t border-black/10 space-y-1">
+                <div className="flex justify-between text-sm text-gray-500">
+                  <span>Xizmat narxi:</span>
+                  <span>{service.price.toLocaleString()} so'm</span>
+                </div>
                 {langSurcharge > 0 && (
-                  <p className="text-xs text-amber-600">+{langSurcharge.toLocaleString()} so'm til uchun qo'shimcha</p>
+                  <div className="flex justify-between text-sm text-amber-600">
+                    <span>Boshqa tilda yozish uchun:</span>
+                    <span>+{langSurcharge.toLocaleString()} so'm</span>
+                  </div>
                 )}
+                <div className="flex justify-between items-center pt-1 border-t border-black/10">
+                  <span className="font-bold text-tg-text">Jami to'lov:</span>
+                  <span className="font-bold text-primary-600 text-lg">{totalPrice.toLocaleString()} so'm</span>
+                </div>
               </div>
             </div>
           </div>

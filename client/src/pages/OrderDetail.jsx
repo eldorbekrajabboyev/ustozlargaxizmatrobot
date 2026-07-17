@@ -5,6 +5,34 @@ import Header from '../components/Header'
 
 const PAYMENT_TIMEOUT_MS = 2 * 60 * 1000
 
+function copyToClipboard(text) {
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(() => true).catch(() => false)
+  } else {
+    const ta = document.createElement('textarea')
+    ta.value = text
+    document.body.appendChild(ta)
+    ta.select()
+    document.execCommand('copy')
+    document.body.removeChild(ta)
+  }
+}
+
+function CopyButton({ text, label }) {
+  const [copied, setCopied] = useState(false)
+  const handleCopy = () => {
+    copyToClipboard(text)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1500)
+  }
+  return (
+    <button onClick={handleCopy}
+      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-medium bg-primary-50 text-primary-600 active:bg-primary-100 transition-colors">
+      {copied ? '✅ Nusxalandi' : `📋 ${label || 'Nusxa olish'}`}
+    </button>
+  )
+}
+
 function parseToUTCTimestamp(dateStr) {
   if (!dateStr) return NaN
   if (typeof dateStr === 'number') return dateStr
@@ -251,6 +279,7 @@ function OrderDetail({ user }) {
 
   const status = statusMap[order.status] || { label: order.status, color: 'bg-gray-100 text-gray-600', icon: '❓', desc: '' }
   const canReview = ['sent', 'ready'].includes(order.status) && !reviewDone
+  const servicePrice = (order.total_price || 0) - (order.language_surcharge || 0)
 
   return (
     <div className="animate-fade-in min-h-screen">
@@ -274,7 +303,25 @@ function OrderDetail({ user }) {
           <h3 className="font-semibold text-tg-text mb-3">Buyurtma ma'lumotlari</h3>
           <div className="space-y-2.5 text-sm">
             <Row label="Xizmat" value={order.service_name} />
-            <Row label="Narx" value={`${order.total_price?.toLocaleString()} so'm`} accent />
+            <div className="pt-2 space-y-1">
+              <div className="flex justify-between gap-3 text-sm">
+                <span className="text-tg-hint shrink-0">Xizmat narxi:</span>
+                <span className="text-tg-text">{servicePrice.toLocaleString()} so'm</span>
+              </div>
+              {order.language_surcharge > 0 && (
+                <div className="flex justify-between gap-3 text-sm">
+                  <span className="text-amber-600 shrink-0">Boshqa tilda yozish uchun:</span>
+                  <span className="text-amber-600">+{order.language_surcharge.toLocaleString()} so'm</span>
+                </div>
+              )}
+              <div className="flex justify-between gap-3 items-center pt-1 border-t border-black/10">
+                <span className="font-bold text-tg-text">Jami to'lov:</span>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-primary-600 text-lg">{order.total_price?.toLocaleString()} so'm</span>
+                  <CopyButton text={String(order.total_price)} label="Summani nusxalash" />
+                </div>
+              </div>
+            </div>
             <Row label="F.I.Sh" value={order.full_name} />
             <Row label="Maktab" value={order.school} />
             {order.school_type && (
@@ -325,10 +372,20 @@ function OrderDetail({ user }) {
             <h3 className="font-semibold text-tg-text mb-3">To'lov</h3>
             {cards.length > 0 && (
               <div className="bg-black/5 rounded-xl p-3 mb-4">
-                <p className="text-xs text-tg-hint">Karta raqami</p>
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-tg-hint">Karta raqami</p>
+                  <CopyButton text={cards[0].card_number.replace(/\s/g, '')} label="Raqamni nusxalash" />
+                </div>
                 <p className="font-mono font-bold text-lg text-tg-text mt-0.5">{cards[0].card_number}</p>
                 <p className="text-sm text-tg-text">{cards[0].card_holder}</p>
                 {cards[0].bank_name && <p className="text-xs text-tg-hint">{cards[0].bank_name}</p>}
+                <div className="mt-3 pt-3 border-t border-black/10 flex items-center justify-between">
+                  <span className="text-sm text-tg-hint">To'lov summasi:</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-primary-600">{order.total_price?.toLocaleString()} so'm</span>
+                    <CopyButton text={String(order.total_price)} label="Summani nusxalash" />
+                  </div>
+                </div>
               </div>
             )}
             {!countdown.expired ? (
