@@ -214,6 +214,22 @@ function OrderDetail() {
                 <p className="text-sm text-gray-500">Maktab</p>
                 <p className="font-medium">{order.school}</p>
               </div>
+              {order.school_type && (
+                <div>
+                  <p className="text-sm text-gray-500">Maktab turi</p>
+                  <p className="font-medium">
+                    {order.school_type === 'uzbek' ? "🇺🇿 O'zbek maktab" :
+                     order.school_type === 'russian' ? '🇷🇺 Rus maktab' :
+                     order.school_type === 'qoraqalpoq' ? "🏛 Qoraqalpoq maktab" : order.school_type}
+                  </p>
+                </div>
+              )}
+              {order.language_surcharge > 0 && (
+                <div>
+                  <p className="text-sm text-gray-500">Til qo'shimcha</p>
+                  <p className="font-medium text-amber-600">+{order.language_surcharge.toLocaleString()} so'm</p>
+                </div>
+              )}
               <div>
                 <p className="text-sm text-gray-500">Fan</p>
                 <p className="font-medium">{order.subject}</p>

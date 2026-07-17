@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import axios from 'axios'
 import Header from '../components/Header'
 
-const PAYMENT_TIMEOUT_MS = 4 * 60 * 1000
+const PAYMENT_TIMEOUT_MS = 2 * 60 * 1000
 
 function parseToUTCTimestamp(dateStr) {
   if (!dateStr) return NaN
@@ -277,6 +277,16 @@ function OrderDetail({ user }) {
             <Row label="Narx" value={`${order.total_price?.toLocaleString()} so'm`} accent />
             <Row label="F.I.Sh" value={order.full_name} />
             <Row label="Maktab" value={order.school} />
+            {order.school_type && (
+              <Row label="Maktab turi" value={
+                order.school_type === 'uzbek' ? "🇺🇿 O'zbek maktab" :
+                order.school_type === 'russian' ? '🇷🇺 Rus maktab' :
+                order.school_type === 'qoraqalpoq' ? "🏛 Qoraqalpoq maktab" : order.school_type
+              } />
+            )}
+            {order.language_surcharge > 0 && (
+              <Row label="Til qo'shimcha" value={`+${order.language_surcharge.toLocaleString()} so'm`} />
+            )}
             <Row label="Fan" value={order.subject} />
             <Row label="Sinf" value={`${order.grade}-sinf`} />
             <Row label="Mavzu" value={order.topic} />

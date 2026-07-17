@@ -13,16 +13,46 @@ const REGIONS = [
 
 const GRADES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
 
+const SCHOOL_TYPES = [
+  { id: 'uzbek', label: "O'zbek maktab", icon: '🇺🇿' },
+  { id: 'russian', label: 'Rus maktab', icon: '🇷🇺' },
+  { id: 'qoraqalpoq', label: "Qoraqalpoq maktab", icon: '🏛' },
+]
+
+function getLanguageSurcharge(schoolType, subject) {
+  if (!schoolType || !subject) return 0
+  const st = schoolType
+  const sub = subject.toLowerCase()
+  const isUzbek = sub === "o'zbek tili" || sub === 'ona tili' || sub === "o'qish"
+  const isRussian = sub === 'rus tili'
+  const isEnglish = sub === 'ingliz tili'
+  if (st === 'uzbek') {
+    if (isRussian || isEnglish) return 50000
+    return 0
+  }
+  if (st === 'russian') {
+    if (isUzbek) return 0
+    if (isEnglish) return 60000
+    return 50000
+  }
+  if (st === 'qoraqalpoq') {
+    if (isUzbek) return 0
+    if (isRussian || isEnglish) return 60000
+    return 50000
+  }
+  return 0
+}
+
 function getSubjects(grade) {
   const g = parseInt(grade)
   if (g >= 1 && g <= 4) {
-    return ['Ona tili', "O'qish", 'Matematika', 'Tabiiy fan', 'Tarbiya', 'Texnologiya', "Tasviriy san'at", 'Musiqa', 'Jismoniy tarbiya']
+    return ['Ona tili', "O'qish", 'Matematika', 'Tabiiy fan', 'Tarbiya', 'Texnologiya', "Tasviriy san'at", 'Musiqa', 'Jismoniy tarbiya', 'Ingliz tili']
   } else if (g >= 5 && g <= 6) {
-    return ['Ona tili', 'Adabiyot', "O'zbek tili", 'Matematika', 'Tabiiy fan', 'Informatika', 'Tarix', 'Tarbiya', 'Texnologiya', "Tasviriy san'at", 'Musiqa', 'Jismoniy tarbiya']
+    return ['Ona tili', 'Adabiyot', "O'zbek tili", 'Matematika', 'Tabiiy fan', 'Informatika', 'Tarix', 'Tarbiya', 'Texnologiya', "Tasviriy san'at", 'Musiqa', 'Jismoniy tarbiya', 'Rus tili', 'Ingliz tili']
   } else if (g >= 7 && g <= 9) {
-    return ['Ona tili', 'Adabiyot', 'Algebra', 'Geometriya', 'Fizika', 'Kimyo', 'Biologiya', 'Geografiya', "O'zbekiston tarixi", 'Jahon tarixi', 'Informatika', 'Tarbiya', "Davlat va huquq asoslari", 'Chizmachilik', 'Jismoniy tarbiya']
+    return ['Ona tili', 'Adabiyot', 'Algebra', 'Geometriya', 'Fizika', 'Kimyo', 'Biologiya', 'Geografiya', "O'zbekiston tarixi", 'Jahon tarixi', 'Informatika', 'Tarbiya', "Davlat va huquq asoslari", 'Chizmachilik', 'Jismoniy tarbiya', 'Rus tili', 'Ingliz tili']
   } else if (g >= 10 && g <= 11) {
-    return ['Ona tili', 'Adabiyot', 'Algebra', 'Geometriya', 'Fizika', 'Kimyo', 'Biologiya', 'Geografiya', "O'zbekiston tarixi", 'Jahon tarixi', 'Informatika', "Davlat va huquq asoslari", 'Tarbiya', 'Jismoniy tarbiya']
+    return ['Ona tili', 'Adabiyot', 'Algebra', 'Geometriya', 'Fizika', 'Kimyo', 'Biologiya', 'Geografiya', "O'zbekiston tarixi", 'Jahon tarixi', 'Informatika', "Davlat va huquq asoslari", 'Tarbiya', 'Jismoniy tarbiya', 'Rus tili', 'Ingliz tili']
   }
   return []
 }
@@ -42,6 +72,7 @@ function OrderForm({ user }) {
     region: '',
     district: '',
     school: '',
+    school_type: '',
     grade: '',
     subject: '',
     topic: '',
@@ -95,9 +126,11 @@ function OrderForm({ user }) {
         full_name: form.full_name,
         address: fullAddress,
         school: form.school,
+        school_type: form.school_type,
         subject: form.subject,
         grade: form.grade,
         topic: form.topic,
+        language_surcharge: getLanguageSurcharge(form.school_type, form.subject),
       })
 
       if (images.length > 0) {
@@ -140,14 +173,18 @@ function OrderForm({ user }) {
     )
   }
 
+  const langSurcharge = getLanguageSurcharge(form.school_type, form.subject)
+  const totalPrice = (service ? service.price : 0) + langSurcharge
+
   const steps = [
     { num: 1, title: 'F.I.Sh' },
     { num: 2, title: 'Viloyat' },
     { num: 3, title: 'Tuman' },
     { num: 4, title: 'Maktab' },
-    { num: 5, title: 'Sinf' },
-    { num: 6, title: 'Fan' },
-    { num: 7, title: 'Mavzu' },
+    { num: 5, title: 'Maktab turi' },
+    { num: 6, title: 'Sinf' },
+    { num: 7, title: 'Fan' },
+    { num: 8, title: 'Mavzu' },
   ]
 
   const canNext = () => {
@@ -156,9 +193,10 @@ function OrderForm({ user }) {
       case 2: return form.region
       case 3: return form.district.trim()
       case 4: return form.school.trim()
-      case 5: return form.grade
-      case 6: return form.subject
-      case 7: return form.topic.trim()
+      case 5: return form.school_type
+      case 6: return form.grade
+      case 7: return form.subject
+      case 8: return form.topic.trim()
       default: return false
     }
   }
@@ -169,7 +207,9 @@ function OrderForm({ user }) {
     <div className="animate-fade-in min-h-screen">
       <Header
         title={service.name}
-        subtitle={`${service.price.toLocaleString()} so'm`}
+        subtitle={langSurcharge > 0
+          ? `${totalPrice.toLocaleString()} so'm (+${langSurcharge.toLocaleString()} til uchun)`
+          : `${totalPrice.toLocaleString()} so'm`}
         onBack={() => step > 1 ? setStep(step - 1) : navigate(-1)}
       />
 
@@ -268,8 +308,35 @@ function OrderForm({ user }) {
         </div>
       )}
 
-      {/* Step 5: Grade */}
+      {/* Step 5: School Type */}
       {step === 5 && (
+        <div className="space-y-4">
+          <h2 className="text-lg font-semibold">🏫 Qaysi turdagi maktab?</h2>
+          <div className="space-y-2">
+            {SCHOOL_TYPES.map(st => (
+              <button
+                key={st.id}
+                onClick={() => setForm({ ...form, school_type: st.id })}
+                className={`w-full p-4 rounded-2xl text-left font-medium border-2 transition-all flex items-center gap-3 ${
+                  form.school_type === st.id
+                    ? 'border-primary-500 bg-primary-50 text-primary-700'
+                    : 'border-gray-200 bg-tg-secondary text-tg-text active:bg-black/5'
+                }`}
+              >
+                <span className="text-2xl">{st.icon}</span>
+                <span className="text-base">{st.label}</span>
+              </button>
+            ))}
+          </div>
+          <button onClick={goNext} disabled={!canNext()}
+            className="w-full bg-primary-600 text-white rounded-2xl py-3.5 font-medium disabled:bg-black/10 disabled:text-tg-hint active:bg-primary-700 transition-colors">
+            Keyingisi →
+          </button>
+        </div>
+      )}
+
+      {/* Step 6: Grade */}
+      {step === 6 && (
         <div className="space-y-4">
           <h2 className="text-lg font-semibold">🎓 Nechinchi sinf?</h2>
           <div className="grid grid-cols-4 gap-2">
@@ -294,8 +361,8 @@ function OrderForm({ user }) {
         </div>
       )}
 
-      {/* Step 6: Subject */}
-      {step === 6 && (
+      {/* Step 7: Subject */}
+      {step === 7 && (
         <div className="space-y-4">
           <h2 className="text-lg font-semibold">📚 Fan nomini tanlang</h2>
           <p className="text-gray-500 text-sm">{form.grade}-sinf</p>
@@ -321,8 +388,8 @@ function OrderForm({ user }) {
         </div>
       )}
 
-      {/* Step 7: Topic & Images & Submit */}
-      {step === 7 && (
+      {/* Step 8: Topic & Images & Submit */}
+      {step === 8 && (
         <div className="space-y-4">
           <h2 className="text-lg font-semibold">📖 Mavzu</h2>
           <input
@@ -376,10 +443,17 @@ function OrderForm({ user }) {
               <p><strong>F.I.Sh:</strong> {form.full_name}</p>
               <p><strong>Manzil:</strong> {form.region}, {form.district}</p>
               <p><strong>Maktab:</strong> {form.school}</p>
+              <p><strong>Maktab turi:</strong> {SCHOOL_TYPES.find(s => s.id === form.school_type)?.label || '—'}</p>
               <p><strong>Sinf:</strong> {form.grade}-sinf</p>
               <p><strong>Fan:</strong> {form.subject}</p>
               <p><strong>Mavzu:</strong> {form.topic}</p>
               {images.length > 0 && <p><strong>Rasmlar:</strong> {images.length} ta</p>}
+              <div className="pt-2 mt-2 border-t border-black/10">
+                <p className="font-bold text-primary-600 text-base">{totalPrice.toLocaleString()} so'm</p>
+                {langSurcharge > 0 && (
+                  <p className="text-xs text-amber-600">+{langSurcharge.toLocaleString()} so'm til uchun qo'shimcha</p>
+                )}
+              </div>
             </div>
           </div>
 

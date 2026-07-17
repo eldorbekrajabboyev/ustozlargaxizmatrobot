@@ -134,6 +134,8 @@ async function initDatabase() {
   // Add columns if not exists
   try { await db.execute("ALTER TABLE orders ADD COLUMN receipt_uploaded_at DATETIME"); } catch (e) {}
   try { await db.execute("ALTER TABLE orders ADD COLUMN ready_at DATETIME"); } catch (e) {}
+  try { await db.execute("ALTER TABLE orders ADD COLUMN school_type TEXT"); } catch (e) {}
+  try { await db.execute("ALTER TABLE orders ADD COLUMN language_surcharge INTEGER DEFAULT 0"); } catch (e) {}
 
   console.log('📦 Database initialized (Turso)');
   return db;
