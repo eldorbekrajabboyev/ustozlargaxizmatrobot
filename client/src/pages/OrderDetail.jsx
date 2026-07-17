@@ -316,10 +316,7 @@ function OrderDetail({ user }) {
               )}
               <div className="flex justify-between gap-3 items-center pt-1 border-t border-black/10">
                 <span className="font-bold text-tg-text">Jami to'lov:</span>
-                <div className="flex items-center gap-2">
-                  <span className="font-bold text-primary-600 text-lg">{order.total_price?.toLocaleString()} so'm</span>
-                  <CopyButton text={String(order.total_price)} label="Summani nusxalash" />
-                </div>
+                <span className="font-bold text-primary-600 text-lg">{order.total_price?.toLocaleString()} so'm</span>
               </div>
             </div>
             <Row label="F.I.Sh" value={order.full_name} />
