@@ -237,7 +237,6 @@ async function startBot(app) {
       `Biz sizga metodik qo'llanma va metodik tavsiya hujjatlarini tayyorlab beramiz.\n\n` +
       `Quyidagi tugmalardan birini tanlang:`,
       { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [
-        [{ text: '📚 Xizmatlar', callback_data: 'services' }],
         [{ text: '📱 Xizmatlar App', web_app: { url: 'https://metodikish.fly.dev/' } }],
         [{ text: '📦 Buyurtmalarim', callback_data: 'my_orders' }],
         [{ text: "ℹ️ Ma'lumot", callback_data: 'info' }],
@@ -376,7 +375,6 @@ async function startBot(app) {
 
     if (data === 'back_main') {
       bot.sendMessage(chatId, '🏠 Asosiy menyu:', { reply_markup: { inline_keyboard: [
-        [{ text: '📚 Xizmatlar', callback_data: 'services' }],
         [{ text: '📱 Xizmatlar App', web_app: { url: 'https://metodikish.fly.dev/' } }],
         [{ text: '📦 Buyurtmalarim', callback_data: 'my_orders' }],
         [{ text: "ℹ️ Ma'lumot", callback_data: 'info' }],
@@ -436,7 +434,6 @@ async function startBot(app) {
               `🎓 *Metodikish* ga xush kelibsiz!\n\n` +
               `Quyidagi tugmalardan birini tanlang:`,
               { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [
-                [{ text: '📚 Xizmatlar', callback_data: 'services' }],
                 [{ text: '📱 Xizmatlar App', web_app: { url: 'https://metodikish.fly.dev/' } }],
                 [{ text: '📦 Buyurtmalarim', callback_data: 'my_orders' }],
                 [{ text: "ℹ️ Ma'lumot", callback_data: 'info' }],
@@ -452,7 +449,6 @@ async function startBot(app) {
             bot.sendMessage(chatId,
               `🎓 *Metodikish* ga xush kelibsiz!`,
               { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [
-                [{ text: '📚 Xizmatlar', callback_data: 'services' }],
                 [{ text: '📱 Xizmatlar App', web_app: { url: 'https://metodikish.fly.dev/' } }],
                 [{ text: '📦 Buyurtmalarim', callback_data: 'my_orders' }],
                 [{ text: "ℹ️ Ma'lumot", callback_data: 'info' }],
