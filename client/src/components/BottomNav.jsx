@@ -4,6 +4,7 @@ const TABS = [
   { path: '/', label: 'Bosh', icon: HomeIcon },
   { path: '/services', label: 'Xizmatlar', icon: ServicesIcon },
   { path: '/my-orders', label: 'Buyurtmalar', icon: OrdersIcon },
+  { path: '/profile', label: 'Profil', icon: ProfileIcon },
 ]
 
 function HomeIcon({ active }) {
@@ -35,6 +36,15 @@ function OrdersIcon({ active }) {
       <path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5z" />
       <path d="M3.5 7.5 12 12l8.5-4.5" />
       <path d="M12 12v9" />
+    </svg>
+  )
+}
+
+function ProfileIcon({ active }) {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 21v-1a6 6 0 0 1 12 0v1" />
     </svg>
   )
 }

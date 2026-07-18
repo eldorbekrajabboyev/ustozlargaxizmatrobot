@@ -96,6 +96,21 @@ function Settings() {
             />
           </div>
 
+          {/* Bot Username */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              🤖 Bot Username (referal havola uchun)
+            </label>
+            <input
+              type="text"
+              value={settings.bot_username || ''}
+              onChange={(e) => handleChange('bot_username', e.target.value)}
+              placeholder="Masalan: metodikish_bot"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            />
+            <p className="text-xs text-gray-500 mt-1">Bot username'siz referal havola ishlamaydi</p>
+          </div>
+
           {/* Admin Chat ID */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">

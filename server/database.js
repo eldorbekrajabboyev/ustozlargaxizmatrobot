@@ -118,6 +118,8 @@ async function initDatabase() {
   }
   await db.execute("INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)",
     ["referral_discount_amount", "0"]);
+  await db.execute("INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)",
+    ["bot_username", ""]);
 
   await db.execute(`
     CREATE TABLE IF NOT EXISTS reviews (

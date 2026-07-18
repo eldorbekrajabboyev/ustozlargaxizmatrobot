@@ -6,6 +6,7 @@ import Services from './pages/Services'
 import OrderForm from './pages/OrderForm'
 import MyOrders from './pages/MyOrders'
 import OrderDetail from './pages/OrderDetail'
+import Profile from './pages/Profile'
 import BottomNav from './components/BottomNav'
 import { applyTelegramTheme } from './theme'
 
@@ -13,7 +14,7 @@ const api = axios.create({
   baseURL: '/api',
 })
 
-const MAIN_ROUTES = ['/', '/services', '/my-orders']
+const MAIN_ROUTES = ['/', '/services', '/my-orders', '/profile']
 
 function AppContent() {
   const [user, setUser] = useState(null)
@@ -49,6 +50,7 @@ function AppContent() {
         <Route path="/order/:serviceId" element={<OrderForm user={user} />} />
         <Route path="/my-orders" element={<MyOrders user={user} />} />
         <Route path="/order-detail/:orderId" element={<OrderDetail user={user} />} />
+        <Route path="/profile" element={<Profile user={user} />} />
       </Routes>
       {showNav && <BottomNav />}
     </div>
