@@ -257,7 +257,10 @@ app.post('/api/orders', async (req, res) => {
     if (promo_code_id) {
       const promo = await queryOne('SELECT * FROM promo_codes WHERE id = ? AND is_active = 1', [promo_code_id]);
       if (promo) {
-        if (promo.max_uses <= 0 || promo.used_count < promo.max_uses) {
+        const reservedRow = await queryOne("SELECT COUNT(*) as cnt FROM promo_code_usage WHERE promo_code_id = ? AND status = 'reserved'", [promo.id]);
+        const reservedCount = reservedRow ? reservedRow.cnt : 0;
+        const available = promo.max_uses <= 0 || (promo.used_count + reservedCount) < promo.max_uses;
+        if (available) {
           const alreadyUsed = await queryOne('SELECT id FROM promo_code_usage WHERE promo_code_id = ? AND user_id = ?', [promo.id, user_id]);
           if (!alreadyUsed) {
             validPromoId = promo.id;
@@ -613,12 +616,15 @@ app.post('/api/promo-codes/validate', async (req, res) => {
     const used = await queryOne('SELECT id FROM promo_code_usage WHERE promo_code_id = ? AND user_id = ?', [promo.id, user_id]);
     if (used) return res.status(400).json({ error: 'Siz allaqachon bu promo-koddan foydalangansiz' });
 
-    if (promo.max_uses > 0 && promo.used_count >= promo.max_uses) {
-      const reserved = await queryOne("SELECT id FROM promo_code_usage WHERE promo_code_id = ? AND status = 'reserved'", [promo.id]);
-      if (reserved) {
-        return res.status(400).json({ error: 'Promo-kod limiti tugagan. Hozir to\'lov jarayonida. Tasdiqlansa bo\'shatilishi mumkin.' });
+    if (promo.max_uses > 0) {
+      const reservedRow = await queryOne("SELECT COUNT(*) as cnt FROM promo_code_usage WHERE promo_code_id = ? AND status = 'reserved'", [promo.id]);
+      const reservedCount = reservedRow ? reservedRow.cnt : 0;
+      if ((promo.used_count + reservedCount) >= promo.max_uses) {
+        if (reservedCount > 0) {
+          return res.status(400).json({ error: 'Promo-kod limiti tugagan. Hozir to\'lov jarayonida. Tasdiqlansa bo\'shatilishi mumkin.' });
+        }
+        return res.status(400).json({ error: 'Promo-kodning barcha limitlari tugagan. Boshqa foydalanib bo\'lmaydi.' });
       }
-      return res.status(400).json({ error: 'Promo-kodning barcha limitlari tugagan. Boshqa foydalanib bo\'lmaydi.' });
     }
 
     res.json({ success: true, promo_code_id: promo.id, discount_percent: promo.discount_percent, source_name: promo.source_name });
@@ -778,6 +784,17 @@ process.on('unhandledRejection', (err) => console.error('Unhandled rejection:', 
 
 async function start() {
   await initDatabase();
+  try {
+    const codes = await queryAll('SELECT id, used_count FROM promo_codes');
+    for (const c of codes) {
+      const row = await queryOne("SELECT COUNT(*) as cnt FROM promo_code_usage WHERE promo_code_id = ? AND status = 'used'", [c.id]);
+      const actual = row ? row.cnt : 0;
+      if (c.used_count !== actual) {
+        await run('UPDATE promo_codes SET used_count = ? WHERE id = ?', [actual, c.id]);
+        console.log(`🔧 Fixed promo_code id=${c.id}: used_count ${c.used_count} → ${actual}`);
+      }
+    }
+  } catch (e) { console.error('Promo used_count recalc error:', e.message); }
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Server running on port ${PORT}`);
     console.log(`📡 API: http://localhost:${PORT}/api`);
