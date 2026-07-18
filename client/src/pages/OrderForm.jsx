@@ -51,38 +51,54 @@ function getSubjects(grade, schoolType) {
   const st = schoolType || 'uzbek'
 
   if (st === 'uzbek') {
-    if (g >= 1 && g <= 4) {
-      return ['Ona tili', "O'qish", 'Matematika', 'Tabiiy fan', 'Tarbiya', 'Texnologiya', "Tasviriy san'at", 'Musiqa', 'Jismoniy tarbiya', 'Ingliz tili']
-    } else if (g >= 5 && g <= 6) {
-      return ['Ona tili', 'Adabiyot', "O'zbek tili", 'Matematika', 'Tabiiy fan', 'Informatika', 'Tarix', 'Tarbiya', 'Texnologiya', "Tasviriy san'at", 'Musiqa', 'Jismoniy tarbiya', 'Rus tili', 'Ingliz tili']
-    } else if (g >= 7 && g <= 9) {
-      return ['Ona tili', 'Adabiyot', 'Algebra', 'Geometriya', 'Fizika', 'Kimyo', 'Biologiya', 'Geografiya', "O'zbekiston tarixi", 'Jahon tarixi', 'Informatika', 'Tarbiya', "Davlat va huquq asoslari", 'Chizmachilik', 'Jismoniy tarbiya', 'Rus tili', 'Ingliz tili']
+    if (g === 1) {
+      return ['Alifbe', "O'qish", 'Ona tili', 'Matematika', 'Tarbiya', 'Tabiiy fan', 'Texnologiya', "Tasviriy san'at", 'Musiqa madaniyati', 'Jismoniy tarbiya', 'Ingliz tili']
+    } else if (g >= 2 && g <= 4) {
+      return ['Ona tili', "O'qish", 'Matematika', 'Tarbiya', 'Tabiiy fan', 'Texnologiya', "Tasviriy san'at", 'Musiqa madaniyati', 'Jismoniy tarbiya', 'Ingliz tili']
+    } else if (g === 5) {
+      return ['Ona tili', 'Adabiyot', "O'zbek tili", 'Matematika', 'Tabiiy fan', 'Tarix', 'Tarbiya', 'Informatika va axborot texnologiyalari', 'Texnologiya', "Tasviriy san'at", 'Musiqa madaniyati', 'Jismoniy tarbiya', 'Ingliz tili']
+    } else if (g === 6) {
+      return ['Ona tili', 'Adabiyot', 'Matematika', 'Tabiiy fan', 'Tarix', 'Tarbiya', 'Informatika va axborot texnologiyalari', 'Texnologiya', "Tasviriy san'at", 'Musiqa madaniyati', 'Jismoniy tarbiya', 'Ingliz tili']
+    } else if (g === 7) {
+      return ['Ona tili', 'Adabiyot', 'Algebra', 'Geometriya', 'Fizika', 'Kimyo', 'Biologiya', "O'zbekiston tarixi", 'Jahon tarixi', 'Geografiya', 'Tarbiya', 'Informatika va axborot texnologiyalari', 'Texnologiya', "Tasviriy san'at", 'Jismoniy tarbiya', 'Ingliz tili']
+    } else if (g === 8) {
+      return ['Ona tili', 'Adabiyot', 'Algebra', 'Geometriya', 'Fizika', 'Kimyo', 'Biologiya', "O'zbekiston tarixi", 'Jahon tarixi', 'Geografiya', "Davlat va huquq asoslari", 'Tarbiya', 'Informatika va axborot texnologiyalari', 'Texnologiya', 'Jismoniy tarbiya', 'Ingliz tili']
+    } else if (g === 9) {
+      return ['Ona tili', 'Adabiyot', 'Algebra', 'Geometriya', 'Fizika', 'Kimyo', 'Biologiya', "O'zbekiston tarixi", 'Jahon tarixi', 'Geografiya', "Davlat va huquq asoslari", 'Tarbiya', 'Informatika va axborot texnologiyalari', 'Iqtisodiy bilim asoslari', 'Jismoniy tarbiya', 'Ingliz tili']
     } else if (g >= 10 && g <= 11) {
-      return ['Ona tili', 'Adabiyot', 'Algebra', 'Geometriya', 'Fizika', 'Kimyo', 'Biologiya', 'Geografiya', "O'zbekiston tarixi", 'Jahon tarixi', 'Informatika', "Davlat va huquq asoslari", 'Tarbiya', 'Jismoniy tarbiya', 'Rus tili', 'Ingliz tili']
+      return ['Ona tili', 'Adabiyot', 'Algebra va analiz asoslari', 'Geometriya', 'Fizika', 'Kimyo', 'Biologiya', "O'zbekiston tarixi", 'Jahon tarixi', 'Geografiya', 'Huquq', 'Tarbiya', 'Informatika', "Chaqiruvga qadar boshlang'ich tayyorgarlik", 'Jismoniy tarbiya', 'Ingliz tili']
     }
   }
 
   if (st === 'russian') {
     if (g >= 1 && g <= 4) {
-      return ['Родной язык', 'Литература', 'Математика', 'Природоведение', 'Труд', 'Изобразительное искусство', 'Музыка', 'Физкультура', 'Английский язык']
+      return ['Русский язык', 'Литературное чтение', 'Математика', 'Воспитание', 'Естествознание', 'Технология', 'Изобразительное искусство', 'Музыка', 'Физическая культура', 'Английский язык', 'Узбекский язык']
     } else if (g >= 5 && g <= 6) {
-      return ['Родной язык', 'Литература', 'Русский язык', 'Математика', 'Природоведение', 'Информатика', 'История', 'Труд', 'Изобразительное искусство', 'Музыка', 'Физкультура', 'Узбекский язык', 'Английский язык']
-    } else if (g >= 7 && g <= 9) {
-      return ['Родной язык', 'Литература', 'Алгебра', 'Геометрия', 'Физика', 'Химия', 'Биология', 'География', 'История Узбекистана', 'Всеобщая история', 'Информатика', 'Труд', 'Основы государства и права', 'Черчение', 'Физкультура', 'Узбекский язык', 'Английский язык']
+      return ['Русский язык', 'Русская литература', 'Математика', 'Естествознание', 'История', 'Воспитание', 'Информатика', 'Технология', 'Изобразительное искусство', 'Музыка', 'Физическая культура', 'Английский язык', 'Узбекский язык']
+    } else if (g === 7) {
+      return ['Русский язык', 'Русская литература', 'Алгебра', 'Геометрия', 'Физика', 'Химия', 'Биология', 'История Узбекистана', 'Всемирная история', 'География', 'Воспитание', 'Информатика', 'Технология', 'Изобразительное искусство', 'Физическая культура', 'Английский язык', 'Узбекский язык']
+    } else if (g === 8) {
+      return ['Русский язык', 'Русская литература', 'Алгебра', 'Геометрия', 'Физика', 'Химия', 'Биология', 'История Узбекистана', 'Всемирная история', 'География', 'Основы государства и права', 'Воспитание', 'Информатика', 'Технология', 'Физическая культура', 'Английский язык', 'Узбекский язык']
+    } else if (g === 9) {
+      return ['Русский язык', 'Русская литература', 'Алгебра', 'Геометрия', 'Физика', 'Химия', 'Биология', 'История Узбекистана', 'Всемирная история', 'География', 'Основы государства и права', 'Воспитание', 'Информатика', 'Основы экономики', 'Физическая культура', 'Английский язык', 'Узбекский язык']
     } else if (g >= 10 && g <= 11) {
-      return ['Родной язык', 'Литература', 'Алгебра', 'Геометрия', 'Физика', 'Химия', 'Биология', 'География', 'История Узбекистана', 'Всеобщая история', 'Информатика', 'Основы государства и права', 'Труд', 'Физкультура', 'Узбекский язык', 'Английский язык']
+      return ['Русский язык', 'Русская литература', 'Алгебра и начала анализа', 'Геометрия', 'Физика', 'Химия', 'Биология', 'История Узбекистана', 'Всемирная история', 'География', 'Право', 'Воспитание', 'Информатика', 'Начальная допризывная подготовка', 'Физическая культура', 'Английский язык', 'Узбекский язык']
     }
   }
 
   if (st === 'qoraqalpoq') {
     if (g >= 1 && g <= 4) {
-      return ['Ana tili', 'Oqish', 'Matematika', 'Tabiyi fan', "T\u02BBrbiye", 'Texnologiya', "Suret san\u02BBatı", 'Muzıka', "Dene t\u02BBrbiye", "Ag\u02BBilshin tili"]
+      return ['Qaraqalpaq tili', 'Oqıw', 'Matematika', 'Tárbiya', 'Tábiyiy pán', 'Texnologiya', 'Súwret salıw', 'Muzıka', 'Dene tárbiyası', 'Inglis tili', 'Ózbek tili']
     } else if (g >= 5 && g <= 6) {
-      return ['Ana tili', 'Edebiyat', 'Qaraqalpaq tili', 'Matematika', 'Tabiyi fan', 'Informatika', 'Tarix', "T\u02BBrbiye", 'Texnologiya', "Suret san\u02BBatı", 'Muzıka', "Dene t\u02BBrbiye", 'Orıs tili', "Ag\u02BBilshin tili"]
-    } else if (g >= 7 && g <= 9) {
-      return ['Ana tili', 'Edebiyat', 'Algebra', 'Geometriya', 'Fizika', 'Kimya', 'Biologiya', 'Geografiya', 'Qaraqalpaqstan tar\u0131x\u0131', 'Alem tar\u0131x\u0131', 'Informatika', "T\u02BBrbiye", 'Memleket ve quq\u0131q negizleri', 'Chizmashilik', "Dene t\u02BBrbiye", 'Orıs tili', "Ag\u02BBilshin tili"]
+      return ['Qaraqalpaq tili', 'Qaraqalpaq ádebiyatı', 'Matematika', 'Tábiyiy pán', 'Tariyx', 'Tárbiya', 'Informatika', 'Texnologiya', 'Súwret salıw', 'Muzıka', 'Dene tárbiyası', 'Inglis tili', 'Ózbek tili']
+    } else if (g === 7) {
+      return ['Qaraqalpaq tili', 'Qaraqalpaq ádebiyatı', 'Algebra', 'Geometriya', 'Fizika', 'Ximiya', 'Biologiya', 'Ózbekstan tariyxı', 'Dúnya tariyxı', 'Geografiya', 'Tárbiya', 'Informatika', 'Texnologiya', 'Súwret salıw', 'Dene tárbiyası', 'Inglis tili', 'Ózbek tili']
+    } else if (g === 8) {
+      return ['Qaraqalpaq tili', 'Qaraqalpaq ádebiyatı', 'Algebra', 'Geometriya', 'Fizika', 'Ximiya', 'Biologiya', 'Ózbekstan tariyxı', 'Dúnya tariyxı', 'Geografiya', 'Mámleket hám huqıq tiykarları', 'Tárbiya', 'Informatika', 'Texnologiya', 'Dene tárbiyası', 'Inglis tili', 'Ózbek tili']
+    } else if (g === 9) {
+      return ['Qaraqalpaq tili', 'Qaraqalpaq ádebiyatı', 'Algebra', 'Geometriya', 'Fizika', 'Ximiya', 'Biologiya', 'Ózbekstan tariyxı', 'Dúnya tariyxı', 'Geografiya', 'Mámleket hám huqıq tiykarları', 'Tárbiya', 'Informatika', 'Ekonomika tiykarları', 'Dene tárbiyası', 'Inglis tili', 'Ózbek tili']
     } else if (g >= 10 && g <= 11) {
-      return ['Ana tili', 'Edebiyat', 'Algebra', 'Geometriya', 'Fizika', 'Kimya', 'Biologiya', 'Geografiya', 'Qaraqalpaqstan tar\u0131x\u0131', 'Alem tar\u0131x\u0131', 'Informatika', 'Memleket ve quq\u0131q negizleri', "T\u02BBrbiye", "Dene t\u02BBrbiye", 'Orıs tili', "Ag\u02BBilshin tili"]
+      return ['Qaraqalpaq tili', 'Qaraqalpaq ádebiyatı', 'Algebra hám analiz tiykarları', 'Geometriya', 'Fizika', 'Ximiya', 'Biologiya', 'Ózbekstan tariyxı', 'Dúnya tariyxı', 'Geografiya', 'Huqıq', 'Tárbiya', 'Informatika', 'Áskerlikke shekemgi tayarlıq', 'Dene tárbiyası', 'Inglis tili', 'Ózbek tili']
     }
   }
 
