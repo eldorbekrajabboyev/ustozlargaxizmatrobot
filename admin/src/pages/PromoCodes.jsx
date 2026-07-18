@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
+import api from '../api/api'
 
 export default function PromoCodes() {
   const [codes, setCodes] = useState([])
@@ -12,7 +12,7 @@ export default function PromoCodes() {
 
   const load = async () => {
     try {
-      const res = await axios.get('/api/promo-codes')
+      const res = await api.get('/api/promo-codes')
       setCodes(res.data)
     } catch (e) { console.error(e) }
     setLoading(false)
@@ -22,7 +22,7 @@ export default function PromoCodes() {
     if (!form.code.trim() || !form.discount_percent) return
     setSaving(true)
     try {
-      await axios.post('/api/promo-codes', form)
+      await api.post('/api/promo-codes', form)
       setForm({ code: '', discount_percent: 10, source_name: '', max_uses: 0 })
       setShowForm(false)
       load()
@@ -32,7 +32,7 @@ export default function PromoCodes() {
 
   const toggle = async (id, isActive) => {
     try {
-      await axios.put(`/api/promo-codes/${id}`, { is_active: isActive ? 0 : 1 })
+      await api.put(`/api/promo-codes/${id}`, { is_active: isActive ? 0 : 1 })
       load()
     } catch (e) { alert(e.response?.data?.error || 'Xatolik') }
   }
@@ -40,7 +40,7 @@ export default function PromoCodes() {
   const remove = async (id) => {
     if (!confirm('O\'chirishni xohlaysizmi?')) return
     try {
-      await axios.delete(`/api/promo-codes/${id}`)
+      await api.delete(`/api/promo-codes/${id}`)
       load()
     } catch (e) { alert(e.response?.data?.error || 'Xatolik') }
   }

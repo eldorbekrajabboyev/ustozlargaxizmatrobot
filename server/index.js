@@ -5,6 +5,7 @@ const path = require('path');
 const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
 const { initDatabase, queryAll, queryOne, run } = require('./database');
+const adminAuth = require('./middleware/adminAuth');
 
 const Sentry = require('@sentry/node');
 Sentry.init({ dsn: process.env.SENTRY_DSN, tracesSampleRate: 0.1 });
@@ -95,7 +96,7 @@ function setUploadType(type) {
 
 // ==================== API ROUTES ====================
 
-app.get('/api/users', async (req, res) => {
+app.get('/api/users', adminAuth, async (req, res) => {
   try {
     const users = await queryAll(`
       SELECT u.*,
@@ -136,7 +137,7 @@ app.get('/api/services', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.post('/api/services', async (req, res) => {
+app.post('/api/services', adminAuth, async (req, res) => {
   try {
     const { name, description, price } = req.body;
     const result = await run('INSERT INTO services (name, description, price) VALUES (?, ?, ?)',
@@ -145,7 +146,7 @@ app.post('/api/services', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.put('/api/services/:id', async (req, res) => {
+app.put('/api/services/:id', adminAuth, async (req, res) => {
   try {
     const { name, description, price, is_active } = req.body;
     await run('UPDATE services SET name = ?, description = ?, price = ?, is_active = ? WHERE id = ?',
@@ -154,7 +155,7 @@ app.put('/api/services/:id', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.delete('/api/services/:id', async (req, res) => {
+app.delete('/api/services/:id', adminAuth, async (req, res) => {
   try {
     await run('DELETE FROM services WHERE id = ?', [req.params.id]);
     res.json({ success: true });
@@ -168,7 +169,7 @@ app.get('/api/cards', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.post('/api/cards', async (req, res) => {
+app.post('/api/cards', adminAuth, async (req, res) => {
   try {
     const { card_number, card_holder, bank_name } = req.body;
     const result = await run('INSERT INTO payment_cards (card_number, card_holder, bank_name) VALUES (?, ?, ?)',
@@ -177,7 +178,7 @@ app.post('/api/cards', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.put('/api/cards/:id', async (req, res) => {
+app.put('/api/cards/:id', adminAuth, async (req, res) => {
   try {
     const { card_number, card_holder, bank_name, is_active } = req.body;
     await run('UPDATE payment_cards SET card_number = ?, card_holder = ?, bank_name = ?, is_active = ? WHERE id = ?',
@@ -186,14 +187,14 @@ app.put('/api/cards/:id', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.delete('/api/cards/:id', async (req, res) => {
+app.delete('/api/cards/:id', adminAuth, async (req, res) => {
   try {
     await run('DELETE FROM payment_cards WHERE id = ?', [req.params.id]);
     res.json({ success: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.get('/api/orders', async (req, res) => {
+app.get('/api/orders', adminAuth, async (req, res) => {
   try {
     const { status, page = 1, limit = 20, search, region, subject, date_from, date_to } = req.query;
     const conditions = [];
@@ -304,7 +305,7 @@ app.post('/api/orders', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.put('/api/orders/:id', async (req, res) => {
+app.put('/api/orders/:id', adminAuth, async (req, res) => {
   try {
     const { status, admin_note } = req.body;
     const updates = [`updated_at = '${nowUZ()}'`];
@@ -347,7 +348,7 @@ app.post('/api/orders/:id/images', setUploadType('images'), upload.array('images
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.post('/api/orders/:id/document', setUploadType('documents'), upload.single('document'), async (req, res) => {
+app.post('/api/orders/:id/document', adminAuth, setUploadType('documents'), upload.single('document'), async (req, res) => {
   try {
     await run('UPDATE orders SET document_file = ?, status = ? WHERE id = ?',
       [`/uploads/documents/${req.file.filename}`, 'ready', parseInt(req.params.id)]);
@@ -355,7 +356,7 @@ app.post('/api/orders/:id/document', setUploadType('documents'), upload.single('
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.put('/api/orders/:id/confirm-payment', async (req, res) => {
+app.put('/api/orders/:id/confirm-payment', adminAuth, async (req, res) => {
   try {
     const orderId = parseInt(req.params.id);
     const order = await queryOne(`
@@ -392,7 +393,7 @@ app.put('/api/orders/:id/confirm-payment', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.put('/api/orders/:id/reject-payment', async (req, res) => {
+app.put('/api/orders/:id/reject-payment', adminAuth, async (req, res) => {
   try {
     const orderId = parseInt(req.params.id);
     const { reason } = req.body;
@@ -441,7 +442,7 @@ app.post('/api/orders/:id/auto-cancel', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.put('/api/orders/:id/send', async (req, res) => {
+app.put('/api/orders/:id/send', adminAuth, async (req, res) => {
   try {
     const orderId = parseInt(req.params.id);
     const order = await queryOne(`
@@ -471,7 +472,7 @@ app.put('/api/orders/:id/send', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.get('/api/stats', async (req, res) => {
+app.get('/api/stats', adminAuth, async (req, res) => {
   try {
     const totalOrders = (await queryOne('SELECT COUNT(*) as count FROM orders'))?.count || 0;
     const pendingPayment = (await queryOne("SELECT COUNT(*) as count FROM orders WHERE status = 'pending_payment'"))?.count || 0;
@@ -517,11 +518,17 @@ app.get('/api/settings', async (req, res) => {
     const settings = await queryAll('SELECT * FROM settings');
     const obj = {};
     settings.forEach(s => obj[s.key] = s.value);
+    // Admin kalit bilan so'rov yuborilganini tekshirish
+    const isAdmin = req.headers['x-admin-key'] === process.env.ADMIN_API_KEY;
+    if (!isAdmin) {
+      delete obj.bot_token;
+      delete obj.admin_chat_id;
+    }
     res.json(obj);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.put('/api/settings', async (req, res) => {
+app.put('/api/settings', adminAuth, async (req, res) => {
   try {
     for (const [key, value] of Object.entries(req.body)) {
       await run(`UPDATE settings SET value = ?, updated_at = '${nowUZ()}' WHERE key = ?`, [value, key]);
@@ -543,7 +550,7 @@ app.get('/api/settings/channels', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.post('/api/settings/channels', async (req, res) => {
+app.post('/api/settings/channels', adminAuth, async (req, res) => {
   try {
     const { name, link } = req.body;
     if (!name || !link) return res.status(400).json({ error: 'Nomi va link kiritilishi shart' });
@@ -563,7 +570,7 @@ app.post('/api/settings/channels', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.delete('/api/settings/channels/:index', async (req, res) => {
+app.delete('/api/settings/channels/:index', adminAuth, async (req, res) => {
   try {
     const idx = parseInt(req.params.index);
     const row = await queryOne("SELECT value FROM settings WHERE key = 'channels'");
@@ -618,7 +625,7 @@ app.get('/api/user/referral-info/:telegram_id', async (req, res) => {
 });
 
 // Broadcast message to all users
-app.post('/api/broadcast', async (req, res) => {
+app.post('/api/broadcast', adminAuth, async (req, res) => {
   try {
     const { message } = req.body;
     if (!message || !message.trim()) return res.status(400).json({ error: 'Xabar bo\'sh bo\'lmasligi kerak' });
@@ -638,7 +645,7 @@ app.post('/api/broadcast', async (req, res) => {
 });
 
 // Get unique filter options for orders (extract region from address)
-app.get('/api/filters', async (req, res) => {
+app.get('/api/filters', adminAuth, async (req, res) => {
   try {
     const regions = await queryAll("SELECT DISTINCT SUBSTR(address, 1, INSTR(address, ',') - 1) as region FROM orders WHERE address IS NOT NULL AND address != '' AND INSTR(address, ',') > 0 ORDER BY region");
     const subjects = await queryAll("SELECT DISTINCT subject FROM orders WHERE subject IS NOT NULL AND subject != '' ORDER BY subject");
@@ -678,7 +685,7 @@ app.post('/api/promo-codes/validate', async (req, res) => {
 });
 
 // Admin: list promo codes
-app.get('/api/promo-codes', async (req, res) => {
+app.get('/api/promo-codes', adminAuth, async (req, res) => {
   try {
     const codes = await queryAll('SELECT * FROM promo_codes ORDER BY id DESC');
     res.json(codes);
@@ -686,7 +693,7 @@ app.get('/api/promo-codes', async (req, res) => {
 });
 
 // Admin: create promo code
-app.post('/api/promo-codes', async (req, res) => {
+app.post('/api/promo-codes', adminAuth, async (req, res) => {
   try {
     const { code, discount_percent, source_name, max_uses } = req.body;
     if (!code || !discount_percent) return res.status(400).json({ error: 'Kod va chegirma % kiritilishi shart' });
@@ -704,7 +711,7 @@ app.post('/api/promo-codes', async (req, res) => {
 });
 
 // Admin: toggle promo code active/inactive
-app.put('/api/promo-codes/:id', async (req, res) => {
+app.put('/api/promo-codes/:id', adminAuth, async (req, res) => {
   try {
     const { is_active } = req.body;
     const promo = await queryOne('SELECT * FROM promo_codes WHERE id = ?', [req.params.id]);
@@ -717,7 +724,7 @@ app.put('/api/promo-codes/:id', async (req, res) => {
 });
 
 // Admin: delete promo code
-app.delete('/api/promo-codes/:id', async (req, res) => {
+app.delete('/api/promo-codes/:id', adminAuth, async (req, res) => {
   try {
     await run('DELETE FROM promo_code_usage WHERE promo_code_id = ?', [req.params.id]);
     await run('DELETE FROM promo_codes WHERE id = ?', [req.params.id]);
@@ -782,7 +789,7 @@ app.post('/api/reviews', async (req, res) => {
 });
 
 // Admin: get all reviews
-app.get('/api/admin/reviews', async (req, res) => {
+app.get('/api/admin/reviews', adminAuth, async (req, res) => {
   try {
     const reviews = await queryAll(
       `SELECT r.*, u.first_name, u.username, o.order_code
@@ -798,7 +805,7 @@ app.get('/api/admin/reviews', async (req, res) => {
 });
 
 // Admin: publish or reject review
-app.patch('/api/admin/reviews/:id', async (req, res) => {
+app.patch('/api/admin/reviews/:id', adminAuth, async (req, res) => {
   try {
     const { status } = req.body; // 'published' | 'rejected'
     if (!['published', 'rejected'].includes(status))

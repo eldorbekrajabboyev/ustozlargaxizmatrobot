@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import axios from 'axios'
+import api from '../api/api'
 
 function Broadcast() {
   const [message, setMessage] = useState('')
@@ -12,7 +12,7 @@ function Broadcast() {
     setSending(true)
     setResult(null)
     try {
-      const res = await axios.post('/api/broadcast', { message })
+      const res = await api.post('/api/broadcast', { message })
       setResult(res.data)
       if (res.data.failed === 0) setMessage('')
     } catch (err) {

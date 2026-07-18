@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import axios from 'axios'
+import api from '../api/api'
 
 const statusColors = {
   pending_payment: 'bg-yellow-100 text-yellow-800',
@@ -29,7 +29,7 @@ function OrderDetail() {
   const [adminNote, setAdminNote] = useState('')
 
   useEffect(() => {
-    axios.get(`/api/orders/${id}`)
+    api.get(`/api/orders/${id}`)
       .then(res => {
         setOrder(res.data)
         setAdminNote(res.data.admin_note || '')
@@ -42,13 +42,13 @@ function OrderDetail() {
     try {
       // Use specific endpoints for certain actions
       if (newStatus === 'in_progress') {
-        await axios.put(`/api/orders/${id}/confirm-payment`)
+        await api.put(`/api/orders/${id}/confirm-payment`)
       } else if (newStatus === 'sent') {
-        await axios.put(`/api/orders/${id}/send`)
+        await api.put(`/api/orders/${id}/send`)
       } else {
-        await axios.put(`/api/orders/${id}`, { status: newStatus })
+        await api.put(`/api/orders/${id}`, { status: newStatus })
       }
-      const res = await axios.get(`/api/orders/${id}`)
+      const res = await api.get(`/api/orders/${id}`)
       setOrder(res.data)
     } catch (err) {
       alert('Xatolik')
@@ -59,8 +59,8 @@ function OrderDetail() {
     const reason = prompt('Rad etish sababini kiriting (ixtiyoriy):')
     if (reason === null) return
     try {
-      await axios.put(`/api/orders/${id}/reject-payment`, { reason: reason || null })
-      const res = await axios.get(`/api/orders/${id}`)
+      await api.put(`/api/orders/${id}/reject-payment`, { reason: reason || null })
+      const res = await api.get(`/api/orders/${id}`)
       setOrder(res.data)
     } catch (err) {
       alert('Xatolik')
@@ -75,10 +75,10 @@ function OrderDetail() {
     try {
       const formData = new FormData()
       formData.append('document', file)
-      await axios.post(`/api/orders/${id}/document`, formData, {
+      await api.post(`/api/orders/${id}/document`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
-      const res = await axios.get(`/api/orders/${id}`)
+      const res = await api.get(`/api/orders/${id}`)
       setOrder(res.data)
     } catch (err) {
       alert('Fayl yuklashda xatolik')
@@ -89,7 +89,7 @@ function OrderDetail() {
 
   const saveNote = async () => {
     try {
-      await axios.put(`/api/orders/${id}`, { admin_note: adminNote })
+      await api.put(`/api/orders/${id}`, { admin_note: adminNote })
       alert('Saqlandi')
     } catch (err) {
       alert('Xatolik')

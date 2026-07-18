@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
+import api from '../api/api'
 
 const STATUS_LABELS = { pending: 'Kutilmoqda', published: 'Nashr etilgan', rejected: 'Rad etilgan' }
 const STATUS_COLORS = {
@@ -27,7 +27,7 @@ export default function Reviews() {
   const load = async () => {
     setLoading(true)
     try {
-      const res = await axios.get('/api/admin/reviews')
+      const res = await api.get('/api/admin/reviews')
       setReviews(res.data)
     } catch (e) {
       console.error(e)
@@ -41,7 +41,7 @@ export default function Reviews() {
   const setStatus = async (id, status) => {
     setActionLoading(id + status)
     try {
-      await axios.patch(`/api/admin/reviews/${id}`, { status })
+      await api.patch(`/api/admin/reviews/${id}`, { status })
       setReviews(prev => prev.map(r => r.id === id ? { ...r, status } : r))
     } catch (e) {
       alert('Xatolik: ' + (e.response?.data?.error || e.message))

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import axios from 'axios'
+import api from '../api/api'
 
 const statusColors = {
   pending_payment: 'bg-yellow-100 text-yellow-800',
@@ -42,7 +42,7 @@ function Dashboard() {
   const [chartMode, setChartMode] = useState('daily')
 
   useEffect(() => {
-    axios.get('/api/stats')
+    api.get('/api/stats')
       .then(res => setStats(res.data))
       .catch(console.error)
       .finally(() => setLoading(false))

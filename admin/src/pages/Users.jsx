@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
+import api from '../api/api'
 
 function Users() {
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    axios.get('/api/users')
+    api.get('/api/users')
       .then(res => setUsers(res.data))
       .catch(console.error)
       .finally(() => setLoading(false))

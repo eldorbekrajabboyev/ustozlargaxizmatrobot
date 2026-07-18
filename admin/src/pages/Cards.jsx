@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
+import api from '../api/api'
 
 function Cards() {
   const [cards, setCards] = useState([])
@@ -14,7 +14,7 @@ function Cards() {
 
   const fetchCards = () => {
     setLoading(true)
-    axios.get('/api/cards')
+    api.get('/api/cards')
       .then(res => setCards(res.data))
       .catch(console.error)
       .finally(() => setLoading(false))
@@ -24,9 +24,9 @@ function Cards() {
     e.preventDefault()
     try {
       if (editing) {
-        await axios.put(`/api/cards/${editing.id}`, { ...form, is_active: editing.is_active })
+        await api.put(`/api/cards/${editing.id}`, { ...form, is_active: editing.is_active })
       } else {
-        await axios.post('/api/cards', form)
+        await api.post('/api/cards', form)
       }
       setShowForm(false)
       setEditing(null)
@@ -46,7 +46,7 @@ function Cards() {
   const handleDelete = async (id) => {
     if (!confirm("O'chirishni xohlaysizmi?")) return
     try {
-      await axios.delete(`/api/cards/${id}`)
+      await api.delete(`/api/cards/${id}`)
       fetchCards()
     } catch (err) {
       alert('Xatolik')
@@ -55,7 +55,7 @@ function Cards() {
 
   const toggleActive = async (card) => {
     try {
-      await axios.put(`/api/cards/${card.id}`, {
+      await api.put(`/api/cards/${card.id}`, {
         ...card,
         is_active: card.is_active ? 0 : 1,
       })

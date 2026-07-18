@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import axios from 'axios'
+import api from '../api/api'
 
 function getOrderDate(order) {
   if (order.status === 'pending_payment') return order.created_at
@@ -50,7 +50,7 @@ function Orders() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    axios.get('/api/filters').then(res => setFilterOptions(res.data)).catch(() => {})
+    api.get('/api/filters').then(res => setFilterOptions(res.data)).catch(() => {})
   }, [])
 
   const fetchOrders = useCallback(() => {
@@ -62,7 +62,7 @@ function Orders() {
     if (subjectFilter) params.append('subject', subjectFilter)
     if (dateFrom) params.append('date_from', dateFrom)
     if (dateTo) params.append('date_to', dateTo)
-    axios.get(`/api/orders?${params}`)
+    api.get(`/api/orders?${params}`)
       .then(res => {
         setOrders(res.data.orders)
         setTotal(res.data.total)

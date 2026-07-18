@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
+import api from '../api/api'
 
 function Settings() {
   const [settings, setSettings] = useState({})
@@ -11,8 +11,8 @@ function Settings() {
 
   useEffect(() => {
     Promise.all([
-      axios.get('/api/settings'),
-      axios.get('/api/settings/channels'),
+      api.get('/api/settings'),
+      api.get('/api/settings/channels'),
     ]).then(([settingsRes, channelsRes]) => {
       setSettings(settingsRes.data)
       setChannels(channelsRes.data)
@@ -27,7 +27,7 @@ function Settings() {
   const handleSave = async () => {
     setSaving(true)
     try {
-      await axios.put('/api/settings', settings)
+      await api.put('/api/settings', settings)
       alert('Saqlandi!')
     } catch (err) {
       alert('Xatolik')
@@ -43,8 +43,8 @@ function Settings() {
     }
     setAddingChannel(true)
     try {
-      await axios.post('/api/settings/channels', newChannel)
-      const res = await axios.get('/api/settings/channels')
+      await api.post('/api/settings/channels', newChannel)
+      const res = await api.get('/api/settings/channels')
       setChannels(res.data)
       setNewChannel({ name: '', link: '' })
     } catch (err) {
@@ -57,8 +57,8 @@ function Settings() {
   const handleDeleteChannel = async (index) => {
     if (!confirm('Kanalni o\'chirishni xohlaysizmi?')) return
     try {
-      await axios.delete(`/api/settings/channels/${index}`)
-      const res = await axios.get('/api/settings/channels')
+      await api.delete(`/api/settings/channels/${index}`)
+      const res = await api.get('/api/settings/channels')
       setChannels(res.data)
     } catch (err) {
       alert('Xatolik')

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
+import api from '../api/api'
 
 function Services() {
   const [services, setServices] = useState([])
@@ -14,7 +14,7 @@ function Services() {
 
   const fetchServices = () => {
     setLoading(true)
-    axios.get('/api/services')
+    api.get('/api/services')
       .then(res => setServices(res.data))
       .catch(console.error)
       .finally(() => setLoading(false))
@@ -24,9 +24,9 @@ function Services() {
     e.preventDefault()
     try {
       if (editing) {
-        await axios.put(`/api/services/${editing.id}`, { ...form, is_active: editing.is_active })
+        await api.put(`/api/services/${editing.id}`, { ...form, is_active: editing.is_active })
       } else {
-        await axios.post('/api/services', form)
+        await api.post('/api/services', form)
       }
       setShowForm(false)
       setEditing(null)
@@ -46,7 +46,7 @@ function Services() {
   const handleDelete = async (id) => {
     if (!confirm('O\'chirishni xohlaysizmi?')) return
     try {
-      await axios.delete(`/api/services/${id}`)
+      await api.delete(`/api/services/${id}`)
       fetchServices()
     } catch (err) {
       alert('Xatolik')
@@ -55,7 +55,7 @@ function Services() {
 
   const toggleActive = async (service) => {
     try {
-      await axios.put(`/api/services/${service.id}`, {
+      await api.put(`/api/services/${service.id}`, {
         ...service,
         is_active: service.is_active ? 0 : 1,
       })
