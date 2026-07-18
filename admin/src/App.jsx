@@ -8,6 +8,7 @@ import Cards from './pages/Cards'
 import Settings from './pages/Settings'
 import Broadcast from './pages/Broadcast'
 import Reviews from './pages/Reviews'
+import PromoCodes from './pages/PromoCodes'
 
 const navItems = [
   { path: '/', label: 'Dashboard', icon: '📊' },
@@ -17,6 +18,7 @@ const navItems = [
   { path: '/services', label: 'Xizmatlar', icon: '📚' },
   { path: '/cards', label: 'Kartalar', icon: '💳' },
   { path: '/broadcast', label: 'Xabar yuborish', icon: '📨' },
+  { path: '/promo-codes', label: 'Promo-kodlar', icon: '🏷️' },
   { path: '/settings', label: 'Sozlamalar', icon: '⚙️' },
 ]
 
@@ -65,6 +67,7 @@ function App() {
               <Route path="/services" element={<Services />} />
               <Route path="/cards" element={<Cards />} />
               <Route path="/broadcast" element={<Broadcast />} />
+              <Route path="/promo-codes" element={<PromoCodes />} />
               <Route path="/settings" element={<Settings />} />
             </Routes>
           </div>

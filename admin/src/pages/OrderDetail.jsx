@@ -238,6 +238,12 @@ function OrderDetail() {
                   </p>
                 </div>
               )}
+              {order.promo_discount > 0 && (
+                <div>
+                  <p className="text-sm text-gray-500">Promo-kod chegirmasi</p>
+                  <p className="font-medium text-green-600">-{order.promo_discount.toLocaleString()} so'm</p>
+                </div>
+              )}
               <div>
                 <p className="text-sm text-gray-500">Fan</p>
                 <p className="font-medium">{order.subject}</p>

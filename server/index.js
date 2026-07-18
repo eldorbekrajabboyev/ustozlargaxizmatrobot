@@ -245,17 +245,42 @@ app.get('/api/orders/:id', async (req, res) => {
 
 app.post('/api/orders', async (req, res) => {
   try {
-    const { user_id, service_id, full_name, address, school, subject, grade, topic, school_type, language_surcharge, geographic_level, geographic_surcharge } = req.body;
+    const { user_id, service_id, full_name, address, school, subject, grade, topic, school_type, language_surcharge, geographic_level, geographic_surcharge, promo_code_id, promo_discount } = req.body;
     const service = await queryOne('SELECT * FROM services WHERE id = ?', [service_id]);
     if (!service) return res.status(400).json({ error: 'Xizmat topilmadi' });
     const user = await queryOne('SELECT id FROM users WHERE id = ?', [user_id]);
     if (!user) return res.status(400).json({ error: 'Foydalanuvchi topilmadi' });
+
+    // Validate promo code if provided
+    let validPromoId = null;
+    let validPromoDiscount = 0;
+    if (promo_code_id) {
+      const promo = await queryOne('SELECT * FROM promo_codes WHERE id = ? AND is_active = 1', [promo_code_id]);
+      if (promo) {
+        if (promo.max_uses <= 0 || promo.used_count < promo.max_uses) {
+          const alreadyUsed = await queryOne('SELECT id FROM promo_code_usage WHERE promo_code_id = ? AND user_id = ?', [promo.id, user_id]);
+          if (!alreadyUsed) {
+            validPromoId = promo.id;
+            const basePrice = service.price + (parseInt(language_surcharge) || 0) + (parseInt(geographic_surcharge) || 0);
+            validPromoDiscount = Math.round(basePrice * promo.discount_percent / 100);
+            await run('UPDATE promo_codes SET used_count = used_count + 1 WHERE id = ?', [promo.id]);
+          }
+        }
+      }
+    }
+
     const orderCode = `MK-${Date.now().toString(36).toUpperCase()}${uuidv4().substring(0, 4).toUpperCase()}`;
-    const totalPrice = service.price + (parseInt(language_surcharge) || 0) + (parseInt(geographic_surcharge) || 0);
+    const totalPrice = service.price + (parseInt(language_surcharge) || 0) + (parseInt(geographic_surcharge) || 0) - validPromoDiscount;
     const result = await run(`
-      INSERT INTO orders (order_code, user_id, service_id, full_name, address, school, subject, grade, topic, total_price, school_type, language_surcharge, geographic_level, geographic_surcharge, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `, [orderCode, user_id, service_id, full_name, address, school, subject, grade, topic, totalPrice, school_type || null, parseInt(language_surcharge) || 0, geographic_level || 'maktab', parseInt(geographic_surcharge) || 0, nowUZ()]);
+      INSERT INTO orders (order_code, user_id, service_id, full_name, address, school, subject, grade, topic, total_price, school_type, language_surcharge, geographic_level, geographic_surcharge, promo_code_id, promo_discount, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [orderCode, user_id, service_id, full_name, address, school, subject, grade, topic, totalPrice, school_type || null, parseInt(language_surcharge) || 0, geographic_level || 'maktab', parseInt(geographic_surcharge) || 0, validPromoId, validPromoDiscount, nowUZ()]);
+
+    // Record promo usage
+    if (validPromoId) {
+      await run('INSERT INTO promo_code_usage (promo_code_id, user_id, order_id, used_at) VALUES (?, ?, ?, ?)',
+        [validPromoId, user_id, result.lastInsertRowid, nowUZ()]);
+    }
     const order = await queryOne('SELECT * FROM orders WHERE id = ?', [result.lastInsertRowid]);
     res.json(fixOrderDates(order));
   } catch (err) { res.status(500).json({ error: err.message }); }
@@ -560,6 +585,78 @@ app.get('/api/filters', async (req, res) => {
     const regions = await queryAll("SELECT DISTINCT SUBSTR(address, 1, INSTR(address, ',') - 1) as region FROM orders WHERE address IS NOT NULL AND address != '' AND INSTR(address, ',') > 0 ORDER BY region");
     const subjects = await queryAll("SELECT DISTINCT subject FROM orders WHERE subject IS NOT NULL AND subject != '' ORDER BY subject");
     res.json({ regions: regions.map(r => r.region), subjects: subjects.map(s => s.subject) });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// ═══════════════════════════════════════════════
+// PROMO CODES
+// ═══════════════════════════════════════════════
+
+// MiniApp: validate promo code
+app.post('/api/promo-codes/validate', async (req, res) => {
+  try {
+    const { code, user_id } = req.body;
+    if (!code || !user_id) return res.status(400).json({ error: 'Kod va foydalanuvchi ID kiritilishi shart' });
+
+    const promo = await queryOne('SELECT * FROM promo_codes WHERE code = ? AND is_active = 1', [code.toUpperCase().trim()]);
+    if (!promo) return res.status(400).json({ error: 'Noto\'g\'ri yoki faol emas promo-kod' });
+
+    if (promo.max_uses > 0 && promo.used_count >= promo.max_uses) {
+      return res.status(400).json({ error: 'Promo-kod limiti tugagan' });
+    }
+
+    const used = await queryOne('SELECT id FROM promo_code_usage WHERE promo_code_id = ? AND user_id = ?', [promo.id, user_id]);
+    if (used) return res.status(400).json({ error: 'Siz allaqachon bu promo-koddan foydalangansiz' });
+
+    res.json({ success: true, promo_code_id: promo.id, discount_percent: promo.discount_percent, source_name: promo.source_name });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Admin: list promo codes
+app.get('/api/promo-codes', async (req, res) => {
+  try {
+    const codes = await queryAll('SELECT * FROM promo_codes ORDER BY id DESC');
+    res.json(codes);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Admin: create promo code
+app.post('/api/promo-codes', async (req, res) => {
+  try {
+    const { code, discount_percent, source_name, max_uses } = req.body;
+    if (!code || !discount_percent) return res.status(400).json({ error: 'Kod va chegirma % kiritilishi shart' });
+
+    const existing = await queryOne('SELECT id FROM promo_codes WHERE code = ?', [code.toUpperCase().trim()]);
+    if (existing) return res.status(400).json({ error: 'Bu kod allaqachon mavjud' });
+
+    const result = await run(
+      'INSERT INTO promo_codes (code, discount_percent, source_name, max_uses, created_at) VALUES (?, ?, ?, ?, ?)',
+      [code.toUpperCase().trim(), discount_percent, source_name || null, max_uses || 0, nowUZ()]
+    );
+    const promo = await queryOne('SELECT * FROM promo_codes WHERE id = ?', [result.lastInsertRowid]);
+    res.json(promo);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Admin: toggle promo code active/inactive
+app.put('/api/promo-codes/:id', async (req, res) => {
+  try {
+    const { is_active } = req.body;
+    const promo = await queryOne('SELECT * FROM promo_codes WHERE id = ?', [req.params.id]);
+    if (!promo) return res.status(404).json({ error: 'Promo-kod topilmadi' });
+
+    await run('UPDATE promo_codes SET is_active = ? WHERE id = ?', [is_active ? 1 : 0, req.params.id]);
+    const updated = await queryOne('SELECT * FROM promo_codes WHERE id = ?', [req.params.id]);
+    res.json(updated);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Admin: delete promo code
+app.delete('/api/promo-codes/:id', async (req, res) => {
+  try {
+    await run('DELETE FROM promo_code_usage WHERE promo_code_id = ?', [req.params.id]);
+    await run('DELETE FROM promo_codes WHERE id = ?', [req.params.id]);
+    res.json({ success: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 

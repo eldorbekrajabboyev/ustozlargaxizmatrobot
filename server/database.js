@@ -138,6 +138,33 @@ async function initDatabase() {
   try { await db.execute("ALTER TABLE orders ADD COLUMN language_surcharge INTEGER DEFAULT 0"); } catch (e) {}
   try { await db.execute("ALTER TABLE orders ADD COLUMN geographic_level TEXT DEFAULT 'maktab'"); } catch (e) {}
   try { await db.execute("ALTER TABLE orders ADD COLUMN geographic_surcharge INTEGER DEFAULT 0"); } catch (e) {}
+  try { await db.execute("ALTER TABLE orders ADD COLUMN promo_code_id INTEGER"); } catch (e) {}
+  try { await db.execute("ALTER TABLE orders ADD COLUMN promo_discount INTEGER DEFAULT 0"); } catch (e) {}
+
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS promo_codes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      code TEXT UNIQUE NOT NULL,
+      discount_percent INTEGER NOT NULL,
+      source_name TEXT,
+      max_uses INTEGER DEFAULT 0,
+      used_count INTEGER DEFAULT 0,
+      is_active INTEGER DEFAULT 1,
+      created_at DATETIME DEFAULT (datetime('now', '+5 hours'))
+    )
+  `);
+
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS promo_code_usage (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      promo_code_id INTEGER NOT NULL,
+      user_id INTEGER NOT NULL,
+      order_id INTEGER,
+      used_at DATETIME DEFAULT (datetime('now', '+5 hours')),
+      FOREIGN KEY (promo_code_id) REFERENCES promo_codes(id),
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    )
+  `);
 
   console.log('📦 Database initialized (Turso)');
   return db;
