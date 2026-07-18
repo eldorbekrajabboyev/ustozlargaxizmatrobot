@@ -263,7 +263,6 @@ app.post('/api/orders', async (req, res) => {
             validPromoId = promo.id;
             const basePrice = service.price + (parseInt(language_surcharge) || 0) + (parseInt(geographic_surcharge) || 0);
             validPromoDiscount = Math.round(basePrice * promo.discount_percent / 100);
-            await run('UPDATE promo_codes SET used_count = used_count + 1 WHERE id = ?', [promo.id]);
           }
         }
       }
@@ -346,6 +345,9 @@ app.put('/api/orders/:id/confirm-payment', async (req, res) => {
     `, [orderId]);
     if (!order) return res.status(404).json({ error: 'Buyurtma topilmadi' });
     await run('UPDATE orders SET status = ? WHERE id = ?', ['in_progress', orderId]);
+    if (order.promo_code_id) {
+      await run('UPDATE promo_codes SET used_count = used_count + 1 WHERE id = ?', [order.promo_code_id]);
+    }
     const queueResult = await queryOne(
       `SELECT COUNT(*) as position FROM orders WHERE status = 'in_progress' AND created_at <= ?`,
       [order.created_at]
@@ -373,6 +375,10 @@ app.put('/api/orders/:id/reject-payment', async (req, res) => {
     await deleteOrderImages(orderId);
     await run('UPDATE orders SET status = ?, admin_note = ? WHERE id = ?',
       ['rejected', reason || null, orderId]);
+    if (order && order.promo_code_id) {
+      await run('DELETE FROM promo_code_usage WHERE promo_code_id = ? AND user_id = ?', [order.promo_code_id, order.user_id]);
+      await run('UPDATE promo_codes SET used_count = MAX(0, used_count - 1) WHERE id = ?', [order.promo_code_id]);
+    }
     const bot = require('./bot').getBotInstance();
     if (bot && order && order.telegram_id) {
       const reasonText = reason ? `\nSababi: ${reason}` : '';
@@ -388,13 +394,17 @@ app.put('/api/orders/:id/reject-payment', async (req, res) => {
 app.post('/api/orders/:id/auto-cancel', async (req, res) => {
   try {
     const orderId = parseInt(req.params.id);
-    const order = await queryOne('SELECT status FROM orders WHERE id = ?', [orderId]);
+    const order = await queryOne('SELECT status, promo_code_id, user_id FROM orders WHERE id = ?', [orderId]);
     if (!order) return res.status(404).json({ error: 'Buyurtma topilmadi' });
     if (order.status !== 'pending_payment') {
       return res.json({ success: true, alreadyHandled: true });
     }
     await deleteOrderImages(orderId);
-    await run("UPDATE orders SET status = 'rejected', admin_note = 'Avtomatik bekor qilindi: 4 daqiqada chek yuklanmadi' WHERE id = ?", [orderId]);
+    await run("UPDATE orders SET status = 'rejected', admin_note = 'Avtomatik bekor qilindi: 2 daqiqada chek yuklanmadi' WHERE id = ?", [orderId]);
+    if (order.promo_code_id) {
+      await run('DELETE FROM promo_code_usage WHERE promo_code_id = ? AND user_id = ?', [order.promo_code_id, order.user_id]);
+      await run('UPDATE promo_codes SET used_count = MAX(0, used_count - 1) WHERE id = ?', [order.promo_code_id]);
+    }
     res.json({ success: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
