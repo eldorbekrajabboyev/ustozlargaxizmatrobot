@@ -70,12 +70,15 @@ function startCountdown(bot, chatId, orderId, paymentMsgId, orderCode, telegramI
 
     if (remaining <= 0) {
       clearInterval(interval);
-      const order = await queryOne('SELECT status, promo_code_id, user_id FROM orders WHERE id = ?', [orderId]);
+      const order = await queryOne('SELECT status, promo_code_id, user_id, referral_discount FROM orders WHERE id = ?', [orderId]);
       if (order && order.status === 'pending_payment') {
         await deleteOrderImages(orderId);
         await run("UPDATE orders SET status = 'rejected', admin_note = 'Avtomatik bekor qilindi: 2 daqiqada chek yuklanmadi' WHERE id = ?", [orderId]);
         if (order.promo_code_id) {
           await run('DELETE FROM promo_code_usage WHERE promo_code_id = ? AND user_id = ? AND order_id = ?', [order.promo_code_id, order.user_id, orderId]);
+        }
+        if (order.referral_discount > 0) {
+          await run('UPDATE users SET referral_balance = referral_balance + ? WHERE id = ?', [order.referral_discount, order.user_id]);
         }
         bot.deleteMessage(chatId, paymentMsgId).catch(() => {});
         bot.sendMessage(chatId, `❌ *Buyurtma bekor qilindi!*\n\n📋 #${orderCode}\n\n⏱ 2 daqiqada chek yuklanmadi.`, { parse_mode: 'Markdown' });
@@ -164,7 +167,7 @@ async function startBot(app) {
   // Recover stuck pending_payment orders from previous server run
   try {
     const staleOrders = await queryAll(
-      "SELECT id, order_code, user_id, promo_code_id FROM orders WHERE status = 'pending_payment'",
+      "SELECT id, order_code, user_id, promo_code_id, referral_discount FROM orders WHERE status = 'pending_payment'",
       []
     );
     const userIdMap = {};
@@ -181,6 +184,9 @@ async function startBot(app) {
       );
       if (o.promo_code_id) {
         await run('DELETE FROM promo_code_usage WHERE promo_code_id = ? AND user_id = ? AND order_id = ?', [o.promo_code_id, o.user_id, o.id]);
+      }
+      if (o.referral_discount > 0) {
+        await run('UPDATE users SET referral_balance = referral_balance + ? WHERE id = ?', [o.referral_discount, o.user_id]);
       }
       if (tid) {
         bot.sendMessage(tid, `❌ *Buyurtma bekor qilindi!*\n\n📋 #${o.order_code}\n\n⏱ To'lov muddati o'tgan (server qayta ishga tushdi).`).catch(() => {});
@@ -204,9 +210,20 @@ async function startBot(app) {
     return await queryOne('SELECT * FROM users WHERE id = ?', [result.lastInsertRowid]);
   }
 
-  bot.onText(/\/start/, async (msg) => {
+  bot.onText(/\/start(?:\s+(.+))?/, async (msg, match) => {
     const chatId = msg.chat.id;
+    const startParam = match && match[1] ? match[1] : null;
     const user = await ensureUser(msg.from);
+
+    if (startParam && startParam.startsWith('ref_')) {
+      const referrerTelegramId = parseInt(startParam.replace('ref_', ''));
+      if (referrerTelegramId && referrerTelegramId !== msg.from.id && !user.referred_by) {
+        const referrer = await queryOne('SELECT id FROM users WHERE telegram_id = ?', [referrerTelegramId]);
+        if (referrer) {
+          await run('UPDATE users SET referred_by = ? WHERE id = ?', [referrer.id, user.id]);
+        }
+      }
+    }
 
     const channels = await getChannels();
     if (channels.length > 0) {

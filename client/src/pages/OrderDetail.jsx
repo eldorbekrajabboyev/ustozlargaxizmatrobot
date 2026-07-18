@@ -279,7 +279,7 @@ function OrderDetail({ user }) {
 
   const status = statusMap[order.status] || { label: order.status, color: 'bg-gray-100 text-gray-600', icon: '❓', desc: '' }
   const canReview = ['sent', 'ready'].includes(order.status) && !reviewDone
-  const servicePrice = (order.total_price || 0) - (order.language_surcharge || 0) - (order.geographic_surcharge || 0) + (order.promo_discount || 0)
+  const servicePrice = (order.total_price || 0) - (order.language_surcharge || 0) - (order.geographic_surcharge || 0) + (order.promo_discount || 0) + (order.referral_discount || 0)
 
   return (
     <div className="animate-fade-in min-h-screen">
@@ -326,6 +326,12 @@ function OrderDetail({ user }) {
                 <div className="flex justify-between gap-3 text-sm">
                   <span className="text-green-600 shrink-0">Promo-kod chegirmasi:</span>
                   <span className="text-green-600">-{order.promo_discount.toLocaleString()} so'm</span>
+                </div>
+              )}
+              {order.referral_discount > 0 && (
+                <div className="flex justify-between gap-3 text-sm">
+                  <span className="text-green-600 shrink-0">Taklif chegirmasi:</span>
+                  <span className="text-green-600">-{order.referral_discount.toLocaleString()} so'm</span>
                 </div>
               )}
               <div className="flex justify-between gap-3 items-center pt-1 border-t border-black/10">

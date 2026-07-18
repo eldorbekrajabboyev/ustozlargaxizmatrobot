@@ -72,6 +72,9 @@ function OrderForm({ user }) {
   const [promoChecking, setPromoChecking] = useState(false)
   const [promoError, setPromoError] = useState('')
   const [hasPromo, setHasPromo] = useState(false)
+  const [referralBalance, setReferralBalance] = useState(0)
+  const [referralDiscountAmount, setReferralDiscountAmount] = useState(0)
+  const [useReferral, setUseReferral] = useState(false)
 
   const [form, setForm] = useState({
     full_name: '',
@@ -94,9 +97,15 @@ function OrderForm({ user }) {
       const svc = servicesRes.data.find(s => s.id == serviceId)
       setService(svc)
       setCards(cardsRes.data)
+      if (user?.id) {
+        axios.get(`/api/user/referral-info/${user.id}`).then(refRes => {
+          setReferralBalance(refRes.data.referral_balance || 0)
+          setReferralDiscountAmount(refRes.data.referral_discount_amount || 0)
+        }).catch(() => {})
+      }
     }).catch(console.error)
     .finally(() => setLoading(false))
-  }, [serviceId])
+  }, [serviceId, user])
 
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files)
@@ -172,6 +181,7 @@ function OrderForm({ user }) {
         geographic_surcharge: geoSurcharge,
         promo_code_id: promoCodeId,
         promo_discount: promoDiscount,
+        use_referral_discount: useReferral,
       })
 
       if (images.length > 0) {
@@ -217,7 +227,8 @@ function OrderForm({ user }) {
   const langSurcharge = getLanguageSurcharge(form.school_type, form.subject)
   const geoSurcharge = form.geo_extra ? (form.geographic_level === 'viloyat' ? 60000 : form.geographic_level === 'respublika' ? 110000 : 0) : 0
   const basePrice = (service ? service.price : 0) + langSurcharge + geoSurcharge
-  const totalPrice = basePrice - promoDiscount
+  const activeReferralDiscount = useReferral && referralBalance >= referralDiscountAmount ? referralDiscountAmount : 0
+  const totalPrice = basePrice - promoDiscount - activeReferralDiscount
 
   const steps = [
     { num: 1, title: 'F.I.Sh' },
@@ -250,7 +261,7 @@ function OrderForm({ user }) {
     <div className="animate-fade-in min-h-screen">
       <Header
         title={service.name}
-        subtitle={`${totalPrice.toLocaleString()} so'm${langSurcharge > 0 ? ' (til)' : ''}${geoSurcharge > 0 ? ' (daraja)' : ''}${promoDiscount > 0 ? ' (-chegirma)' : ''}`}
+        subtitle={`${totalPrice.toLocaleString()} so'm${langSurcharge > 0 ? ' (til)' : ''}${geoSurcharge > 0 ? ' (daraja)' : ''}${promoDiscount > 0 ? ' (-promo)' : ''}${activeReferralDiscount > 0 ? ' (-referral)' : ''}`}
         onBack={() => step > 1 ? setStep(step - 1) : navigate(-1)}
       />
 
@@ -560,6 +571,27 @@ function OrderForm({ user }) {
             )}
           </div>
 
+          {/* Referral discount */}
+          {referralDiscountAmount > 0 && referralBalance >= referralDiscountAmount && (
+            <div className="bg-tg-secondary rounded-2xl p-4 border border-black/5 space-y-3">
+              <label className="flex items-center gap-3 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={useReferral}
+                  onChange={(e) => setUseReferral(e.target.checked)}
+                  className="w-5 h-5 rounded-md border-gray-300 text-primary-600 focus:ring-primary-500"
+                />
+                <span className="text-sm font-medium text-tg-text">Taklif chegirmadan foydalanish</span>
+              </label>
+              {useReferral && (
+                <div className="pl-8 space-y-1">
+                  <p className="text-xs text-tg-hint">Balans: {referralBalance.toLocaleString()} so'm</p>
+                  <p className="text-sm text-green-600 font-medium">-{referralDiscountAmount.toLocaleString()} so'm kamayadi</p>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Summary */}
             <div className="bg-tg-secondary rounded-2xl p-4 border border-black/5">
             <h3 className="font-semibold mb-2">📋 Buyurtma ma'lumotlari:</h3>
@@ -593,6 +625,12 @@ function OrderForm({ user }) {
                   <div className="flex justify-between text-sm text-green-600">
                     <span>Promo-kod chegirmasi:</span>
                     <span>-{promoDiscount.toLocaleString()} so'm</span>
+                  </div>
+                )}
+                {activeReferralDiscount > 0 && (
+                  <div className="flex justify-between text-sm text-green-600">
+                    <span>Taklif chegirmasi:</span>
+                    <span>-{activeReferralDiscount.toLocaleString()} so'm</span>
                   </div>
                 )}
                 <div className="flex justify-between items-center pt-1 border-t border-black/10">

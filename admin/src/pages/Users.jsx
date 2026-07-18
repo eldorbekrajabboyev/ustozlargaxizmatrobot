@@ -32,6 +32,8 @@ function Users() {
               <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Telegram ID</th>
               <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Username</th>
               <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Ism</th>
+              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Referral</th>
+              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Balans</th>
               <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Sana</th>
             </tr>
           </thead>
@@ -44,6 +46,8 @@ function Users() {
                 <td className="px-4 py-3">
                   <p className="font-medium">{user.first_name} {user.last_name || ''}</p>
                 </td>
+                <td className="px-4 py-3 text-sm">{user.referred_count || 0}</td>
+                <td className="px-4 py-3 text-sm">{(user.referral_balance || 0).toLocaleString()} so'm</td>
                 <td className="px-4 py-3 text-sm text-gray-500">
                   {new Date(user.created_at).toLocaleDateString('uz-UZ')}
                 </td>

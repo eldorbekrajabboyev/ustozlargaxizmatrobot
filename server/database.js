@@ -113,7 +113,11 @@ async function initDatabase() {
       ["min_prep_time_hours", "6"]);
     await db.execute("INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)",
       ["channels", ""]);
+    await db.execute("INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)",
+      ["referral_discount_amount", "0"]);
   }
+  await db.execute("INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)",
+    ["referral_discount_amount", "0"]);
 
   await db.execute(`
     CREATE TABLE IF NOT EXISTS reviews (
@@ -141,6 +145,9 @@ async function initDatabase() {
   try { await db.execute("ALTER TABLE orders ADD COLUMN promo_code_id INTEGER"); } catch (e) {}
   try { await db.execute("ALTER TABLE orders ADD COLUMN promo_discount INTEGER DEFAULT 0"); } catch (e) {}
   try { await db.execute("ALTER TABLE promo_code_usage ADD COLUMN status TEXT DEFAULT 'reserved'"); } catch (e) {}
+  try { await db.execute("ALTER TABLE users ADD COLUMN referred_by INTEGER"); } catch (e) {}
+  try { await db.execute("ALTER TABLE users ADD COLUMN referral_balance INTEGER DEFAULT 0"); } catch (e) {}
+  try { await db.execute("ALTER TABLE orders ADD COLUMN referral_discount INTEGER DEFAULT 0"); } catch (e) {}
 
   await db.execute(`
     CREATE TABLE IF NOT EXISTS promo_codes (

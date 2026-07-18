@@ -97,7 +97,11 @@ function setUploadType(type) {
 
 app.get('/api/users', async (req, res) => {
   try {
-    const users = await queryAll('SELECT * FROM users ORDER BY created_at DESC');
+    const users = await queryAll(`
+      SELECT u.*,
+        (SELECT COUNT(*) FROM users r WHERE r.referred_by = u.id) as referred_count
+      FROM users u ORDER BY u.created_at DESC
+    `);
     res.json(users);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -245,11 +249,13 @@ app.get('/api/orders/:id', async (req, res) => {
 
 app.post('/api/orders', async (req, res) => {
   try {
-    const { user_id, service_id, full_name, address, school, subject, grade, topic, school_type, language_surcharge, geographic_level, geographic_surcharge, promo_code_id, promo_discount } = req.body;
+    const { user_id, service_id, full_name, address, school, subject, grade, topic, school_type, language_surcharge, geographic_level, geographic_surcharge, promo_code_id, promo_discount, use_referral_discount } = req.body;
     const service = await queryOne('SELECT * FROM services WHERE id = ?', [service_id]);
     if (!service) return res.status(400).json({ error: 'Xizmat topilmadi' });
-    const user = await queryOne('SELECT id FROM users WHERE id = ?', [user_id]);
+    const user = await queryOne('SELECT id, referral_balance FROM users WHERE id = ?', [user_id]);
     if (!user) return res.status(400).json({ error: 'Foydalanuvchi topilmadi' });
+
+    const basePrice = service.price + (parseInt(language_surcharge) || 0) + (parseInt(geographic_surcharge) || 0);
 
     // Validate promo code if provided
     let validPromoId = null;
@@ -264,19 +270,29 @@ app.post('/api/orders', async (req, res) => {
           const alreadyUsed = await queryOne('SELECT id FROM promo_code_usage WHERE promo_code_id = ? AND user_id = ?', [promo.id, user_id]);
           if (!alreadyUsed) {
             validPromoId = promo.id;
-            const basePrice = service.price + (parseInt(language_surcharge) || 0) + (parseInt(geographic_surcharge) || 0);
             validPromoDiscount = Math.round(basePrice * promo.discount_percent / 100);
           }
         }
       }
     }
 
+    // Validate referral discount if requested
+    let validReferralDiscount = 0;
+    if (use_referral_discount) {
+      const setting = await queryOne("SELECT value FROM settings WHERE key = 'referral_discount_amount'");
+      const discountAmount = setting ? parseInt(setting.value) || 0 : 0;
+      if (discountAmount > 0 && (user.referral_balance || 0) >= discountAmount) {
+        validReferralDiscount = discountAmount;
+        await run('UPDATE users SET referral_balance = referral_balance - ? WHERE id = ?', [discountAmount, user_id]);
+      }
+    }
+
     const orderCode = `MK-${Date.now().toString(36).toUpperCase()}${uuidv4().substring(0, 4).toUpperCase()}`;
-    const totalPrice = service.price + (parseInt(language_surcharge) || 0) + (parseInt(geographic_surcharge) || 0) - validPromoDiscount;
+    const totalPrice = basePrice - validPromoDiscount - validReferralDiscount;
     const result = await run(`
-      INSERT INTO orders (order_code, user_id, service_id, full_name, address, school, subject, grade, topic, total_price, school_type, language_surcharge, geographic_level, geographic_surcharge, promo_code_id, promo_discount, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `, [orderCode, user_id, service_id, full_name, address, school, subject, grade, topic, totalPrice, school_type || null, parseInt(language_surcharge) || 0, geographic_level || 'maktab', parseInt(geographic_surcharge) || 0, validPromoId, validPromoDiscount, nowUZ()]);
+      INSERT INTO orders (order_code, user_id, service_id, full_name, address, school, subject, grade, topic, total_price, school_type, language_surcharge, geographic_level, geographic_surcharge, promo_code_id, promo_discount, referral_discount, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [orderCode, user_id, service_id, full_name, address, school, subject, grade, topic, totalPrice, school_type || null, parseInt(language_surcharge) || 0, geographic_level || 'maktab', parseInt(geographic_surcharge) || 0, validPromoId, validPromoDiscount, validReferralDiscount, nowUZ()]);
 
     // Record promo usage as reserved
     if (validPromoId) {
@@ -352,6 +368,14 @@ app.put('/api/orders/:id/confirm-payment', async (req, res) => {
       await run("UPDATE promo_code_usage SET status = 'used' WHERE promo_code_id = ? AND user_id = ? AND order_id = ?", [order.promo_code_id, order.user_id, orderId]);
       await run('UPDATE promo_codes SET used_count = used_count + 1 WHERE id = ?', [order.promo_code_id]);
     }
+    const orderUser = await queryOne('SELECT referred_by FROM users WHERE id = ?', [order.user_id]);
+    if (orderUser && orderUser.referred_by) {
+      const setting = await queryOne("SELECT value FROM settings WHERE key = 'referral_discount_amount'");
+      const rewardAmount = setting ? parseInt(setting.value) || 0 : 0;
+      if (rewardAmount > 0) {
+        await run('UPDATE users SET referral_balance = referral_balance + ? WHERE id = ?', [rewardAmount, orderUser.referred_by]);
+      }
+    }
     const queueResult = await queryOne(
       `SELECT COUNT(*) as position FROM orders WHERE status = 'in_progress' AND created_at <= ?`,
       [order.created_at]
@@ -382,6 +406,9 @@ app.put('/api/orders/:id/reject-payment', async (req, res) => {
     if (order && order.promo_code_id) {
       await run('DELETE FROM promo_code_usage WHERE promo_code_id = ? AND user_id = ? AND order_id = ?', [order.promo_code_id, order.user_id, orderId]);
     }
+    if (order && order.referral_discount > 0) {
+      await run('UPDATE users SET referral_balance = referral_balance + ? WHERE id = ?', [order.referral_discount, order.user_id]);
+    }
     const bot = require('./bot').getBotInstance();
     if (bot && order && order.telegram_id) {
       const reasonText = reason ? `\nSababi: ${reason}` : '';
@@ -397,7 +424,7 @@ app.put('/api/orders/:id/reject-payment', async (req, res) => {
 app.post('/api/orders/:id/auto-cancel', async (req, res) => {
   try {
     const orderId = parseInt(req.params.id);
-    const order = await queryOne('SELECT status, promo_code_id, user_id FROM orders WHERE id = ?', [orderId]);
+    const order = await queryOne('SELECT status, promo_code_id, user_id, referral_discount FROM orders WHERE id = ?', [orderId]);
     if (!order) return res.status(404).json({ error: 'Buyurtma topilmadi' });
     if (order.status !== 'pending_payment') {
       return res.json({ success: true, alreadyHandled: true });
@@ -406,6 +433,9 @@ app.post('/api/orders/:id/auto-cancel', async (req, res) => {
     await run("UPDATE orders SET status = 'rejected', admin_note = 'Avtomatik bekor qilindi: 2 daqiqada chek yuklanmadi' WHERE id = ?", [orderId]);
     if (order.promo_code_id) {
       await run('DELETE FROM promo_code_usage WHERE promo_code_id = ? AND user_id = ? AND order_id = ?', [order.promo_code_id, order.user_id, orderId]);
+    }
+    if (order.referral_discount > 0) {
+      await run('UPDATE users SET referral_balance = referral_balance + ? WHERE id = ?', [order.referral_discount, order.user_id]);
     }
     res.json({ success: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
@@ -568,6 +598,22 @@ app.get('/api/user/active-cards', async (req, res) => {
   try {
     const cards = await queryAll('SELECT * FROM payment_cards WHERE is_active = 1');
     res.json(cards);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.get('/api/user/referral-info/:telegram_id', async (req, res) => {
+  try {
+    const user = await queryOne('SELECT id, referral_balance, referred_by FROM users WHERE telegram_id = ?', [parseInt(req.params.telegram_id)]);
+    if (!user) return res.status(404).json({ error: 'Foydalanuvchi topilmadi' });
+    const referredCount = await queryOne('SELECT COUNT(*) as cnt FROM users WHERE referred_by = ?', [user.id]);
+    const setting = await queryOne("SELECT value FROM settings WHERE key = 'referral_discount_amount'");
+    const discountAmount = setting ? parseInt(setting.value) || 0 : 0;
+    res.json({
+      referral_balance: user.referral_balance || 0,
+      referral_discount_amount: discountAmount,
+      referred_count: referredCount ? referredCount.cnt : 0,
+      referral_code: req.params.telegram_id
+    });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 

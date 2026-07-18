@@ -146,6 +146,35 @@ function Settings() {
           </button>
         </div>
 
+        {/* Referral Settings */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-6">
+          <h2 className="text-lg font-semibold">👥 Referal tizimi sozlamalari</h2>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              💰 Referal chegirma miqdori (so'm)
+            </label>
+            <input
+              type="number"
+              value={settings.referral_discount_amount || '0'}
+              onChange={(e) => handleChange('referral_discount_amount', e.target.value)}
+              placeholder="Masalan: 40000"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Taklif qilgan foydalanuvchi to'lov qilganda, taklif qiluvchiga beriladigan chegirma miqdori. 0 = o'chirilgan.
+            </p>
+          </div>
+
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="w-full bg-primary-500 text-white rounded-lg py-3 font-medium hover:bg-primary-600 transition-colors disabled:opacity-50"
+          >
+            {saving ? 'Saqlanmoqda...' : '💾 Saqlash'}
+          </button>
+        </div>
+
         {/* Channels Management */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
           <h2 className="text-lg font-semibold mb-4">📢 Majburiy obuna kanallari</h2>
