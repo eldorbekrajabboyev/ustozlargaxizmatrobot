@@ -122,12 +122,20 @@ function OrderForm({ user }) {
   })
 
   const districts = getDistricts(form.region)
+  const isKarakalpakstan = form.region === "Qoraqalpog'iston Respublikasi"
+  const availableSchoolTypes = isKarakalpakstan ? SCHOOL_TYPES : SCHOOL_TYPES.filter(st => st.id !== 'qoraqalpoq')
 
   useEffect(() => {
     if (form.region && form.district && !districts.includes(form.district)) {
       setForm(f => ({ ...f, district: '' }))
     }
   }, [form.region, districts])
+
+  useEffect(() => {
+    if (!isKarakalpakstan && form.school_type === 'qoraqalpoq') {
+      setForm(f => ({ ...f, school_type: '' }))
+    }
+  }, [isKarakalpakstan])
 
   useEffect(() => {
     Promise.all([
@@ -382,7 +390,7 @@ function OrderForm({ user }) {
           <div>
             <h2 className="text-lg font-semibold mb-3">🏫 Maktab turi</h2>
             <div className="space-y-2">
-              {SCHOOL_TYPES.map(st => (
+              {availableSchoolTypes.map(st => (
                 <button
                   key={st.id}
                   onClick={() => setForm({ ...form, school_type: st.id })}
