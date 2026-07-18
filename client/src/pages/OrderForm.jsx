@@ -115,10 +115,13 @@ function OrderForm({ user }) {
     if (!promoCode.trim()) return
     setPromoChecking(true)
     setPromoError('')
-    setPromoDiscount(0)
-    setPromoCodeId(null)
     try {
-      const userRes = await axios.get(`/api/users/telegram/${user.id}`)
+      const userRes = await axios.post('/api/users', {
+        telegram_id: user.id,
+        username: user.username,
+        first_name: user.first_name,
+        last_name: user.last_name,
+      })
       if (!userRes.data) { setPromoError('Foydalanuvchi topilmadi'); setPromoChecking(false); return }
       const res = await axios.post('/api/promo-codes/validate', {
         code: promoCode.trim(),
@@ -131,6 +134,8 @@ function OrderForm({ user }) {
       }
     } catch (err) {
       setPromoError(err.response?.data?.error || 'Promo-kod tekshirishda xatolik')
+      setPromoDiscount(0)
+      setPromoCodeId(null)
     }
     setPromoChecking(false)
   }
