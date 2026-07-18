@@ -814,44 +814,6 @@ if (fs.existsSync(adminBuildPath)) {
   app.use('/admin', express.static(adminBuildPath));
 }
 
-app.post('/api/admin/reset-all', async (req, res) => {
-  try {
-    const uploadsDir = path.join(__dirname, '..', 'uploads');
-    const subdirs = ['receipts', 'images', 'documents'];
-    for (const sub of subdirs) {
-      const dir = path.join(uploadsDir, sub);
-      if (fs.existsSync(dir)) {
-        const files = fs.readdirSync(dir);
-        for (const f of files) {
-          fs.unlinkSync(path.join(dir, f));
-        }
-      }
-    }
-    await run("DELETE FROM order_images");
-    await run("DELETE FROM promo_code_usage");
-    await run("DELETE FROM promo_codes");
-    await run("DELETE FROM reviews");
-    await run("DELETE FROM orders");
-    await run("DELETE FROM users");
-    await run("DELETE FROM services");
-    await run("DELETE FROM payment_cards");
-    await run("DELETE FROM settings");
-    await run("INSERT INTO services (name, description, price) VALUES (?, ?, ?)", ["Metodik Qo'llanma", "Batafsil metodik qo'llanma hujjati", 250000]);
-    await run("INSERT INTO services (name, description, price) VALUES (?, ?, ?)", ["Metodik Tavsiya", "Metodik tavsiya hujjati", 200000]);
-    await run("INSERT INTO payment_cards (card_number, card_holder, bank_name) VALUES (?, ?, ?)", ["8600 1234 5678 9012", "Rajabboyev Eldorbek", "Ipak Yo'li Bank"]);
-    const defaults = [
-      ["admin_chat_id", ""], ["bot_token", ""],
-      ["payment_instructions", "Kartaga pul o'tkazing va chekni yuklang."],
-      ["min_prep_time_hours", "6"], ["channels", ""],
-      ["referral_discount_amount", "0"]
-    ];
-    for (const [k, v] of defaults) {
-      await run("INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)", [k, v]);
-    }
-    res.json({ success: true, message: "Hammasi tozalandi" });
-  } catch (err) { res.status(500).json({ error: err.message }); }
-});
-
 app.get('*', (req, res) => {
   if (req.path.startsWith('/admin')) {
     const adminIndex = path.join(adminBuildPath, 'index.html');
