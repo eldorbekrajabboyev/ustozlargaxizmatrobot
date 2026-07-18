@@ -75,8 +75,7 @@ function startCountdown(bot, chatId, orderId, paymentMsgId, orderCode, telegramI
         await deleteOrderImages(orderId);
         await run("UPDATE orders SET status = 'rejected', admin_note = 'Avtomatik bekor qilindi: 2 daqiqada chek yuklanmadi' WHERE id = ?", [orderId]);
         if (order.promo_code_id) {
-          await run('DELETE FROM promo_code_usage WHERE promo_code_id = ? AND user_id = ?', [order.promo_code_id, order.user_id]);
-          await run('UPDATE promo_codes SET used_count = MAX(0, used_count - 1) WHERE id = ?', [order.promo_code_id]);
+          await run('DELETE FROM promo_code_usage WHERE promo_code_id = ? AND user_id = ? AND order_id = ?', [order.promo_code_id, order.user_id, orderId]);
         }
         bot.deleteMessage(chatId, paymentMsgId).catch(() => {});
         bot.sendMessage(chatId, `❌ *Buyurtma bekor qilindi!*\n\n📋 #${orderCode}\n\n⏱ 2 daqiqada chek yuklanmadi.`, { parse_mode: 'Markdown' });
@@ -181,8 +180,7 @@ async function startBot(app) {
         [o.id]
       );
       if (o.promo_code_id) {
-        await run('DELETE FROM promo_code_usage WHERE promo_code_id = ? AND user_id = ?', [o.promo_code_id, o.user_id]);
-        await run('UPDATE promo_codes SET used_count = MAX(0, used_count - 1) WHERE id = ?', [o.promo_code_id]);
+        await run('DELETE FROM promo_code_usage WHERE promo_code_id = ? AND user_id = ? AND order_id = ?', [o.promo_code_id, o.user_id, o.id]);
       }
       if (tid) {
         bot.sendMessage(tid, `❌ *Buyurtma bekor qilindi!*\n\n📋 #${o.order_code}\n\n⏱ To'lov muddati o'tgan (server qayta ishga tushdi).`).catch(() => {});

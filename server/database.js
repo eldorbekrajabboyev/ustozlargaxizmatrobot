@@ -140,6 +140,7 @@ async function initDatabase() {
   try { await db.execute("ALTER TABLE orders ADD COLUMN geographic_surcharge INTEGER DEFAULT 0"); } catch (e) {}
   try { await db.execute("ALTER TABLE orders ADD COLUMN promo_code_id INTEGER"); } catch (e) {}
   try { await db.execute("ALTER TABLE orders ADD COLUMN promo_discount INTEGER DEFAULT 0"); } catch (e) {}
+  try { await db.execute("ALTER TABLE promo_code_usage ADD COLUMN status TEXT DEFAULT 'reserved'"); } catch (e) {}
 
   await db.execute(`
     CREATE TABLE IF NOT EXISTS promo_codes (

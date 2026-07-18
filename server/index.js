@@ -275,10 +275,10 @@ app.post('/api/orders', async (req, res) => {
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [orderCode, user_id, service_id, full_name, address, school, subject, grade, topic, totalPrice, school_type || null, parseInt(language_surcharge) || 0, geographic_level || 'maktab', parseInt(geographic_surcharge) || 0, validPromoId, validPromoDiscount, nowUZ()]);
 
-    // Record promo usage
+    // Record promo usage as reserved
     if (validPromoId) {
-      await run('INSERT INTO promo_code_usage (promo_code_id, user_id, order_id, used_at) VALUES (?, ?, ?, ?)',
-        [validPromoId, user_id, result.lastInsertRowid, nowUZ()]);
+      await run('INSERT INTO promo_code_usage (promo_code_id, user_id, order_id, status, used_at) VALUES (?, ?, ?, ?, ?)',
+        [validPromoId, user_id, result.lastInsertRowid, 'reserved', nowUZ()]);
     }
     const order = await queryOne('SELECT * FROM orders WHERE id = ?', [result.lastInsertRowid]);
     res.json(fixOrderDates(order));
@@ -346,6 +346,7 @@ app.put('/api/orders/:id/confirm-payment', async (req, res) => {
     if (!order) return res.status(404).json({ error: 'Buyurtma topilmadi' });
     await run('UPDATE orders SET status = ? WHERE id = ?', ['in_progress', orderId]);
     if (order.promo_code_id) {
+      await run("UPDATE promo_code_usage SET status = 'used' WHERE promo_code_id = ? AND user_id = ? AND order_id = ?", [order.promo_code_id, order.user_id, orderId]);
       await run('UPDATE promo_codes SET used_count = used_count + 1 WHERE id = ?', [order.promo_code_id]);
     }
     const queueResult = await queryOne(
@@ -376,8 +377,7 @@ app.put('/api/orders/:id/reject-payment', async (req, res) => {
     await run('UPDATE orders SET status = ?, admin_note = ? WHERE id = ?',
       ['rejected', reason || null, orderId]);
     if (order && order.promo_code_id) {
-      await run('DELETE FROM promo_code_usage WHERE promo_code_id = ? AND user_id = ?', [order.promo_code_id, order.user_id]);
-      await run('UPDATE promo_codes SET used_count = MAX(0, used_count - 1) WHERE id = ?', [order.promo_code_id]);
+      await run('DELETE FROM promo_code_usage WHERE promo_code_id = ? AND user_id = ? AND order_id = ?', [order.promo_code_id, order.user_id, orderId]);
     }
     const bot = require('./bot').getBotInstance();
     if (bot && order && order.telegram_id) {
@@ -402,8 +402,7 @@ app.post('/api/orders/:id/auto-cancel', async (req, res) => {
     await deleteOrderImages(orderId);
     await run("UPDATE orders SET status = 'rejected', admin_note = 'Avtomatik bekor qilindi: 2 daqiqada chek yuklanmadi' WHERE id = ?", [orderId]);
     if (order.promo_code_id) {
-      await run('DELETE FROM promo_code_usage WHERE promo_code_id = ? AND user_id = ?', [order.promo_code_id, order.user_id]);
-      await run('UPDATE promo_codes SET used_count = MAX(0, used_count - 1) WHERE id = ?', [order.promo_code_id]);
+      await run('DELETE FROM promo_code_usage WHERE promo_code_id = ? AND user_id = ? AND order_id = ?', [order.promo_code_id, order.user_id, orderId]);
     }
     res.json({ success: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
@@ -611,12 +610,16 @@ app.post('/api/promo-codes/validate', async (req, res) => {
     const promo = await queryOne('SELECT * FROM promo_codes WHERE code = ? AND is_active = 1', [code.toUpperCase().trim()]);
     if (!promo) return res.status(400).json({ error: 'Noto\'g\'ri yoki faol emas promo-kod' });
 
-    if (promo.max_uses > 0 && promo.used_count >= promo.max_uses) {
-      return res.status(400).json({ error: 'Promo-kod limiti tugagan' });
-    }
-
     const used = await queryOne('SELECT id FROM promo_code_usage WHERE promo_code_id = ? AND user_id = ?', [promo.id, user_id]);
     if (used) return res.status(400).json({ error: 'Siz allaqachon bu promo-koddan foydalangansiz' });
+
+    if (promo.max_uses > 0 && promo.used_count >= promo.max_uses) {
+      const reserved = await queryOne("SELECT id FROM promo_code_usage WHERE promo_code_id = ? AND status = 'reserved'", [promo.id]);
+      if (reserved) {
+        return res.status(400).json({ error: 'Promo-kod limiti tugagan. Hozir to\'lov jarayonida. Tasdiqlansa bo\'shatilishi mumkin.' });
+      }
+      return res.status(400).json({ error: 'Promo-kodning barcha limitlari tugagan. Boshqa foydalanib bo\'lmaydi.' });
+    }
 
     res.json({ success: true, promo_code_id: promo.id, discount_percent: promo.discount_percent, source_name: promo.source_name });
   } catch (err) { res.status(500).json({ error: err.message }); }
