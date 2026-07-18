@@ -2,30 +2,33 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import axios from 'axios'
 import Header from '../components/Header'
-
-const REGIONS = [
-  'Andijon viloyati', 'Buxoro viloyati', 'Jizzax viloyati',
-  'Qashqadaryo viloyati', 'Navoiy viloyati', 'Namangan viloyati',
-  'Samarqand viloyati', 'Sirdaryo viloyati', 'Surxondaryo viloyati',
-  'Toshkent viloyati', "Farg'ona viloyati", 'Xorazm viloyati',
-  'Toshkent shahri', "Qoraqalpog'iston Respublikasi"
-]
+import regionsData from '../../../server/data/uzbekistan_regions_districts_schools.json'
 
 const GRADES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
 
 const SCHOOL_TYPES = [
-  { id: 'uzbek', label: "O'zbek maktab", icon: '🇺🇿' },
-  { id: 'russian', label: 'Rus maktab', icon: '🇷🇺' },
-  { id: 'qoraqalpoq', label: "Qoraqalpoq maktab", icon: '🏛' },
+  { id: 'uzbek', label: "O'zbek maktab", icon: '\u{1F1FA}\u{1F1FF}' },
+  { id: 'russian', label: 'Rus maktab', icon: '\u{1F1F7}\u{1F1FA}' },
+  { id: 'qoraqalpoq', label: "Qoraqalpoq maktab", icon: '\u{1F3DB}' },
 ]
+
+const REGION_NAMES = regionsData.regions.map(r => r.name_uz)
+
+function getDistricts(regionName) {
+  const region = regionsData.regions.find(r => r.name_uz === regionName)
+  if (!region) return []
+  return region.districts.map(d => d.name)
+}
 
 function getLanguageSurcharge(schoolType, subject) {
   if (!schoolType || !subject) return 0
   const st = schoolType
   const sub = subject.toLowerCase()
-  const isUzbek = sub === "o'zbek tili" || sub === 'ona tili' || sub === "o'qish"
-  const isRussian = sub === 'rus tili'
-  const isEnglish = sub === 'ingliz tili'
+  const isUzbek = sub === "o'zbek tili" || sub === 'ona tili' || sub === "o'qish" ||
+    sub === 'ўзбек тили' || sub === 'ана тили' || sub === 'ўқиш' ||
+    sub === 'карақалпақ тили'
+  const isRussian = sub === 'rus tili' || sub === 'русский язык'
+  const isEnglish = sub === 'ingliz tili' || sub === 'английский язык'
   if (st === 'uzbek') {
     if (isRussian || isEnglish) return 50000
     return 0
@@ -36,24 +39,53 @@ function getLanguageSurcharge(schoolType, subject) {
     return 50000
   }
   if (st === 'qoraqalpoq') {
-    if (isUzbek) return 0
+    if (isUzbek || sub === 'карақалпақ тили') return 0
     if (isRussian || isEnglish) return 60000
     return 50000
   }
   return 0
 }
 
-function getSubjects(grade) {
+function getSubjects(grade, schoolType) {
   const g = parseInt(grade)
-  if (g >= 1 && g <= 4) {
-    return ['Ona tili', "O'qish", 'Matematika', 'Tabiiy fan', 'Tarbiya', 'Texnologiya', "Tasviriy san'at", 'Musiqa', 'Jismoniy tarbiya', 'Ingliz tili']
-  } else if (g >= 5 && g <= 6) {
-    return ['Ona tili', 'Adabiyot', "O'zbek tili", 'Matematika', 'Tabiiy fan', 'Informatika', 'Tarix', 'Tarbiya', 'Texnologiya', "Tasviriy san'at", 'Musiqa', 'Jismoniy tarbiya', 'Rus tili', 'Ingliz tili']
-  } else if (g >= 7 && g <= 9) {
-    return ['Ona tili', 'Adabiyot', 'Algebra', 'Geometriya', 'Fizika', 'Kimyo', 'Biologiya', 'Geografiya', "O'zbekiston tarixi", 'Jahon tarixi', 'Informatika', 'Tarbiya', "Davlat va huquq asoslari", 'Chizmachilik', 'Jismoniy tarbiya', 'Rus tili', 'Ingliz tili']
-  } else if (g >= 10 && g <= 11) {
-    return ['Ona tili', 'Adabiyot', 'Algebra', 'Geometriya', 'Fizika', 'Kimyo', 'Biologiya', 'Geografiya', "O'zbekiston tarixi", 'Jahon tarixi', 'Informatika', "Davlat va huquq asoslari", 'Tarbiya', 'Jismoniy tarbiya', 'Rus tili', 'Ingliz tili']
+  const st = schoolType || 'uzbek'
+
+  if (st === 'uzbek') {
+    if (g >= 1 && g <= 4) {
+      return ['Ona tili', "O'qish", 'Matematika', 'Tabiiy fan', 'Tarbiya', 'Texnologiya', "Tasviriy san'at", 'Musiqa', 'Jismoniy tarbiya', 'Ingliz tili']
+    } else if (g >= 5 && g <= 6) {
+      return ['Ona tili', 'Adabiyot', "O'zbek tili", 'Matematika', 'Tabiiy fan', 'Informatika', 'Tarix', 'Tarbiya', 'Texnologiya', "Tasviriy san'at", 'Musiqa', 'Jismoniy tarbiya', 'Rus tili', 'Ingliz tili']
+    } else if (g >= 7 && g <= 9) {
+      return ['Ona tili', 'Adabiyot', 'Algebra', 'Geometriya', 'Fizika', 'Kimyo', 'Biologiya', 'Geografiya', "O'zbekiston tarixi", 'Jahon tarixi', 'Informatika', 'Tarbiya', "Davlat va huquq asoslari", 'Chizmachilik', 'Jismoniy tarbiya', 'Rus tili', 'Ingliz tili']
+    } else if (g >= 10 && g <= 11) {
+      return ['Ona tili', 'Adabiyot', 'Algebra', 'Geometriya', 'Fizika', 'Kimyo', 'Biologiya', 'Geografiya', "O'zbekiston tarixi", 'Jahon tarixi', 'Informatika', "Davlat va huquq asoslari", 'Tarbiya', 'Jismoniy tarbiya', 'Rus tili', 'Ingliz tili']
+    }
   }
+
+  if (st === 'russian') {
+    if (g >= 1 && g <= 4) {
+      return ['Родной язык', 'Литература', 'Математика', 'Природоведение', 'Труд', 'Изобразительное искусство', 'Музыка', 'Физкультура', 'Английский язык']
+    } else if (g >= 5 && g <= 6) {
+      return ['Родной язык', 'Литература', 'Русский язык', 'Математика', 'Природоведение', 'Информатика', 'История', 'Труд', 'Изобразительное искусство', 'Музыка', 'Физкультура', 'Узбекский язык', 'Английский язык']
+    } else if (g >= 7 && g <= 9) {
+      return ['Родной язык', 'Литература', 'Алгебра', 'Геометрия', 'Физика', 'Химия', 'Биология', 'География', 'История Узбекистана', 'Всеобщая история', 'Информатика', 'Труд', 'Основы государства и права', 'Черчение', 'Физкультура', 'Узбекский язык', 'Английский язык']
+    } else if (g >= 10 && g <= 11) {
+      return ['Родной язык', 'Литература', 'Алгебра', 'Геометрия', 'Физика', 'Химия', 'Биология', 'География', 'История Узбекистана', 'Всеобщая история', 'Информатика', 'Основы государства и права', 'Труд', 'Физкультура', 'Узбекский язык', 'Английский язык']
+    }
+  }
+
+  if (st === 'qoraqalpoq') {
+    if (g >= 1 && g <= 4) {
+      return ['Ana tili', 'Oqish', 'Matematika', 'Tabiyi fan', "T\u02BBrbiye", 'Texnologiya', "Suret san\u02BBatı", 'Muzıka', "Dene t\u02BBrbiye", "Ag\u02BBilshin tili"]
+    } else if (g >= 5 && g <= 6) {
+      return ['Ana tili', 'Edebiyat', 'Qaraqalpaq tili', 'Matematika', 'Tabiyi fan', 'Informatika', 'Tarix', "T\u02BBrbiye", 'Texnologiya', "Suret san\u02BBatı", 'Muzıka', "Dene t\u02BBrbiye", 'Orıs tili', "Ag\u02BBilshin tili"]
+    } else if (g >= 7 && g <= 9) {
+      return ['Ana tili', 'Edebiyat', 'Algebra', 'Geometriya', 'Fizika', 'Kimya', 'Biologiya', 'Geografiya', 'Qaraqalpaqstan tar\u0131x\u0131', 'Alem tar\u0131x\u0131', 'Informatika', "T\u02BBrbiye", 'Memleket ve quq\u0131q negizleri', 'Chizmashilik', "Dene t\u02BBrbiye", 'Orıs tili', "Ag\u02BBilshin tili"]
+    } else if (g >= 10 && g <= 11) {
+      return ['Ana tili', 'Edebiyat', 'Algebra', 'Geometriya', 'Fizika', 'Kimya', 'Biologiya', 'Geografiya', 'Qaraqalpaqstan tar\u0131x\u0131', 'Alem tar\u0131x\u0131', 'Informatika', 'Memleket ve quq\u0131q negizleri', "T\u02BBrbiye", "Dene t\u02BBrbiye", 'Orıs tili', "Ag\u02BBilshin tili"]
+    }
+  }
+
   return []
 }
 
@@ -88,6 +120,14 @@ function OrderForm({ user }) {
     geo_extra: false,
     geographic_level: 'maktab',
   })
+
+  const districts = getDistricts(form.region)
+
+  useEffect(() => {
+    if (form.region && form.district && !districts.includes(form.district)) {
+      setForm(f => ({ ...f, district: '' }))
+    }
+  }, [form.region, districts])
 
   useEffect(() => {
     Promise.all([
@@ -232,25 +272,19 @@ function OrderForm({ user }) {
 
   const steps = [
     { num: 1, title: 'F.I.Sh' },
-    { num: 2, title: 'Viloyat' },
-    { num: 3, title: 'Tuman' },
-    { num: 4, title: 'Maktab' },
-    { num: 5, title: 'Maktab turi' },
-    { num: 6, title: 'Sinf' },
-    { num: 7, title: 'Fan' },
-    { num: 8, title: 'Mavzu' },
+    { num: 2, title: 'Manzil' },
+    { num: 3, title: 'Maktab' },
+    { num: 4, title: 'Fan' },
+    { num: 5, title: 'Mavzu' },
   ]
 
   const canNext = () => {
     switch (step) {
       case 1: return form.full_name.trim()
-      case 2: return form.region
-      case 3: return form.district.trim()
-      case 4: return form.school.trim()
-      case 5: return form.school_type
-      case 6: return form.grade
-      case 7: return form.subject
-      case 8: return form.topic.trim()
+      case 2: return form.region && form.district && form.school.trim()
+      case 3: return form.school_type && form.grade
+      case 4: return form.subject
+      case 5: return form.topic.trim()
       default: return false
     }
   }
@@ -266,7 +300,6 @@ function OrderForm({ user }) {
       />
 
       <div className="p-4 space-y-3">
-        {/* Progress */}
         <div className="flex gap-1.5 mb-2">
           {steps.map(s => (
             <div key={s.num} className="flex-1">
@@ -275,7 +308,6 @@ function OrderForm({ user }) {
           ))}
         </div>
 
-      {/* Step 1: Full Name */}
       {step === 1 && (
         <div className="space-y-4">
           <h2 className="text-lg font-semibold">To'liq F.I.Sh</h2>
@@ -294,25 +326,50 @@ function OrderForm({ user }) {
         </div>
       )}
 
-      {/* Step 2: Region */}
       {step === 2 && (
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold">📍 Viloyatni tanlang</h2>
-          <div className="grid grid-cols-2 gap-2">
-            {REGIONS.map(region => (
-              <button
-                key={region}
-                onClick={() => setForm({ ...form, region })}
-                className={`p-3 rounded-lg text-sm font-medium border-2 transition-all text-left ${
-                  form.region === region
-                    ? 'border-primary-500 bg-primary-50 text-primary-700'
-                    : '                  border-gray-200 bg-tg-secondary text-tg-text active:bg-black/5'
-                }`}
-              >
-                {region}
-              </button>
-            ))}
+          <h2 className="text-lg font-semibold">📍 Manzil</h2>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Viloyat</label>
+            <select
+              value={form.region}
+              onChange={(e) => setForm({ ...form, region: e.target.value, district: '' })}
+              className="w-full border border-black/10 rounded-2xl px-4 py-3.5 text-base bg-tg-secondary focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+            >
+              <option value="">Viloyatni tanlang</option>
+              {REGION_NAMES.map(r => (
+                <option key={r} value={r}>{r}</option>
+              ))}
+            </select>
           </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Tuman / Shahar</label>
+            <select
+              value={form.district}
+              onChange={(e) => setForm({ ...form, district: e.target.value })}
+              disabled={!form.region}
+              className="w-full border border-black/10 rounded-2xl px-4 py-3.5 text-base bg-tg-secondary focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none disabled:opacity-50"
+            >
+              <option value="">{form.region ? 'Tumanni tanlang' : 'Avval viloyatni tanlang'}</option>
+              {districts.map(d => (
+                <option key={d} value={d}>{d}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Maktab nomi</label>
+            <input
+              type="text"
+              value={form.school}
+              onChange={(e) => setForm({ ...form, school: e.target.value })}
+              placeholder="Masalan: 1-maktab"
+              className="w-full border border-black/10 rounded-2xl px-4 py-3.5 text-lg bg-tg-secondary focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+            />
+          </div>
+
           <button onClick={goNext} disabled={!canNext()}
             className="w-full bg-primary-600 text-white rounded-2xl py-3.5 font-medium disabled:bg-black/10 disabled:text-tg-hint active:bg-primary-700 transition-colors">
             Keyingisi →
@@ -320,19 +377,42 @@ function OrderForm({ user }) {
         </div>
       )}
 
-      {/* Step 3: District */}
       {step === 3 && (
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold">📍 Tuman / Shahar</h2>
-          <p className="text-gray-500 text-sm">{form.region}</p>
-          <input
-            type="text"
-            value={form.district}
-            onChange={(e) => setForm({ ...form, district: e.target.value })}
-            placeholder="Masalan: Chilonzor tumani"
-            className="w-full border border-black/10 rounded-2xl px-4 py-3.5 text-lg bg-tg-secondary focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
-            autoFocus
-          />
+        <div className="space-y-5">
+          <div>
+            <h2 className="text-lg font-semibold mb-3">🏫 Maktab turi</h2>
+            <div className="space-y-2">
+              {SCHOOL_TYPES.map(st => (
+                <button
+                  key={st.id}
+                  onClick={() => setForm({ ...form, school_type: st.id })}
+                  className={`w-full p-4 rounded-2xl text-left font-medium border-2 transition-all flex items-center gap-3 ${form.school_type === st.id ? 'border-primary-500 bg-primary-50 text-primary-700' : 'border-gray-200 bg-tg-secondary text-tg-text active:bg-black/5'}`}
+                >
+                  <span className="text-2xl">{st.icon}</span>
+                  <span className="text-base">{st.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <h2 className="text-lg font-semibold mb-3">🎓 Sinf</h2>
+            <input
+              type="number"
+              min="1"
+              max="11"
+              value={form.grade}
+              onChange={(e) => {
+                const val = e.target.value
+                if (val === '' || (parseInt(val) >= 1 && parseInt(val) <= 11)) {
+                  setForm({ ...form, grade: val, subject: '' })
+                }
+              }}
+              placeholder="Sinfni kiriting (1-11)"
+              className="w-full border border-black/10 rounded-2xl px-4 py-3.5 text-lg bg-tg-secondary focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+            />
+          </div>
+
           <button onClick={goNext} disabled={!canNext()}
             className="w-full bg-primary-600 text-white rounded-2xl py-3.5 font-medium disabled:bg-black/10 disabled:text-tg-hint active:bg-primary-700 transition-colors">
             Keyingisi →
@@ -340,94 +420,16 @@ function OrderForm({ user }) {
         </div>
       )}
 
-      {/* Step 4: School */}
       {step === 4 && (
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold">🏫 Maktab nomi</h2>
-          <p className="text-gray-500 text-sm">{form.region}, {form.district}</p>
-          <input
-            type="text"
-            value={form.school}
-            onChange={(e) => setForm({ ...form, school: e.target.value })}
-            placeholder="Masalan: 1-maktab"
-            className="w-full border border-black/10 rounded-2xl px-4 py-3.5 text-lg bg-tg-secondary focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
-            autoFocus
-          />
-          <button onClick={goNext} disabled={!canNext()}
-            className="w-full bg-primary-600 text-white rounded-2xl py-3.5 font-medium disabled:bg-black/10 disabled:text-tg-hint active:bg-primary-700 transition-colors">
-            Keyingisi →
-          </button>
-        </div>
-      )}
-
-      {/* Step 5: School Type */}
-      {step === 5 && (
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold">🏫 Qaysi turdagi maktab?</h2>
-          <div className="space-y-2">
-            {SCHOOL_TYPES.map(st => (
-              <button
-                key={st.id}
-                onClick={() => setForm({ ...form, school_type: st.id })}
-                className={`w-full p-4 rounded-2xl text-left font-medium border-2 transition-all flex items-center gap-3 ${
-                  form.school_type === st.id
-                    ? 'border-primary-500 bg-primary-50 text-primary-700'
-                    : 'border-gray-200 bg-tg-secondary text-tg-text active:bg-black/5'
-                }`}
-              >
-                <span className="text-2xl">{st.icon}</span>
-                <span className="text-base">{st.label}</span>
-              </button>
-            ))}
-          </div>
-          <button onClick={goNext} disabled={!canNext()}
-            className="w-full bg-primary-600 text-white rounded-2xl py-3.5 font-medium disabled:bg-black/10 disabled:text-tg-hint active:bg-primary-700 transition-colors">
-            Keyingisi →
-          </button>
-        </div>
-      )}
-
-      {/* Step 6: Grade */}
-      {step === 6 && (
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold">🎓 Nechinchi sinf?</h2>
-          <div className="grid grid-cols-4 gap-2">
-            {GRADES.map(g => (
-              <button
-                key={g}
-                onClick={() => setForm({ ...form, grade: String(g), subject: '' })}
-                className={`py-3 rounded-lg text-lg font-semibold border-2 transition-all ${
-                  form.grade === String(g)
-                    ? 'border-primary-500 bg-primary-50 text-primary-700'
-                    : '                  border-gray-200 bg-tg-secondary text-tg-text active:bg-black/5'
-                }`}
-              >
-                {g}
-              </button>
-            ))}
-          </div>
-          <button onClick={goNext} disabled={!canNext()}
-            className="w-full bg-primary-600 text-white rounded-2xl py-3.5 font-medium disabled:bg-black/10 disabled:text-tg-hint active:bg-primary-700 transition-colors">
-            Keyingisi →
-          </button>
-        </div>
-      )}
-
-      {/* Step 7: Subject */}
-      {step === 7 && (
-        <div className="space-y-4">
           <h2 className="text-lg font-semibold">📚 Fan nomini tanlang</h2>
-          <p className="text-gray-500 text-sm">{form.grade}-sinf</p>
+          <p className="text-gray-500 text-sm">{form.grade}-sinf · {SCHOOL_TYPES.find(s => s.id === form.school_type)?.label}</p>
           <div className="grid grid-cols-2 gap-2">
-            {getSubjects(form.grade).map(subject => (
+            {getSubjects(form.grade, form.school_type).map(subject => (
               <button
                 key={subject}
                 onClick={() => setForm({ ...form, subject })}
-                className={`p-3 rounded-lg text-sm font-medium border-2 transition-all text-left ${
-                  form.subject === subject
-                    ? 'border-primary-500 bg-primary-50 text-primary-700'
-                    : '                  border-gray-200 bg-tg-secondary text-tg-text active:bg-black/5'
-                }`}
+                className={`p-3 rounded-lg text-sm font-medium border-2 transition-all text-left ${form.subject === subject ? 'border-primary-500 bg-primary-50 text-primary-700' : 'border-gray-200 bg-tg-secondary text-tg-text active:bg-black/5'}`}
               >
                 {subject}
               </button>
@@ -440,8 +442,7 @@ function OrderForm({ user }) {
         </div>
       )}
 
-      {/* Step 8: Topic & Images & Submit */}
-      {step === 8 && (
+      {step === 5 && (
         <div className="space-y-4">
           <h2 className="text-lg font-semibold">📖 Mavzu</h2>
           <input
@@ -457,7 +458,7 @@ function OrderForm({ user }) {
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Rasmlar (ixtiyoriy, 5 tagacha)
             </label>
-              <label className="block w-full border-2 border-dashed border-primary-300 rounded-2xl p-4 text-center cursor-pointer hover:border-primary-500 transition-colors">
+            <label className="block w-full border-2 border-dashed border-primary-300 rounded-2xl p-4 text-center cursor-pointer hover:border-primary-500 transition-colors">
               <span className="text-gray-500">📷 Rasm yuklash</span>
               <input
                 type="file"
@@ -488,7 +489,6 @@ function OrderForm({ user }) {
             )}
           </div>
 
-          {/* Geographic level */}
           <div className="bg-tg-secondary rounded-2xl p-4 border border-black/5 space-y-3">
             <label className="flex items-center gap-3 cursor-pointer select-none">
               <input
@@ -501,11 +501,7 @@ function OrderForm({ user }) {
             </label>
             {form.geo_extra && (
               <div className="space-y-2 pl-8">
-                <label className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${
-                  form.geographic_level === 'viloyat'
-                    ? 'border-primary-500 bg-primary-50'
-                    : 'border-gray-200 bg-white'
-                }`}>
+                <label className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${form.geographic_level === 'viloyat' ? 'border-primary-500 bg-primary-50' : 'border-gray-200 bg-white'}`}>
                   <input type="radio" name="geo" value="viloyat" checked={form.geographic_level === 'viloyat'}
                     onChange={() => setForm({ ...form, geographic_level: 'viloyat' })} className="w-4 h-4 text-primary-600" />
                   <div className="text-sm">
@@ -514,11 +510,7 @@ function OrderForm({ user }) {
                   </div>
                   <span className="ml-auto text-sm font-bold text-amber-600">+60,000</span>
                 </label>
-                <label className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${
-                  form.geographic_level === 'respublika'
-                    ? 'border-primary-500 bg-primary-50'
-                    : 'border-gray-200 bg-white'
-                }`}>
+                <label className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${form.geographic_level === 'respublika' ? 'border-primary-500 bg-primary-50' : 'border-gray-200 bg-white'}`}>
                   <input type="radio" name="geo" value="respublika" checked={form.geographic_level === 'respublika'}
                     onChange={() => setForm({ ...form, geographic_level: 'respublika' })} className="w-4 h-4 text-primary-600" />
                   <div className="text-sm">
@@ -531,7 +523,6 @@ function OrderForm({ user }) {
             )}
           </div>
 
-          {/* Promo code */}
           <div className="bg-tg-secondary rounded-2xl p-4 border border-black/5 space-y-3">
             <label className="flex items-center gap-3 cursor-pointer select-none">
               <input
@@ -571,7 +562,6 @@ function OrderForm({ user }) {
             )}
           </div>
 
-          {/* Referral discount */}
           {referralDiscountAmount > 0 && referralBalance >= referralDiscountAmount && (
             <div className="bg-tg-secondary rounded-2xl p-4 border border-black/5 space-y-3">
               <label className="flex items-center gap-3 cursor-pointer select-none">
@@ -592,8 +582,7 @@ function OrderForm({ user }) {
             </div>
           )}
 
-          {/* Summary */}
-            <div className="bg-tg-secondary rounded-2xl p-4 border border-black/5">
+          <div className="bg-tg-secondary rounded-2xl p-4 border border-black/5">
             <h3 className="font-semibold mb-2">📋 Buyurtma ma'lumotlari:</h3>
             <div className="text-sm text-gray-600 space-y-1">
               <p className="break-words"><strong>F.I.Sh:</strong> {form.full_name}</p>

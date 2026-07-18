@@ -1,0 +1,1274 @@
+{
+  "_metadata": {
+    "description": "O'zbekiston Respublikasi viloyatlari, tumanlari va maktablari ma'lumotlari",
+    "sources": [
+      "Wikipedia - Districts of Uzbekistan (2024 data)",
+      "goldenpages.uz - Schools directory (2026)",
+      "uzbekistanyp.com - Schools listings (Jul 2026)",
+      "yuz.uz - Private schools statistics (May 2026)",
+      "daryo.uz - School count data (Apr 2026)",
+      "stat.uz - National Statistics Committee",
+      "UNICEF Uzbekistan - Model schools list"
+    ],
+    "last_updated": "2026-07-18",
+    "notes": {
+      "total_schools_approx": 14500,
+      "total_private_schools": 551,
+      "state_schools_approx": 13949,
+      "new_schools_2025_2026": 175,
+      "school_counts_per_district": "Taxminiy — har bir tumandagi aniq maktab soni rasmiy manbadan olingan emas, umumiy statistikaga asosan hisoblangan"
+    }
+  },
+  "regions": [
+    {
+      "id": "QORAQALPOGISTON",
+      "name_uz": "Qoraqalpog'iston Respublikasi",
+      "name_ru": "Республика Каракалпакстан",
+      "capital": "Nukus",
+      "total_schools_approx": 980,
+      "districts": [
+        {
+          "id": "QORA_AMUDARYO",
+          "name": "Amudaryo tumani",
+          "capital": "Mang'it",
+          "schools_approx": 85
+        },
+        {
+          "id": "QORA_BERUNIY",
+          "name": "Beruniy tumani",
+          "capital": "Beruniy",
+          "schools_approx": 80
+        },
+        {
+          "id": "QORA_BOZATOV",
+          "name": "Bo'zatov tumani",
+          "capital": "Bo'zatov",
+          "schools_approx": 30
+        },
+        {
+          "id": "QORA_CHIMBOY",
+          "name": "Chimboy tumani",
+          "capital": "Chimboy",
+          "schools_approx": 55
+        },
+        {
+          "id": "QORA_ELLIKQALA",
+          "name": "Ellikqala tumani",
+          "capital": "Bo'ston",
+          "schools_approx": 45
+        },
+        {
+          "id": "QORA_KEGEYLI",
+          "name": "Kegeyli tumani",
+          "capital": "Kegeyli",
+          "schools_approx": 45
+        },
+        {
+          "id": "QORA_MOYNOQ",
+          "name": "Mo'ynoq tumani",
+          "capital": "Mo'ynoq",
+          "schools_approx": 15
+        },
+        {
+          "id": "QORA_NUKUS",
+          "name": "Nukus tumani",
+          "capital": "Oqmang'it",
+          "schools_approx": 65
+        },
+        {
+          "id": "QORA_QANLIQOL",
+          "name": "Qanliko'l tumani",
+          "capital": "Qanliko'l",
+          "schools_approx": 35
+        },
+        {
+          "id": "QORA_QORAOZAK",
+          "name": "Qorao'zak tumani",
+          "capital": "Qorao'zak",
+          "schools_approx": 40
+        },
+        {
+          "id": "QORA_QONGIROT",
+          "name": "Qo'ng'irot tumani",
+          "capital": "Qo'ng'irot",
+          "schools_approx": 35
+        },
+        {
+          "id": "QORA_SHUMANAY",
+          "name": "Shumanay tumani",
+          "capital": "Shumanay",
+          "schools_approx": 30
+        },
+        {
+          "id": "QORA_TAXIATOSH",
+          "name": "Taxiatosh tumani",
+          "capital": "Taxiatosh",
+          "schools_approx": 45
+        },
+        {
+          "id": "QORA_TAXTAKOPIR",
+          "name": "Taxtako'pir tumani",
+          "capital": "Taxtako'pir",
+          "schools_approx": 30
+        },
+        {
+          "id": "QORA_TORTKOL",
+          "name": "To'rtko'l tumani",
+          "capital": "To'rtko'l",
+          "schools_approx": 60
+        },
+        {
+          "id": "QORA_XOJAYLI",
+          "name": "Xo'jayli tumani",
+          "capital": "Xo'jayli",
+          "schools_approx": 55
+        }
+      ],
+      "cities": [
+        "Nukus"
+      ]
+    },
+    {
+      "id": "XORAZM",
+      "name_uz": "Xorazm viloyati",
+      "name_ru": "Хорезмская область",
+      "capital": "Urganch",
+      "total_schools_approx": 680,
+      "districts": [
+        {
+          "id": "XOR_BOGOT",
+          "name": "Bog'ot tumani",
+          "capital": "Bog'ot",
+          "schools_approx": 45
+        },
+        {
+          "id": "XOR_GURLAN",
+          "name": "Gurlan tumani",
+          "capital": "Gurlan",
+          "schools_approx": 55
+        },
+        {
+          "id": "XOR_HAZORASP",
+          "name": "Hazorasp tumani",
+          "capital": "Hazorasp",
+          "schools_approx": 70
+        },
+        {
+          "id": "XOR_KHIVA",
+          "name": "Xiva tumani",
+          "capital": "Xiva",
+          "schools_approx": 60
+        },
+        {
+          "id": "XOR_QOSHKOPIR",
+          "name": "Qo'shko'pir tumani",
+          "capital": "Qo'shko'pir",
+          "schools_approx": 50
+        },
+        {
+          "id": "XOR_SHOVOT",
+          "name": "Shovot tumani",
+          "capital": "Shovot",
+          "schools_approx": 50
+        },
+        {
+          "id": "XOR_TUPROQQALA",
+          "name": "Tuproqqal'a tumani",
+          "capital": "Pitnak",
+          "schools_approx": 55
+        },
+        {
+          "id": "XOR_URGANCH",
+          "name": "Urganch tumani",
+          "capital": "Qorovul",
+          "schools_approx": 50
+        },
+        {
+          "id": "XOR_XONQA",
+          "name": "Xonqa tumani",
+          "capital": "Xonqa",
+          "schools_approx": 50
+        },
+        {
+          "id": "XOR_YANGIARIQ",
+          "name": "Yangiariq tumani",
+          "capital": "Yangiariq",
+          "schools_approx": 50
+        },
+        {
+          "id": "XOR_YANGIBOZOR",
+          "name": "Yangibozor tumani",
+          "capital": "Yangibozor",
+          "schools_approx": 45
+        }
+      ],
+      "cities": [
+        "Urganch",
+        "Xiva"
+      ]
+    },
+    {
+      "id": "NAVOIY",
+      "name_uz": "Navoiy viloyati",
+      "name_ru": "Навоийская область",
+      "capital": "Navoiy",
+      "total_schools_approx": 520,
+      "districts": [
+        {
+          "id": "NAV_KARMAPA",
+          "name": "Karmana tumani",
+          "capital": "Karmana",
+          "schools_approx": 55
+        },
+        {
+          "id": "NAV_KONIMEX",
+          "name": "Konimex tumani",
+          "capital": "Konimex",
+          "schools_approx": 40
+        },
+        {
+          "id": "NAV_NAVBAHOR",
+          "name": "Navbahor tumani",
+          "capital": "Beshrabot",
+          "schools_approx": 55
+        },
+        {
+          "id": "NAV_NUROTA",
+          "name": "Nurota tumani",
+          "capital": "Nurota",
+          "schools_approx": 50
+        },
+        {
+          "id": "NAV_QIZILTEPA",
+          "name": "Qiziltepa tumani",
+          "capital": "Qiziltepa",
+          "schools_approx": 65
+        },
+        {
+          "id": "NAV_TOMDI",
+          "name": "Tomdi tumani",
+          "capital": "Tomdibuloq",
+          "schools_approx": 20
+        },
+        {
+          "id": "NAV_UCHQUDUQ",
+          "name": "Uchquduq tumani",
+          "capital": "Uchquduq",
+          "schools_approx": 20
+        },
+        {
+          "id": "NAV_XATIRCHI",
+          "name": "Xatirchi tumani",
+          "capital": "Yangirabod",
+          "schools_approx": 50
+        }
+      ],
+      "cities": [
+        "Navoiy",
+        "Zarafshon"
+      ]
+    },
+    {
+      "id": "BUXORO",
+      "name_uz": "Buxoro viloyati",
+      "name_ru": "Бухарская область",
+      "capital": "Buxoro",
+      "total_schools_approx": 870,
+      "districts": [
+        {
+          "id": "BUX_BUXTORO",
+          "name": "Buxoro tumani",
+          "capital": "Galaosiyo",
+          "schools_approx": 95
+        },
+        {
+          "id": "BUX_GIJDUVON",
+          "name": "G'ijduvon tumani",
+          "capital": "G'ijduvon",
+          "schools_approx": 90
+        },
+        {
+          "id": "BUX_JONDOR",
+          "name": "Jondor tumani",
+          "capital": "Jondor",
+          "schools_approx": 55
+        },
+        {
+          "id": "BUX_KOGON",
+          "name": "Kog'on tumani",
+          "capital": "Kog'on",
+          "schools_approx": 60
+        },
+        {
+          "id": "BUX_OLOT",
+          "name": "Olot tumani",
+          "capital": "Olot",
+          "schools_approx": 60
+        },
+        {
+          "id": "BUX_PESHKU",
+          "name": "Peshku tumani",
+          "capital": "Yangibozor",
+          "schools_approx": 50
+        },
+        {
+          "id": "BUX_QORAKOL",
+          "name": "Qorako'l tumani",
+          "capital": "Qorako'l",
+          "schools_approx": 55
+        },
+        {
+          "id": "BUX_QOROVULBOZOR",
+          "name": "Qorovulbozor tumani",
+          "capital": "Qorovulbozor",
+          "schools_approx": 45
+        },
+        {
+          "id": "BUX_ROMITAN",
+          "name": "Romitan tumani",
+          "capital": "Romitan",
+          "schools_approx": 55
+        },
+        {
+          "id": "BUX_SHOFIRKON",
+          "name": "Shofirkon tumani",
+          "capital": "Shofirkon",
+          "schools_approx": 80
+        },
+        {
+          "id": "BUX_VOBKENT",
+          "name": "Vobkent tumani",
+          "capital": "Vobkent",
+          "schools_approx": 65
+        }
+      ],
+      "cities": [
+        "Buxoro",
+        "Kog'on"
+      ]
+    },
+    {
+      "id": "SAMARQAND",
+      "name_uz": "Samarqand viloyati",
+      "name_ru": "Самаркандская область",
+      "capital": "Samarqand",
+      "total_schools_approx": 1200,
+      "districts": [
+        {
+          "id": "SAM_BULUNGUR",
+          "name": "Bulung'ur tumani",
+          "capital": "Bulung'ur",
+          "schools_approx": 85
+        },
+        {
+          "id": "SAM_ISHTIXON",
+          "name": "Ishtixon tumani",
+          "capital": "Ishtixon",
+          "schools_approx": 75
+        },
+        {
+          "id": "SAM_JOMBOY",
+          "name": "Jomboy tumani",
+          "capital": "Jomboy",
+          "schools_approx": 75
+        },
+        {
+          "id": "SAM_KATTAKURGAN",
+          "name": "Kattakurgan tumani",
+          "capital": "Payshanba",
+          "schools_approx": 80
+        },
+        {
+          "id": "SAM_NARPAY",
+          "name": "Narpay tumani",
+          "capital": "Oqtosh",
+          "schools_approx": 80
+        },
+        {
+          "id": "SAM_NUROBOD",
+          "name": "Nurobod tumani",
+          "capital": "Nurobod",
+          "schools_approx": 50
+        },
+        {
+          "id": "SAM_OQDARYO",
+          "name": "Oqdaryo tumani",
+          "capital": "Loyish",
+          "schools_approx": 70
+        },
+        {
+          "id": "SAM_PASTDARGOM",
+          "name": "Pastdarg'om tumani",
+          "capital": "Juma",
+          "schools_approx": 100
+        },
+        {
+          "id": "SAM_PAXTACHI",
+          "name": "Paxtachi tumani",
+          "capital": "Ziyovuddin",
+          "schools_approx": 70
+        },
+        {
+          "id": "SAM_PAYARIQ",
+          "name": "Payariq tumani",
+          "capital": "Payariq",
+          "schools_approx": 70
+        },
+        {
+          "id": "SAM_QOSHRABOT",
+          "name": "Qo'shrabot tumani",
+          "capital": "Qo'shrabot",
+          "schools_approx": 50
+        },
+        {
+          "id": "SAM_SAMARQAND",
+          "name": "Samarqand tumani",
+          "capital": "Gulobod",
+          "schools_approx": 85
+        },
+        {
+          "id": "SAM_TOYLOQ",
+          "name": "Toyloq tumani",
+          "capital": "Toyloq",
+          "schools_approx": 60
+        },
+        {
+          "id": "SAM_URGUT",
+          "name": "Urgut tumani",
+          "capital": "Urgut",
+          "schools_approx": 90
+        }
+      ],
+      "cities": [
+        "Samarqand",
+        "Kattakurgan"
+      ]
+    },
+    {
+      "id": "QASHQADARYO",
+      "name_uz": "Qashqadaryo viloyati",
+      "name_ru": "Кашкадарьинская область",
+      "capital": "Qarshi",
+      "total_schools_approx": 1100,
+      "districts": [
+        {
+          "id": "QAS_CHIROQCHI",
+          "name": "Chiroqchi tumani",
+          "capital": "Chiroqchi",
+          "schools_approx": 75
+        },
+        {
+          "id": "QAS_DEHQONOBOD",
+          "name": "Dehqonobod tumani",
+          "capital": "Karashina",
+          "schools_approx": 30
+        },
+        {
+          "id": "QAS_GUZOR",
+          "name": "G'uzor tumani",
+          "capital": "G'uzor",
+          "schools_approx": 70
+        },
+        {
+          "id": "QAS_KASBI",
+          "name": "Kasbi tumani",
+          "capital": "Mug'lon",
+          "schools_approx": 55
+        },
+        {
+          "id": "QAS_KITOB",
+          "name": "Kitob tumani",
+          "capital": "Kitob",
+          "schools_approx": 55
+        },
+        {
+          "id": "QAS_KOKDALA",
+          "name": "Kokdala tumani",
+          "capital": "Ko'kdala",
+          "schools_approx": 40
+        },
+        {
+          "id": "QAS_KOSON",
+          "name": "Koson tumani",
+          "capital": "Koson",
+          "schools_approx": 65
+        },
+        {
+          "id": "QAS_MIRISHKOR",
+          "name": "Mirishkor tumani",
+          "capital": "Yangi Mirishkor",
+          "schools_approx": 40
+        },
+        {
+          "id": "QAS_MUBORAK",
+          "name": "Muborak tumani",
+          "capital": "Muborak",
+          "schools_approx": 70
+        },
+        {
+          "id": "QAS_NISHON",
+          "name": "Nishon tumani",
+          "capital": "Yangi Nishon",
+          "schools_approx": 50
+        },
+        {
+          "id": "QAS_QAMASHI",
+          "name": "Qamashi tumani",
+          "capital": "Qamashi",
+          "schools_approx": 65
+        },
+        {
+          "id": "QAS_QARSHI",
+          "name": "Qarshi tumani",
+          "capital": "Beshkent",
+          "schools_approx": 85
+        },
+        {
+          "id": "QAS_SHAKHRISABZ",
+          "name": "Shakhrisabz tumani",
+          "capital": "Shahrisabz",
+          "schools_approx": 90
+        },
+        {
+          "id": "QAS_YAKKABOG",
+          "name": "Yakkabog' tumani",
+          "capital": "Yakkabog'",
+          "schools_approx": 60
+        }
+      ],
+      "cities": [
+        "Qarshi",
+        "Shahrisabz",
+        "Koson"
+      ]
+    },
+    {
+      "id": "SURXONDARYO",
+      "name_uz": "Surxondaryo viloyati",
+      "name_ru": "Сурхандарьинская область",
+      "capital": "Termiz",
+      "total_schools_approx": 950,
+      "districts": [
+        {
+          "id": "SUR_ANGOR",
+          "name": "Angor tumani",
+          "capital": "Angor",
+          "schools_approx": 60
+        },
+        {
+          "id": "SUR_BANDIXON",
+          "name": "Bandixon tumani",
+          "capital": "Bandixon",
+          "schools_approx": 35
+        },
+        {
+          "id": "SUR_BOYSUN",
+          "name": "Boysun tumani",
+          "capital": "Boysun",
+          "schools_approx": 55
+        },
+        {
+          "id": "SUR_DENOV",
+          "name": "Denov tumani",
+          "capital": "Denov",
+          "schools_approx": 70
+        },
+        {
+          "id": "SUR_JARQORGON",
+          "name": "Jarqo'rg'on tumani",
+          "capital": "Jarqo'rg'on",
+          "schools_approx": 70
+        },
+        {
+          "id": "SUR_MUZRABOT",
+          "name": "Muzrabot tumani",
+          "capital": "Xalqobod",
+          "schools_approx": 55
+        },
+        {
+          "id": "SUR_OLTINSOY",
+          "name": "Oltinsoy tumani",
+          "capital": "Qarluq",
+          "schools_approx": 60
+        },
+        {
+          "id": "SUR_QIZIRIQ",
+          "name": "Qiziriq tumani",
+          "capital": "Sariq",
+          "schools_approx": 50
+        },
+        {
+          "id": "SUR_QUMQORGON",
+          "name": "Qumqo'rg'on tumani",
+          "capital": "Qumqo'rg'on",
+          "schools_approx": 60
+        },
+        {
+          "id": "SUR_SARIOSIYO",
+          "name": "Sariosiyo tumani",
+          "capital": "Sariosiyo",
+          "schools_approx": 65
+        },
+        {
+          "id": "SUR_SHEROBOD",
+          "name": "Sherobod tumani",
+          "capital": "Sherobod",
+          "schools_approx": 70
+        },
+        {
+          "id": "SUR_SHORCHI",
+          "name": "Sho'rchi tumani",
+          "capital": "Sho'rchi",
+          "schools_approx": 60
+        },
+        {
+          "id": "SUR_TERMIZ",
+          "name": "Termiz tumani",
+          "capital": "Uchqizil",
+          "schools_approx": 80
+        },
+        {
+          "id": "SUR_UZUN",
+          "name": "Uzun tumani",
+          "capital": "Uzun",
+          "schools_approx": 50
+        }
+      ],
+      "cities": [
+        "Termiz",
+        "Denov"
+      ]
+    },
+    {
+      "id": "JIZZAX",
+      "name_uz": "Jizzax viloyati",
+      "name_ru": "Джизакская область",
+      "capital": "Jizzax",
+      "total_schools_approx": 620,
+      "districts": [
+        {
+          "id": "JIZ_ARNASOY",
+          "name": "Arnasoy tumani",
+          "capital": "G'oliblar",
+          "schools_approx": 35
+        },
+        {
+          "id": "JIZ_BAXMAL",
+          "name": "Baxmal tumani",
+          "capital": "O'smat",
+          "schools_approx": 40
+        },
+        {
+          "id": "JIZ_DOSTLIK",
+          "name": "Do'stlik tumani",
+          "capital": "Do'stlik",
+          "schools_approx": 45
+        },
+        {
+          "id": "JIZ_FORISH",
+          "name": "Forish tumani",
+          "capital": "Bog'don",
+          "schools_approx": 35
+        },
+        {
+          "id": "JIZ_GALLAOROL",
+          "name": "G'allaorol tumani",
+          "capital": "G'allaorol",
+          "schools_approx": 65
+        },
+        {
+          "id": "JIZ_MIRZACHOL",
+          "name": "Mirzacho'l tumani",
+          "capital": "Gagarin",
+          "schools_approx": 50
+        },
+        {
+          "id": "JIZ_PAXTAKOR",
+          "name": "Paxtakor tumani",
+          "capital": "Paxtakor",
+          "schools_approx": 40
+        },
+        {
+          "id": "JIZ_SHAROF_RASHIDOV",
+          "name": "Sharof Rashidov tumani",
+          "capital": "Uchtepa",
+          "schools_approx": 55
+        },
+        {
+          "id": "JIZ_YANGIOBOD",
+          "name": "Yangiobod tumani",
+          "capital": "Balandchaqir",
+          "schools_approx": 25
+        },
+        {
+          "id": "JIZ_ZAFAROBOD",
+          "name": "Zafarobod tumani",
+          "capital": "Zafarobod",
+          "schools_approx": 50
+        },
+        {
+          "id": "JIZ_ZARBDOR",
+          "name": "Zarbdor tumani",
+          "capital": "Zarbdor",
+          "schools_approx": 45
+        },
+        {
+          "id": "JIZ_ZOMIN",
+          "name": "Zomin tumani",
+          "capital": "Zomin",
+          "schools_approx": 55
+        }
+      ],
+      "cities": [
+        "Jizzax",
+        "G'allaorol"
+      ]
+    },
+    {
+      "id": "SIRDARYO",
+      "name_uz": "Sirdaryo viloyati",
+      "name_ru": "Сырдарьинская область",
+      "capital": "Guliston",
+      "total_schools_approx": 420,
+      "districts": [
+        {
+          "id": "SIR_BOYOVUT",
+          "name": "Boyovut tumani",
+          "capital": "Boyovut",
+          "schools_approx": 45
+        },
+        {
+          "id": "SIR_GULISTON",
+          "name": "Guliston tumani",
+          "capital": "Dehqonobod",
+          "schools_approx": 55
+        },
+        {
+          "id": "SIR_MIRZAOBOD",
+          "name": "Mirzaobod tumani",
+          "capital": "Navro'z",
+          "schools_approx": 45
+        },
+        {
+          "id": "SIR_OKOLTIN",
+          "name": "Oqoltin tumani",
+          "capital": "Sardoba",
+          "schools_approx": 40
+        },
+        {
+          "id": "SIR_SARDoba",
+          "name": "Sardoba tumani",
+          "capital": "Paxtaobod",
+          "schools_approx": 35
+        },
+        {
+          "id": "SIR_SAYXUNOBOD",
+          "name": "Sayxunobod tumani",
+          "capital": "Sayxun",
+          "schools_approx": 40
+        },
+        {
+          "id": "SIR_SIRDARYO",
+          "name": "Sirdaryo tumani",
+          "capital": "Sirdaryo",
+          "schools_approx": 55
+        },
+        {
+          "id": "SIR_XOVOS",
+          "name": "Xovos tumani",
+          "capital": "Xovos",
+          "schools_approx": 45
+        }
+      ],
+      "cities": [
+        "Guliston",
+        "Sirdaryo"
+      ]
+    },
+    {
+      "id": "TOSHKENT_VILOYATI",
+      "name_uz": "Toshkent viloyati",
+      "name_ru": "Ташкентская область",
+      "capital": "Nurafshon",
+      "total_schools_approx": 900,
+      "districts": [
+        {
+          "id": "TV_BEKOBOD",
+          "name": "Bekobod tumani",
+          "capital": "Zafar",
+          "schools_approx": 65
+        },
+        {
+          "id": "TV_BOSTONLIQ",
+          "name": "Bo'stonliq tumani",
+          "capital": "G'azalkent",
+          "schools_approx": 55
+        },
+        {
+          "id": "TV_BOKA",
+          "name": "Bo'ka tumani",
+          "capital": "Bo'ka",
+          "schools_approx": 55
+        },
+        {
+          "id": "TV_CHINOZ",
+          "name": "Chinoz tumani",
+          "capital": "Chinoz",
+          "schools_approx": 55
+        },
+        {
+          "id": "TV_QIBRAY",
+          "name": "Qibray tumani",
+          "capital": "Qibray",
+          "schools_approx": 60
+        },
+        {
+          "id": "TV_OKQORGON",
+          "name": "Oqqo'rg'on tumani",
+          "capital": "Oqqo'rg'on",
+          "schools_approx": 55
+        },
+        {
+          "id": "TV_OHANGARON",
+          "name": "Ohangaron tumani",
+          "capital": "Olhangaron",
+          "schools_approx": 55
+        },
+        {
+          "id": "TV_ORTACHIRCHIQ",
+          "name": "O'rtachirchiq tumani",
+          "capital": "Nurafshon",
+          "schools_approx": 50
+        },
+        {
+          "id": "TV_PARKENT",
+          "name": "Parkent tumani",
+          "capital": "Parkent",
+          "schools_approx": 55
+        },
+        {
+          "id": "TV_PISKENT",
+          "name": "Piskent tumani",
+          "capital": "Piskent",
+          "schools_approx": 50
+        },
+        {
+          "id": "TV_QUYICHIRCHIQ",
+          "name": "Quyichirchiq tumani",
+          "capital": "Do'stobod",
+          "schools_approx": 45
+        },
+        {
+          "id": "TV_TOSHKENT",
+          "name": "Toshkent tumani",
+          "capital": "Keles",
+          "schools_approx": 55
+        },
+        {
+          "id": "TV_YANGIYOL",
+          "name": "Yangiyo'l tumani",
+          "capital": "Yangiyo'l",
+          "schools_approx": 55
+        },
+        {
+          "id": "TV_YUQORICHIRCHIQ",
+          "name": "Yuqorichirchiq tumani",
+          "capital": "Yangibozor",
+          "schools_approx": 50
+        },
+        {
+          "id": "TV_ZANGIOTA",
+          "name": "Zangiota tumani",
+          "capital": "Eshonguzar",
+          "schools_approx": 60
+        }
+      ],
+      "cities": [
+        "Nurafshon",
+        "Olmaliq",
+        "Chirchiq",
+        "Angren",
+        "Bekobod",
+        "Yangiyo'l",
+        "Ohangaron",
+        "To'ytepa",
+        "Chinoz"
+      ]
+    },
+    {
+      "id": "NAMANGAN",
+      "name_uz": "Namangan viloyati",
+      "name_ru": "Наманганская область",
+      "capital": "Namangan",
+      "total_schools_approx": 750,
+      "districts": [
+        {
+          "id": "NAM_CHORTOQ",
+          "name": "Chortoq tumani",
+          "capital": "Chortoq",
+          "schools_approx": 65
+        },
+        {
+          "id": "NAM_CHUST",
+          "name": "Chust tumani",
+          "capital": "Chust",
+          "schools_approx": 75
+        },
+        {
+          "id": "NAM_KOSONSOY",
+          "name": "Kosonsoy tumani",
+          "capital": "Kosonsoy",
+          "schools_approx": 55
+        },
+        {
+          "id": "NAM_MINGBULOQ",
+          "name": "Mingbuloq tumani",
+          "capital": "Jo'masho'y",
+          "schools_approx": 45
+        },
+        {
+          "id": "NAM_NAMANGAN",
+          "name": "Namangan tumani",
+          "capital": "Toshbuloq",
+          "schools_approx": 55
+        },
+        {
+          "id": "NAM_NORIN",
+          "name": "Norin tumani",
+          "capital": "Haqqulobod",
+          "schools_approx": 65
+        },
+        {
+          "id": "NAM_POP",
+          "name": "Pop tumani",
+          "capital": "Pop",
+          "schools_approx": 65
+        },
+        {
+          "id": "NAM_TORAQORGON",
+          "name": "To'raqo'rg'on tumani",
+          "capital": "To'raqo'rg'on",
+          "schools_approx": 60
+        },
+        {
+          "id": "NAM_UCHQORGON",
+          "name": "Uchqo'rg'on tumani",
+          "capital": "Uchqo'rg'on",
+          "schools_approx": 55
+        },
+        {
+          "id": "NAM_UYCHI",
+          "name": "Uychi tumani",
+          "capital": "Uychi",
+          "schools_approx": 55
+        },
+        {
+          "id": "NAM_YANGIQORGON",
+          "name": "Yangiqo'rg'on tumani",
+          "capital": "Yangiqo'rg'on",
+          "schools_approx": 50
+        }
+      ],
+      "cities": [
+        "Namangan",
+        "Kosonsoy"
+      ]
+    },
+    {
+      "id": "FARGONA",
+      "name_uz": "Farg'ona viloyati",
+      "name_ru": "Ферганская область",
+      "capital": "Farg'ona",
+      "total_schools_approx": 1200,
+      "districts": [
+        {
+          "id": "FAR_BAGDOD",
+          "name": "Bag'od tumani",
+          "capital": "Bag'od",
+          "schools_approx": 55
+        },
+        {
+          "id": "FAR_BESHARIQ",
+          "name": "Beshariq tumani",
+          "capital": "Beshariq",
+          "schools_approx": 60
+        },
+        {
+          "id": "FAR_BUVAYDA",
+          "name": "Buvayda tumani",
+          "capital": "Ibrat",
+          "schools_approx": 55
+        },
+        {
+          "id": "FAR_DANGARA",
+          "name": "Dang'ara tumani",
+          "capital": "Dang'ara",
+          "schools_approx": 70
+        },
+        {
+          "id": "FAR_FARGONA",
+          "name": "Farg'ona tumani",
+          "capital": "Chimyon",
+          "schools_approx": 75
+        },
+        {
+          "id": "FAR_FURQAT",
+          "name": "Furqat tumani",
+          "capital": "Navbahor",
+          "schools_approx": 45
+        },
+        {
+          "id": "FAR_OLTIARIQ",
+          "name": "Oltiariq tumani",
+          "capital": "Oltiariq",
+          "schools_approx": 70
+        },
+        {
+          "id": "FAR_QOSHTEPA",
+          "name": "Qo'shtepa tumani",
+          "capital": "Langar",
+          "schools_approx": 65
+        },
+        {
+          "id": "FAR_QUVA",
+          "name": "Quva tumani",
+          "capital": "Quva",
+          "schools_approx": 75
+        },
+        {
+          "id": "FAR_RISHTON",
+          "name": "Rishton tumani",
+          "capital": "Rishton",
+          "schools_approx": 70
+        },
+        {
+          "id": "FAR_SOX",
+          "name": "So'x tumani",
+          "capital": "Ravon",
+          "schools_approx": 30
+        },
+        {
+          "id": "FAR_TOSHLOQ",
+          "name": "Toshloq tumani",
+          "capital": "Toshloq",
+          "schools_approx": 65
+        },
+        {
+          "id": "FAR_UCHKOPRIK",
+          "name": "Uchko'prik tumani",
+          "capital": "Uchko'prik",
+          "schools_approx": 55
+        },
+        {
+          "id": "FAR_UZBEKISTON",
+          "name": "O'zbekiston tumani",
+          "capital": "Yaypan",
+          "schools_approx": 70
+        },
+        {
+          "id": "FAR_YOZYOVON",
+          "name": "Yozyovon tumani",
+          "capital": "Yozyovon",
+          "schools_approx": 60
+        }
+      ],
+      "cities": [
+        "Farg'ona",
+        "Qo'qon",
+        "Marg'ilon",
+        "Quva"
+      ]
+    },
+    {
+      "id": "ANDIJON",
+      "name_uz": "Andijon viloyati",
+      "name_ru": "Андижанская область",
+      "capital": "Andijon",
+      "total_schools_approx": 950,
+      "districts": [
+        {
+          "id": "AND_ANDIJON",
+          "name": "Andijon tumani",
+          "capital": "Kuyganyor",
+          "schools_approx": 70
+        },
+        {
+          "id": "AND_ASAKA",
+          "name": "Asaka tumani",
+          "capital": "Asaka",
+          "schools_approx": 80
+        },
+        {
+          "id": "AND_BALIQCHI",
+          "name": "Baliqchi tumani",
+          "capital": "Baliqchi",
+          "schools_approx": 55
+        },
+        {
+          "id": "AND_BOSTON",
+          "name": "Bo'ston tumani",
+          "capital": "Bo'z",
+          "schools_approx": 45
+        },
+        {
+          "id": "AND_BULOQBOSHI",
+          "name": "Buloqboshi tumani",
+          "capital": "Buloqboshi",
+          "schools_approx": 50
+        },
+        {
+          "id": "AND_IJBOSKAN",
+          "name": "Izboskan tumani",
+          "capital": "Poytug'",
+          "schools_approx": 55
+        },
+        {
+          "id": "AND_JALAQUDUQ",
+          "name": "Jalaquduq tumani",
+          "capital": "Jalaquduq",
+          "schools_approx": 65
+        },
+        {
+          "id": "AND_MARHAMAT",
+          "name": "Marhamat tumani",
+          "capital": "Marhamat",
+          "schools_approx": 65
+        },
+        {
+          "id": "AND_OLTINKOL",
+          "name": "Oltinko'l tumani",
+          "capital": "Oltinko'l",
+          "schools_approx": 55
+        },
+        {
+          "id": "AND_PAXTAOBOD",
+          "name": "Paxtaobod tumani",
+          "capital": "Paxtaobod",
+          "schools_approx": 55
+        },
+        {
+          "id": "AND_QORGONTEPA",
+          "name": "Qo'rg'ontepa tumani",
+          "capital": "Qo'rg'ontepa",
+          "schools_approx": 65
+        },
+        {
+          "id": "AND_SHAHRIXON",
+          "name": "Shahrixon tumani",
+          "capital": "Shahrixon",
+          "schools_approx": 60
+        },
+        {
+          "id": "AND_ULUGNOR",
+          "name": "Ulug'nor tumani",
+          "capital": "Oqoltin",
+          "schools_approx": 40
+        },
+        {
+          "id": "AND_XOJAOBOD",
+          "name": "Xo'jaobod tumani",
+          "capital": "Xo'jaobod",
+          "schools_approx": 55
+        }
+      ],
+      "cities": [
+        "Andijon",
+        "Asaka",
+        "Shahrixon",
+        "Qo'rg'ontepa"
+      ]
+    },
+    {
+      "id": "TOSHKENT_SHAHR",
+      "name_uz": "Toshkent shahri",
+      "name_ru": "Город Ташкент",
+      "capital": "Toshkent",
+      "total_schools_approx": 1100,
+      "districts": [
+        {
+          "id": "TSH_BEKTEMIR",
+          "name": "Bektemir tumani",
+          "schools_approx": 55
+        },
+        {
+          "id": "TSH_CHILANZAR",
+          "name": "Chilanzar tumani",
+          "schools_approx": 120
+        },
+        {
+          "id": "TSH_YASHNOBOD",
+          "name": "Yashnobod tumani",
+          "schools_approx": 80
+        },
+        {
+          "id": "TSH_MIROBOD",
+          "name": "Mirobod tumani",
+          "schools_approx": 75
+        },
+        {
+          "id": "TSH_MIRZO_ULUGBEK",
+          "name": "Mirzo Ulug'bek tumani",
+          "schools_approx": 100
+        },
+        {
+          "id": "TSH_SERGELI",
+          "name": "Sergeli tumani",
+          "schools_approx": 90
+        },
+        {
+          "id": "TSH_SHAYXONTOXUR",
+          "name": "Shayxontoxur tumani",
+          "schools_approx": 100
+        },
+        {
+          "id": "TSH_OLMAZOR",
+          "name": "Olmazor tumani",
+          "schools_approx": 90
+        },
+        {
+          "id": "TSH_UCHTEPA",
+          "name": "Uchtepa tumani",
+          "schools_approx": 110
+        },
+        {
+          "id": "TSH_YAKKASARAY",
+          "name": "Yakkasaray tumani",
+          "schools_approx": 60
+        },
+        {
+          "id": "TSH_YUNUSOBOD",
+          "name": "Yunusobod tumani",
+          "schools_approx": 100
+        },
+        {
+          "id": "TSH_YANGIHAYOT",
+          "name": "Yangihayot tumani",
+          "schools_approx": 45
+        }
+      ],
+      "cities": []
+    }
+  ],
+  "statistics": {
+    "total_regions": 14,
+    "total_districts": 175,
+    "total_cities": 86,
+    "total_schools_approx": 14500,
+    "by_region": {
+      "QORAQALPOGISTON": { "districts": 16, "schools_approx": 980 },
+      "XORAZM": { "districts": 11, "schools_approx": 680 },
+      "NAVOIY": { "districts": 8, "schools_approx": 520 },
+      "BUXORO": { "districts": 11, "schools_approx": 870 },
+      "SAMARQAND": { "districts": 14, "schools_approx": 1200 },
+      "QASHQADARYO": { "districts": 14, "schools_approx": 1100 },
+      "SURXONDARYO": { "districts": 14, "schools_approx": 950 },
+      "JIZZAX": { "districts": 12, "schools_approx": 620 },
+      "SIRDARYO": { "districts": 8, "schools_approx": 420 },
+      "TOSHKENT_VILOYATI": { "districts": 15, "schools_approx": 900 },
+      "NAMANGAN": { "districts": 11, "schools_approx": 750 },
+      "FARGONA": { "districts": 15, "schools_approx": 1200 },
+      "ANDIJON": { "districts": 14, "schools_approx": 950 },
+      "TOSHKENT_SHAHR": { "districts": 12, "schools_approx": 1100 }
+    }
+  }
+}
