@@ -8,9 +8,14 @@ const { initDatabase, queryAll, queryOne, run, withTransaction } = require('./da
 const adminAuth = require('./middleware/adminAuth');
 const telegramAuth = require('./middleware/telegramAuth');
 const { validateTelegramInitData } = require('./middleware/telegramAuth');
+const rateLimit = require('express-rate-limit');
 
 const Sentry = require('@sentry/node');
 Sentry.init({ dsn: process.env.SENTRY_DSN, tracesSampleRate: 0.1 });
+
+const generalLimiter = rateLimit({ windowMs: 60000, max: 100, message: { error: "Juda ko'p so'rov. 1 daqiqa kuting." } });
+const writeLimiter = rateLimit({ windowMs: 60000, max: 20, message: { error: "Juda ko'p amal. 1 daqiqa kuting." } });
+const promoLimiter = rateLimit({ windowMs: 60000, max: 10, message: { error: "Promo-kod tekshirish limiti. 1 daqiqa kuting." } });
 
 function nowUZ() {
   return new Date().toLocaleString('sv-SE', { timeZone: 'Asia/Tashkent' });
@@ -20,6 +25,32 @@ function toISODate(dateStr) {
   if (!dateStr || typeof dateStr !== 'string') return dateStr;
   if (dateStr.includes('T')) return dateStr;
   return dateStr.replace(' ', 'T') + '+05:00';
+}
+
+function getLanguageSurcharge(schoolType, subject) {
+  if (!schoolType || !subject) return 0;
+  const st = schoolType;
+  const sub = subject.toLowerCase();
+  const isUzbek = sub === "o'zbek tili" || sub === 'ona tili' || sub === "o'qish" ||
+    sub === 'ўзбек тили' || sub === 'ана тили' || sub === 'ўқиш' ||
+    sub === 'карақалпақ тили';
+  const isRussian = sub === 'rus tili' || sub === 'русский язык';
+  const isEnglish = sub === 'ingliz tili' || sub === 'английский язык';
+  if (st === 'uzbek') {
+    if (isRussian || isEnglish) return 50000;
+    return 0;
+  }
+  if (st === 'russian') {
+    if (isUzbek) return 0;
+    if (isEnglish) return 60000;
+    return 50000;
+  }
+  if (st === 'qoraqalpoq') {
+    if (isUzbek || sub === 'карақалпақ тили') return 0;
+    if (isRussian || isEnglish) return 60000;
+    return 50000;
+  }
+  return 0;
 }
 
 function fixOrderDates(order) {
@@ -71,6 +102,7 @@ app.use(cors({
   }
 }));
 app.use(express.json());
+app.use(generalLimiter);
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 const fs = require('fs');
@@ -121,15 +153,18 @@ app.get('/api/users', adminAuth, async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.get('/api/users/:telegram_id', async (req, res) => {
+app.get('/api/users/:telegram_id', telegramAuth, async (req, res) => {
   try {
+    if (req.telegramUserId !== parseInt(req.params.telegram_id)) {
+      return res.status(403).json({ error: 'Ruxsatsiz — faqat o\'zingizning ma\'lumotlaringizni ko\'ra olasiz' });
+    }
     const user = await queryOne('SELECT * FROM users WHERE telegram_id = ?', [parseInt(req.params.telegram_id)]);
     if (!user) return res.status(404).json({ error: 'Foydalanuvchi topilmadi' });
     res.json(user);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.post('/api/users', telegramAuth, async (req, res) => {
+app.post('/api/users', writeLimiter, telegramAuth, async (req, res) => {
   try {
     const { username, first_name, last_name } = req.body;
     const telegram_id = req.telegramUserId;
@@ -251,6 +286,9 @@ app.get('/api/orders/:id', async (req, res) => {
   try {
     const isAdmin = !!req.headers['x-admin-key'];
     const isTelegram = !!req.headers['x-telegram-init-data'];
+    if (!isAdmin && !isTelegram) {
+      return res.status(401).json({ error: 'Autentifikatsiya talab qilinadi' });
+    }
     if (isTelegram && !isAdmin) {
       const result = validateTelegramInitData(req.headers['x-telegram-init-data'], process.env.BOT_TOKEN);
       if (!result) return res.status(401).json({ error: 'Telegram auth xatosi' });
@@ -274,16 +312,18 @@ app.get('/api/orders/:id', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.post('/api/orders', telegramAuth, async (req, res) => {
+app.post('/api/orders', writeLimiter, telegramAuth, async (req, res) => {
   try {
-    const { service_id, full_name, address, school, subject, grade, topic, school_type, language_surcharge, geographic_level, geographic_surcharge, promo_code_id, promo_discount, use_referral_discount } = req.body;
+    const { service_id, full_name, address, school, subject, grade, topic, school_type, geographic_level, promo_code_id, promo_discount, use_referral_discount } = req.body;
     const service = await queryOne('SELECT * FROM services WHERE id = ?', [service_id]);
     if (!service) return res.status(400).json({ error: 'Xizmat topilmadi' });
     const tgUser = await queryOne('SELECT id, referral_balance FROM users WHERE telegram_id = ?', [req.telegramUserId]);
     if (!tgUser) return res.status(400).json({ error: 'Foydalanuvchi topilmadi' });
     const user_id = tgUser.id;
 
-    const basePrice = service.price + (parseInt(language_surcharge) || 0) + (parseInt(geographic_surcharge) || 0);
+    const languageSurcharge = getLanguageSurcharge(school_type, subject);
+    const geoSurcharge = geographic_level === 'viloyat' ? 60000 : geographic_level === 'respublika' ? 110000 : 0;
+    const basePrice = service.price + languageSurcharge + geoSurcharge;
 
     // Validate promo code if provided
     let validPromoId = null;
@@ -315,14 +355,14 @@ app.post('/api/orders', telegramAuth, async (req, res) => {
     }
 
     const orderCode = `MK-${Date.now().toString(36).toUpperCase()}${uuidv4().substring(0, 4).toUpperCase()}`;
-    const totalPrice = basePrice - validPromoDiscount - validReferralDiscount;
+    const totalPrice = Math.max(0, basePrice - validPromoDiscount - validReferralDiscount);
 
     // P5: Wrap order + promo usage + referral deduction in a transaction
     const orderId = await withTransaction(async ({ run: txRun, queryOne: txQueryOne }) => {
       const result = await txRun(`
         INSERT INTO orders (order_code, user_id, service_id, full_name, address, school, subject, grade, topic, total_price, school_type, language_surcharge, geographic_level, geographic_surcharge, promo_code_id, promo_discount, referral_discount, created_at)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `, [orderCode, user_id, service_id, full_name, address, school, subject, grade, topic, totalPrice, school_type || null, parseInt(language_surcharge) || 0, geographic_level || 'maktab', parseInt(geographic_surcharge) || 0, validPromoId, validPromoDiscount, validReferralDiscount, nowUZ()]);
+      `, [orderCode, user_id, service_id, full_name, address, school, subject, grade, topic, totalPrice, school_type || null, languageSurcharge, geographic_level || 'maktab', geoSurcharge, validPromoId, validPromoDiscount, validReferralDiscount, nowUZ()]);
 
       const oid = result.lastInsertRowid;
 
@@ -531,22 +571,22 @@ app.put('/api/orders/:id/send', adminAuth, async (req, res) => {
 app.get('/api/stats', adminAuth, async (req, res) => {
   try {
     const schoolTypeFilter = req.query.school_type;
-    const stWhere = schoolTypeFilter ? `WHERE school_type = '${schoolTypeFilter}'` : '';
-    const stAndWhere = schoolTypeFilter ? `AND school_type = '${schoolTypeFilter}'` : '';
-    const totalOrders = (await queryOne(`SELECT COUNT(*) as count FROM orders ${stWhere}`))?.count || 0;
-    const pendingPayment = (await queryOne(`SELECT COUNT(*) as count FROM orders WHERE status = 'pending_payment' ${stAndWhere}`))?.count || 0;
-    const pendingConfirmation = (await queryOne(`SELECT COUNT(*) as count FROM orders WHERE status = 'pending_confirmation' ${stAndWhere}`))?.count || 0;
-    const inProgress = (await queryOne(`SELECT COUNT(*) as count FROM orders WHERE status = 'in_progress' ${stAndWhere}`))?.count || 0;
-    const ready = (await queryOne(`SELECT COUNT(*) as count FROM orders WHERE status = 'ready' ${stAndWhere}`))?.count || 0;
-    const sent = (await queryOne(`SELECT COUNT(*) as count FROM orders WHERE status = 'sent' ${stAndWhere}`))?.count || 0;
+    const stParams = schoolTypeFilter ? [schoolTypeFilter] : [];
+    const stWhere = schoolTypeFilter ? 'WHERE school_type = ?' : '';
+    const totalOrders = (await queryOne(`SELECT COUNT(*) as count FROM orders ${stWhere}`, stParams))?.count || 0;
+    const pendingPayment = (await queryOne(`SELECT COUNT(*) as count FROM orders WHERE status = ? ${schoolTypeFilter ? 'AND school_type = ?' : ''}`, schoolTypeFilter ? ['pending_payment', schoolTypeFilter] : ['pending_payment']))?.count || 0;
+    const pendingConfirmation = (await queryOne(`SELECT COUNT(*) as count FROM orders WHERE status = ? ${schoolTypeFilter ? 'AND school_type = ?' : ''}`, schoolTypeFilter ? ['pending_confirmation', schoolTypeFilter] : ['pending_confirmation']))?.count || 0;
+    const inProgress = (await queryOne(`SELECT COUNT(*) as count FROM orders WHERE status = ? ${schoolTypeFilter ? 'AND school_type = ?' : ''}`, schoolTypeFilter ? ['in_progress', schoolTypeFilter] : ['in_progress']))?.count || 0;
+    const ready = (await queryOne(`SELECT COUNT(*) as count FROM orders WHERE status = ? ${schoolTypeFilter ? 'AND school_type = ?' : ''}`, schoolTypeFilter ? ['ready', schoolTypeFilter] : ['ready']))?.count || 0;
+    const sent = (await queryOne(`SELECT COUNT(*) as count FROM orders WHERE status = ? ${schoolTypeFilter ? 'AND school_type = ?' : ''}`, schoolTypeFilter ? ['sent', schoolTypeFilter] : ['sent']))?.count || 0;
     const totalUsers = (await queryOne('SELECT COUNT(*) as count FROM users'))?.count || 0;
-    const totalRevenueResult = await queryOne(`SELECT COALESCE(SUM(total_price), 0) as total FROM orders WHERE status IN ('in_progress', 'ready', 'sent') ${stAndWhere}`);
+    const totalRevenueResult = await queryOne(`SELECT COALESCE(SUM(total_price), 0) as total FROM orders WHERE status IN ('in_progress', 'ready', 'sent') ${schoolTypeFilter ? 'AND school_type = ?' : ''}`, stParams);
     const totalRevenue = totalRevenueResult ? totalRevenueResult.total : 0;
     let subjectStats = [], gradeStats = [], regionStats = [], recentOrders = [];
-    try { subjectStats = await queryAll(`SELECT subject, COUNT(*) as count FROM orders ${stWhere} GROUP BY subject ORDER BY count DESC LIMIT 10`); } catch (e) {}
-    try { gradeStats = await queryAll(`SELECT grade, COUNT(*) as count FROM orders ${stWhere} GROUP BY grade ORDER BY count DESC`); } catch (e) {}
-    try { regionStats = await queryAll(`SELECT address as region, COUNT(*) as count FROM orders ${stWhere} GROUP BY region ORDER BY count DESC LIMIT 20`); } catch (e) {}
-    try { recentOrders = await queryAll(`SELECT o.id, o.order_code, o.full_name, o.status, o.total_price, o.created_at, s.name as service_name FROM orders o LEFT JOIN services s ON o.service_id = s.id ${schoolTypeFilter ? `WHERE o.school_type = '${schoolTypeFilter}'` : ''} ORDER BY o.created_at DESC LIMIT 7`); recentOrders.forEach(fixOrderDates); } catch (e) {}
+    try { subjectStats = await queryAll(`SELECT subject, COUNT(*) as count FROM orders ${stWhere} GROUP BY subject ORDER BY count DESC LIMIT 10`, stParams); } catch (e) {}
+    try { gradeStats = await queryAll(`SELECT grade, COUNT(*) as count FROM orders ${stWhere} GROUP BY grade ORDER BY count DESC`, stParams); } catch (e) {}
+    try { regionStats = await queryAll(`SELECT address as region, COUNT(*) as count FROM orders ${stWhere} GROUP BY region ORDER BY count DESC LIMIT 20`, stParams); } catch (e) {}
+    try { recentOrders = await queryAll(`SELECT o.id, o.order_code, o.full_name, o.status, o.total_price, o.created_at, s.name as service_name FROM orders o LEFT JOIN services s ON o.service_id = s.id ${schoolTypeFilter ? 'WHERE o.school_type = ?' : ''} ORDER BY o.created_at DESC LIMIT 7`, stParams); recentOrders.forEach(fixOrderDates); } catch (e) {}
 
     // Daily chart data (last 14 days)
     let dailyChart = [];
@@ -589,7 +629,9 @@ app.get('/api/settings', async (req, res) => {
 
 app.put('/api/settings', adminAuth, async (req, res) => {
   try {
+    const allowedKeys = ['bot_username', 'channels', 'referral_discount_amount', 'referral_reward_amount'];
     for (const [key, value] of Object.entries(req.body)) {
+      if (!allowedKeys.includes(key)) continue;
       await run(`UPDATE settings SET value = ?, updated_at = '${nowUZ()}' WHERE key = ?`, [value, key]);
     }
     res.json({ success: true });
@@ -721,7 +763,7 @@ app.get('/api/filters', adminAuth, async (req, res) => {
 // ═══════════════════════════════════════════════
 
 // MiniApp: validate promo code
-app.post('/api/promo-codes/validate', telegramAuth, async (req, res) => {
+app.post('/api/promo-codes/validate', promoLimiter, telegramAuth, async (req, res) => {
   try {
     const { code } = req.body;
     const dbUser = await queryOne('SELECT id FROM users WHERE telegram_id = ?', [req.telegramUserId]);
@@ -823,7 +865,7 @@ app.get('/api/reviews/published', async (req, res) => {
 });
 
 // MiniApp: submit review (order must be 'sent' and belong to user)
-app.post('/api/reviews', telegramAuth, async (req, res) => {
+app.post('/api/reviews', writeLimiter, telegramAuth, async (req, res) => {
   try {
     const { order_id, stars, text, author_name, region } = req.body;
     if (!order_id || !stars || !text)

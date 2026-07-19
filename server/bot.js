@@ -79,11 +79,17 @@ async function startBot(app) {
   if (WEBHOOK_URL && WEBHOOK_URL.startsWith('https://')) {
     try {
       bot = new TelegramBot(BOT_TOKEN);
+      const crypto = require('crypto');
+      const webhookSecret = crypto.createHmac('sha256', 'webhook-secret').update(BOT_TOKEN).digest('hex');
       app.post(webhookPath, (req, res) => {
+        const secretHeader = req.headers['x-telegram-bot-api-secret-token'];
+        if (secretHeader !== webhookSecret) {
+          return res.sendStatus(403);
+        }
         try { bot.processUpdate(req.body); } catch (e) { console.error('Webhook error:', e.message); }
         res.sendStatus(200);
       });
-      const result = await bot.setWebHook(`${WEBHOOK_URL}${webhookPath}`);
+      const result = await bot.setWebHook(`${WEBHOOK_URL}${webhookPath}`, { secret_token: webhookSecret });
       if (result) {
         console.log(`🤖 Bot webhook set: ${WEBHOOK_URL}${webhookPath}`);
       } else {

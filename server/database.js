@@ -1,12 +1,18 @@
 const { createClient } = require('@libsql/client');
+const path = require('path');
+const fs = require('fs');
 
 let db = null;
 
 async function initDatabase() {
-  db = createClient({
-    url: process.env.TURSO_DATABASE_URL || 'file:local.db',
-    authToken: process.env.TURSO_AUTH_TOKEN || undefined,
-  });
+  const dbUrl = process.env.TURSO_DATABASE_URL;
+  if (dbUrl) {
+    db = createClient({ url: dbUrl, authToken: process.env.TURSO_AUTH_TOKEN || undefined });
+  } else {
+    const uploadsDir = path.join(__dirname, '..', 'uploads');
+    if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+    db = createClient({ url: `file:${path.join(uploadsDir, 'local.db')}` });
+  }
 
   await db.execute(`
     CREATE TABLE IF NOT EXISTS users (
