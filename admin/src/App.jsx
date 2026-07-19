@@ -10,6 +10,7 @@ import Settings from './pages/Settings'
 import Broadcast from './pages/Broadcast'
 import Reviews from './pages/Reviews'
 import PromoCodes from './pages/PromoCodes'
+import AdminLogin from './pages/AdminLogin'
 
 const navItems = [
   { path: '/', label: 'Dashboard', icon: '📊' },
@@ -23,75 +24,99 @@ const navItems = [
   { path: '/settings', label: 'Sozlamalar', icon: '⚙️' },
 ]
 
-function Sidebar({ dark, setDark }) {
+function Sidebar({ dark, setDark, open, setOpen }) {
   const location = useLocation()
 
   return (
-    <div className="w-64 bg-gray-900 text-white min-h-screen fixed left-0 top-0 flex flex-col">
-      <div className="p-4 border-b border-gray-700">
-        <h1 className="text-xl font-bold">📚 Metodikish</h1>
-        <p className="text-xs text-gray-400 mt-1">Admin Panel</p>
-      </div>
-      <nav className="p-2 flex-1">
-        {navItems.map(item => (
-          <Link
-            key={item.path}
-            to={item.path}
-            className={`flex items-center gap-3 px-3 py-2 rounded-lg mb-1 transition-colors ${
-              location.pathname === item.path
-                ? 'bg-primary-600 text-white'
-                : 'text-gray-300 hover:bg-gray-800'
-            }`}
+    <>
+      {open && <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setOpen(false)} />}
+      <div className={`fixed left-0 top-0 h-full w-64 bg-gray-900 text-white flex flex-col z-50 transition-transform duration-200 ${open ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}>
+        <div className="p-4 border-b border-gray-700 flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-bold">📚 Metodikish</h1>
+            <p className="text-xs text-gray-400 mt-1">Admin Panel</p>
+          </div>
+          <button onClick={() => setOpen(false)} className="md:hidden text-gray-400 hover:text-white text-xl">&times;</button>
+        </div>
+        <nav className="p-2 flex-1 overflow-y-auto">
+          {navItems.map(item => (
+            <Link
+              key={item.path}
+              to={item.path}
+              onClick={() => setOpen(false)}
+              className={`flex items-center gap-3 px-3 py-2 rounded-lg mb-1 transition-colors ${
+                location.pathname === item.path
+                  ? 'bg-primary-600 text-white'
+                  : 'text-gray-300 hover:bg-gray-800'
+              }`}
+            >
+              <span>{item.icon}</span>
+              <span>{item.label}</span>
+            </Link>
+          ))}
+        </nav>
+        <div className="p-3 border-t border-gray-700">
+          <button
+            onClick={() => setDark(d => { const next = !d; localStorage.setItem('admin-theme', next ? 'dark' : 'light'); return next })}
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors text-sm"
           >
-            <span>{item.icon}</span>
-            <span>{item.label}</span>
-          </Link>
-        ))}
-      </nav>
-      <div className="p-3 border-t border-gray-700">
-        <button
-          onClick={() => setDark(d => { const next = !d; localStorage.setItem('admin-theme', next ? 'dark' : 'light'); return next })}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors text-sm"
-        >
-          {dark ? '☀️ Yorug\' rejim' : '🌙 Qorong\'u rejim'}
-        </button>
+            {dark ? '☀️ Yorug\' rejim' : '🌙 Qorong\'u rejim'}
+          </button>
+        </div>
       </div>
-    </div>
+    </>
   )
 }
 
-function App() {
+function AdminPanel({ onLogout }) {
   const [dark, setDark] = useState(() => {
     return localStorage.getItem('admin-theme') === 'dark' || (!localStorage.getItem('admin-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)
   })
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', dark)
   }, [dark])
 
   return (
-    <Router basename="/admin">
-      <div className={`flex min-h-screen ${dark ? 'dark' : ''}`}>
-        <div className="dark:bg-gray-950 dark:text-gray-200 bg-gray-50 min-h-screen flex-1">
-          <Sidebar dark={dark} setDark={setDark} />
-          <div className="flex-1 ml-64">
-            <div className="p-6">
-              <Routes>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/orders" element={<Orders />} />
-                <Route path="/orders/:id" element={<OrderDetail />} />
-                <Route path="/reviews" element={<Reviews />} />
-                <Route path="/users" element={<Users />} />
-                <Route path="/services" element={<Services />} />
-                <Route path="/cards" element={<Cards />} />
-                <Route path="/broadcast" element={<Broadcast />} />
-                <Route path="/promo-codes" element={<PromoCodes />} />
-                <Route path="/settings" element={<Settings />} />
-              </Routes>
-            </div>
+    <div className={`min-h-screen ${dark ? 'dark' : ''}`}>
+      <div className="dark:bg-gray-950 dark:text-gray-200 bg-gray-50 min-h-screen">
+        <div className="md:hidden fixed top-0 left-0 right-0 z-30 bg-gray-900 text-white px-4 py-3 flex items-center gap-3 shadow">
+          <button onClick={() => setSidebarOpen(true)} className="text-2xl">&#9776;</button>
+          <span className="font-bold">📚 Metodikish</span>
+        </div>
+        <Sidebar dark={dark} setDark={setDark} open={sidebarOpen} setOpen={setSidebarOpen} />
+        <div className="md:ml-64 pt-14 md:pt-0">
+          <div className="p-4 md:p-6">
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/orders" element={<Orders />} />
+              <Route path="/orders/:id" element={<OrderDetail />} />
+              <Route path="/reviews" element={<Reviews />} />
+              <Route path="/users" element={<Users />} />
+              <Route path="/services" element={<Services />} />
+              <Route path="/cards" element={<Cards />} />
+              <Route path="/broadcast" element={<Broadcast />} />
+              <Route path="/promo-codes" element={<PromoCodes />} />
+              <Route path="/settings" element={<Settings />} />
+            </Routes>
           </div>
         </div>
       </div>
+    </div>
+  )
+}
+
+function App() {
+  const [loggedIn, setLoggedIn] = useState(() => !!localStorage.getItem('admin_api_key'))
+
+  return (
+    <Router basename="/admin">
+      {loggedIn ? (
+        <AdminPanel onLogout={() => { localStorage.removeItem('admin_api_key'); setLoggedIn(false) }} />
+      ) : (
+        <AdminLogin onLogin={() => setLoggedIn(true)} />
+      )}
     </Router>
   )
 }

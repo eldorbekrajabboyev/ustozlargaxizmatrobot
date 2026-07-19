@@ -14,12 +14,8 @@ api.interceptors.response.use(
   (res) => res,
   (err) => {
     if (err.response?.status === 401) {
-      const key = prompt('Admin kalitni kiriting:');
-      if (key) {
-        localStorage.setItem('admin_api_key', key);
-        err.config.headers['X-Admin-Key'] = key;
-        return api.request(err.config);
-      }
+      localStorage.removeItem('admin_api_key');
+      window.location.href = '/admin';
     }
     return Promise.reject(err);
   }

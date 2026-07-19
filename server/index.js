@@ -423,7 +423,10 @@ app.post('/api/orders/:id/receipt', telegramAuth, setUploadType('receipts'), upl
     await run(`UPDATE orders SET payment_receipt = ?, status = ?, receipt_uploaded_at = '${nowUZ()}' WHERE id = ?`,
       [`/uploads/receipts/${req.file.filename}`, 'pending_confirmation', parseInt(req.params.id)]);
     res.json({ success: true, path: `/uploads/receipts/${req.file.filename}` });
-  } catch (err) { res.status(500).json({ error: err.message }); }
+  } catch (err) {
+    if (req.file) { const fp = path.join(uploadsDir, 'receipts', req.file.filename); if (fs.existsSync(fp)) fs.unlinkSync(fp); }
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.post('/api/orders/:id/images', telegramAuth, setUploadType('images'), upload.array('images', 5), async (req, res) => {
@@ -439,7 +442,10 @@ app.post('/api/orders/:id/images', telegramAuth, setUploadType('images'), upload
       images.push({ id: result.lastInsertRowid, image_path: `/uploads/images/${file.filename}` });
     }
     res.json(images);
-  } catch (err) { res.status(500).json({ error: err.message }); }
+  } catch (err) {
+    if (req.files) { for (const f of req.files) { const fp = path.join(uploadsDir, 'images', f.filename); if (fs.existsSync(fp)) fs.unlinkSync(fp); } }
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.post('/api/orders/:id/document', adminAuth, setUploadType('documents'), upload.single('document'), async (req, res) => {
@@ -447,7 +453,10 @@ app.post('/api/orders/:id/document', adminAuth, setUploadType('documents'), uplo
     await run('UPDATE orders SET document_file = ?, status = ? WHERE id = ?',
       [`/uploads/documents/${req.file.filename}`, 'ready', parseInt(req.params.id)]);
     res.json({ success: true, path: `/uploads/documents/${req.file.filename}` });
-  } catch (err) { res.status(500).json({ error: err.message }); }
+  } catch (err) {
+    if (req.file) { const fp = path.join(uploadsDir, 'documents', req.file.filename); if (fs.existsSync(fp)) fs.unlinkSync(fp); }
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.put('/api/orders/:id/confirm-payment', adminAuth, async (req, res) => {
