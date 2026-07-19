@@ -57,7 +57,19 @@ function cached(key, ttlMs, fn) {
   };
 }
 
-app.use(cors());
+app.use(cors({
+  origin: function (origin, callback) {
+    const allowed = [
+      'https://metodikish.fly.dev',
+      'https://metodikish.vercel.app',
+    ];
+    if (!origin || allowed.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('CORS ruxsatsiz'));
+    }
+  }
+}));
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
