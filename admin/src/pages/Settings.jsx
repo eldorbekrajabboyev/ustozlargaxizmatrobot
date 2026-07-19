@@ -79,12 +79,12 @@ function Settings() {
 
       <div className="max-w-2xl space-y-6">
         {/* Bot Settings */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-6">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-6 dark:bg-gray-800 dark:border-gray-700/50">
           <h2 className="text-lg font-semibold">🤖 Bot sozlamalari</h2>
           
           {/* Bot Token */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
               Bot Token
             </label>
             <input
@@ -92,13 +92,13 @@ function Settings() {
               value={settings.bot_token || ''}
               onChange={(e) => handleChange('bot_token', e.target.value)}
               placeholder="123456789:ABCdefGHIjklMNOpqrsTUVwxyz"
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-200"
             />
           </div>
 
           {/* Bot Username */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
               🤖 Bot Username (referal havola uchun)
             </label>
             <input
@@ -106,14 +106,14 @@ function Settings() {
               value={settings.bot_username || ''}
               onChange={(e) => handleChange('bot_username', e.target.value)}
               placeholder="Masalan: metodikish_bot"
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-200"
             />
-            <p className="text-xs text-gray-500 mt-1">Bot username'siz referal havola ishlamaydi</p>
+            <p className="text-xs text-gray-500 mt-1 dark:text-gray-400">Bot username'siz referal havola ishlamaydi</p>
           </div>
 
           {/* Admin Chat ID */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
               👑 Admin Telegram ID
             </label>
             <input
@@ -121,32 +121,32 @@ function Settings() {
               value={settings.admin_chat_id || ''}
               onChange={(e) => handleChange('admin_chat_id', e.target.value)}
               placeholder="123456789"
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-200"
             />
           </div>
 
           {/* Min Prep Time */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
               ⏰ Minimal tayyorlash vaqti (soat)
             </label>
             <input
               type="number"
               value={settings.min_prep_time_hours || '6'}
               onChange={(e) => handleChange('min_prep_time_hours', e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-200"
             />
           </div>
 
           {/* Payment Instructions */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
               💳 To'lov ko'rsatmalari
             </label>
             <textarea
               value={settings.payment_instructions || ''}
               onChange={(e) => handleChange('payment_instructions', e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-200"
               rows={4}
               placeholder="To'lov haqida ko'rsatmalar..."
             />
@@ -162,11 +162,11 @@ function Settings() {
         </div>
 
         {/* Referral Settings */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-6">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-6 dark:bg-gray-800 dark:border-gray-700/50">
           <h2 className="text-lg font-semibold">👥 Referal tizimi sozlamalari</h2>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
               💰 Referal chegirma miqdori (so'm)
             </label>
             <input
@@ -174,9 +174,9 @@ function Settings() {
               value={settings.referral_discount_amount || '0'}
               onChange={(e) => handleChange('referral_discount_amount', e.target.value)}
               placeholder="Masalan: 40000"
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-200"
             />
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
               Taklif qilgan foydalanuvchi to'lov qilganda, taklif qiluvchiga beriladigan chegirma miqdori. 0 = o'chirilgan.
             </p>
           </div>
@@ -191,9 +191,9 @@ function Settings() {
         </div>
 
         {/* Channels Management */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 dark:bg-gray-800 dark:border-gray-700/50">
           <h2 className="text-lg font-semibold mb-4">📢 Majburiy obuna kanallari</h2>
-          <p className="text-sm text-gray-500 mb-4">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
             Botni ishlatishdan oldin foydalanuvchi ushbu kanallarga obuna bo'lishi kerak. (Maksimal 5 ta)
           </p>
 
@@ -201,14 +201,14 @@ function Settings() {
           {channels.length > 0 && (
             <div className="space-y-2 mb-4">
               {channels.map((ch, idx) => (
-                <div key={idx} className="flex items-center justify-between bg-gray-50 rounded-lg p-3">
+                <div key={idx} className="flex items-center justify-between bg-gray-50 rounded-lg p-3 dark:bg-gray-900">
                   <div>
                     <p className="font-medium">{ch.name}</p>
-                    <p className="text-xs text-gray-500">{ch.link}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{ch.link}</p>
                   </div>
                   <button
                     onClick={() => handleDeleteChannel(idx)}
-                    className="text-red-500 hover:text-red-700 px-3 py-1 rounded"
+                    className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 px-3 py-1 rounded"
                   >
                     🗑️
                   </button>
@@ -218,25 +218,25 @@ function Settings() {
           )}
 
           {channels.length === 0 && (
-            <p className="text-gray-400 text-sm mb-4">Hali kanal qo'shilmagan</p>
+            <p className="text-gray-400 text-sm mb-4 dark:text-gray-500">Hali kanal qo'shilmagan</p>
           )}
 
           {/* Add Channel Form */}
-          <div className="border-t pt-4">
+          <div className="border-t pt-4 dark:border-gray-700">
             <div className="flex gap-2">
               <input
                 type="text"
                 value={newChannel.name}
                 onChange={(e) => setNewChannel({ ...newChannel, name: e.target.value })}
                 placeholder="Kanal nomi"
-                className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500"
+                className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-200"
               />
               <input
                 type="text"
                 value={newChannel.link}
                 onChange={(e) => setNewChannel({ ...newChannel, link: e.target.value })}
                 placeholder="https://t.me/..."
-                className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500"
+                className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-200"
               />
               <button
                 onClick={handleAddChannel}
@@ -247,15 +247,15 @@ function Settings() {
               </button>
             </div>
             {channels.length >= 5 && (
-              <p className="text-xs text-orange-500 mt-2">Maksimal 5 ta kanal qo'shilgan</p>
+              <p className="text-xs text-orange-500 dark:text-orange-400 mt-2">Maksimal 5 ta kanal qo'shilgan</p>
             )}
           </div>
         </div>
 
         {/* Help */}
-        <div className="bg-yellow-50 rounded-xl p-4">
-          <h3 className="font-semibold text-yellow-800 mb-2">ℹ️ Yordam</h3>
-          <div className="text-sm text-yellow-700 space-y-2">
+        <div className="bg-yellow-50 rounded-xl p-4 dark:bg-yellow-900/30">
+          <h3 className="font-semibold text-yellow-800 dark:text-yellow-300 mb-2">ℹ️ Yordam</h3>
+          <div className="text-sm text-yellow-700 dark:text-yellow-200 space-y-2">
             <p><strong>Majburiy obuna kanallari:</strong> Foydalanuvchi /start bosganida avval kanallarga obuna bo'lishi kerak. Kanal linkini @dan oling.</p>
             <p><strong>Bot Token:</strong> @BotFather dan /newproduct buyrug'i orqali olingan token.</p>
             <p><strong>Admin Chat ID:</strong> Botga /start yuborganingizdan so'ng, @userinfobot dan ID ni olishingiz mumkin.</p>

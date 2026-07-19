@@ -123,6 +123,7 @@ function OrderForm({ user }) {
   const [referralBalance, setReferralBalance] = useState(0)
   const [referralDiscountAmount, setReferralDiscountAmount] = useState(0)
   const [useReferral, setUseReferral] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
 
   const [form, setForm] = useState({
     full_name: '',
@@ -655,15 +656,53 @@ function OrderForm({ user }) {
           </div>
 
           <button
-            onClick={handleSubmit}
+            onClick={() => setShowConfirm(true)}
             disabled={!form.topic.trim() || submitting}
             className="w-full bg-primary-600 text-white rounded-2xl py-3.5 font-medium disabled:bg-black/10 disabled:text-tg-hint active:bg-primary-700 transition-colors"
           >
-            {submitting ? 'Yuborilmoqda...' : '✅ Buyurtma berish'}
+            ✅ Buyurtma berish
           </button>
         </div>
       )}
       </div>
+
+      {showConfirm && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40" onClick={() => !submitting && setShowConfirm(false)}>
+          <div className="bg-white rounded-t-3xl sm:rounded-2xl w-full max-w-md p-6 shadow-xl" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-bold mb-4 text-center">Tasdiqlaysizmi?</h3>
+            <div className="space-y-2 mb-4 text-sm">
+              <div className="flex justify-between"><span className="text-tg-hint">Xizmat:</span><span className="font-medium">{service?.name}</span></div>
+              <div className="flex justify-between"><span className="text-tg-hint">F.I.Sh:</span><span className="font-medium">{form.full_name}</span></div>
+              <div className="flex justify-between"><span className="text-tg-hint">Manzil:</span><span className="font-medium">{form.region}, {form.district}</span></div>
+              <div className="flex justify-between"><span className="text-tg-hint">Maktab:</span><span className="font-medium">{form.school}</span></div>
+              <div className="flex justify-between"><span className="text-tg-hint">Fan:</span><span className="font-medium">{form.subject}</span></div>
+              <div className="flex justify-between"><span className="text-tg-hint">Sinf:</span><span className="font-medium">{form.grade}</span></div>
+              {form.topic && <div className="flex justify-between"><span className="text-tg-hint">Mavzu:</span><span className="font-medium text-right max-w-[60%]">{form.topic}</span></div>}
+              <div className="border-t border-black/10 pt-2 mt-2 flex justify-between items-center">
+                <span className="font-bold">Jami to'lov:</span>
+                <span className="font-bold text-primary-600 text-lg">{totalPrice.toLocaleString()} so'm</span>
+              </div>
+            </div>
+            <p className="text-xs text-tg-hint text-center mb-4">To'lov uchun 5 daqiqa vaqt bor. Chekni yuklang.</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowConfirm(false)}
+                disabled={submitting}
+                className="flex-1 py-3 rounded-2xl font-medium bg-tg-secondary text-tg-text active:bg-black/5 transition-colors"
+              >
+                Bekor qilish
+              </button>
+              <button
+                onClick={() => { setShowConfirm(false); handleSubmit(); }}
+                disabled={submitting}
+                className="flex-1 py-3 rounded-2xl font-medium bg-primary-600 text-white active:bg-primary-700 transition-colors disabled:bg-black/10 disabled:text-tg-hint"
+              >
+                {submitting ? 'Yuborilmoqda...' : '✅ Tasdiqlash'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

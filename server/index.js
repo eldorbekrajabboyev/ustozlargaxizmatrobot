@@ -4,7 +4,7 @@ const cors = require('cors');
 const path = require('path');
 const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
-const { initDatabase, queryAll, queryOne, run } = require('./database');
+const { initDatabase, queryAll, queryOne, run, withTransaction } = require('./database');
 const adminAuth = require('./middleware/adminAuth');
 
 const Sentry = require('@sentry/node');
@@ -284,25 +284,43 @@ app.post('/api/orders', async (req, res) => {
       const discountAmount = setting ? parseInt(setting.value) || 0 : 0;
       if (discountAmount > 0 && (user.referral_balance || 0) >= discountAmount) {
         validReferralDiscount = discountAmount;
-        await run('UPDATE users SET referral_balance = referral_balance - ? WHERE id = ?', [discountAmount, user_id]);
       }
     }
 
     const orderCode = `MK-${Date.now().toString(36).toUpperCase()}${uuidv4().substring(0, 4).toUpperCase()}`;
     const totalPrice = basePrice - validPromoDiscount - validReferralDiscount;
-    const result = await run(`
-      INSERT INTO orders (order_code, user_id, service_id, full_name, address, school, subject, grade, topic, total_price, school_type, language_surcharge, geographic_level, geographic_surcharge, promo_code_id, promo_discount, referral_discount, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `, [orderCode, user_id, service_id, full_name, address, school, subject, grade, topic, totalPrice, school_type || null, parseInt(language_surcharge) || 0, geographic_level || 'maktab', parseInt(geographic_surcharge) || 0, validPromoId, validPromoDiscount, validReferralDiscount, nowUZ()]);
 
-    // Record promo usage as reserved
-    if (validPromoId) {
-      await run('INSERT INTO promo_code_usage (promo_code_id, user_id, order_id, status, used_at) VALUES (?, ?, ?, ?, ?)',
-        [validPromoId, user_id, result.lastInsertRowid, 'reserved', nowUZ()]);
-    }
-    const order = await queryOne('SELECT * FROM orders WHERE id = ?', [result.lastInsertRowid]);
+    // P5: Wrap order + promo usage + referral deduction in a transaction
+    const orderId = await withTransaction(async () => {
+      const result = await run(`
+        INSERT INTO orders (order_code, user_id, service_id, full_name, address, school, subject, grade, topic, total_price, school_type, language_surcharge, geographic_level, geographic_surcharge, promo_code_id, promo_discount, referral_discount, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, [orderCode, user_id, service_id, full_name, address, school, subject, grade, topic, totalPrice, school_type || null, parseInt(language_surcharge) || 0, geographic_level || 'maktab', parseInt(geographic_surcharge) || 0, validPromoId, validPromoDiscount, validReferralDiscount, nowUZ()]);
+
+      const oid = result.lastInsertRowid;
+
+      // Record promo usage as reserved (C1: unique index prevents race condition)
+      if (validPromoId) {
+        await run('INSERT INTO promo_code_usage (promo_code_id, user_id, order_id, status, used_at) VALUES (?, ?, ?, ?, ?)',
+          [validPromoId, user_id, oid, 'reserved', nowUZ()]);
+      }
+
+      // Deduct referral balance
+      if (validReferralDiscount > 0) {
+        await run('UPDATE users SET referral_balance = referral_balance - ? WHERE id = ?', [validReferralDiscount, user_id]);
+      }
+
+      return oid;
+    });
+
+    const order = await queryOne('SELECT * FROM orders WHERE id = ?', [orderId]);
     res.json(fixOrderDates(order));
-  } catch (err) { res.status(500).json({ error: err.message }); }
+  } catch (err) {
+    if (err.message && err.message.includes('UNIQUE constraint')) {
+      return res.status(409).json({ error: 'Promo-kod allaqachon ishlatilgan' });
+    }
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.put('/api/orders/:id', adminAuth, async (req, res) => {

@@ -22,33 +22,33 @@ function Users() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-6">Foydalanuvchilar ({users.length})</h1>
+      <h1 className="text-2xl font-bold mb-6 dark:text-white">Foydalanuvchilar ({users.length})</h1>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700/50 overflow-hidden">
         <table className="w-full">
-          <thead className="bg-gray-50 border-b border-gray-100">
+          <thead className="bg-gray-50 dark:bg-gray-900 border-b border-gray-100 dark:border-gray-700/50">
             <tr>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">ID</th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Telegram ID</th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Username</th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Ism</th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Referral</th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Balans</th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Sana</th>
+              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600 dark:text-gray-300">ID</th>
+              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600 dark:text-gray-300">Telegram ID</th>
+              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600 dark:text-gray-300">Username</th>
+              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600 dark:text-gray-300">Ism</th>
+              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600 dark:text-gray-300">Referral</th>
+              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600 dark:text-gray-300">Balans</th>
+              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600 dark:text-gray-300">Sana</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-gray-100 dark:divide-gray-700/50">
             {users.map(user => (
-              <tr key={user.id} className="hover:bg-gray-50 transition-colors">
-                <td className="px-4 py-3 text-sm">{user.id}</td>
-                <td className="px-4 py-3 text-sm font-mono">{user.telegram_id}</td>
-                <td className="px-4 py-3 text-sm">@{user.username || 'N/A'}</td>
+              <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                <td className="px-4 py-3 text-sm dark:text-gray-200">{user.id}</td>
+                <td className="px-4 py-3 text-sm font-mono dark:text-gray-200">{user.telegram_id}</td>
+                <td className="px-4 py-3 text-sm dark:text-gray-200">@{user.username || 'N/A'}</td>
                 <td className="px-4 py-3">
-                  <p className="font-medium">{user.first_name} {user.last_name || ''}</p>
+                  <p className="font-medium dark:text-gray-200">{user.first_name} {user.last_name || ''}</p>
                 </td>
-                <td className="px-4 py-3 text-sm">{user.referred_count || 0}</td>
-                <td className="px-4 py-3 text-sm">{(user.referral_balance || 0).toLocaleString()} so'm</td>
-                <td className="px-4 py-3 text-sm text-gray-500">
+                <td className="px-4 py-3 text-sm dark:text-gray-200">{user.referred_count || 0}</td>
+                <td className="px-4 py-3 text-sm dark:text-gray-200">{(user.referral_balance || 0).toLocaleString()} so'm</td>
+                <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
                   {new Date(user.created_at).toLocaleDateString('uz-UZ')}
                 </td>
               </tr>

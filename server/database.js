@@ -170,11 +170,15 @@ async function initDatabase() {
       promo_code_id INTEGER NOT NULL,
       user_id INTEGER NOT NULL,
       order_id INTEGER,
+      status TEXT DEFAULT 'reserved',
       used_at DATETIME DEFAULT (datetime('now', '+5 hours')),
       FOREIGN KEY (promo_code_id) REFERENCES promo_codes(id),
       FOREIGN KEY (user_id) REFERENCES users(id)
     )
   `);
+
+  // Unique index: one user can only have one active usage per promo code (C1 race condition fix)
+  await db.execute(`CREATE UNIQUE INDEX IF NOT EXISTS idx_promo_usage_unique_user ON promo_code_usage(promo_code_id, user_id)`)
 
   console.log('📦 Database initialized (Turso)');
   return db;
@@ -204,10 +208,23 @@ async function run(sql, params = []) {
   };
 }
 
+async function withTransaction(fn) {
+  await db.execute("BEGIN");
+  try {
+    const result = await fn();
+    await db.execute("COMMIT");
+    return result;
+  } catch (err) {
+    await db.execute("ROLLBACK");
+    throw err;
+  }
+}
+
 module.exports = {
   initDatabase,
   queryAll,
   queryOne,
   run,
+  withTransaction,
   getDb: () => db,
 };

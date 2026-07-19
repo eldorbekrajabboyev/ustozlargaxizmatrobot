@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom'
 import Dashboard from './pages/Dashboard'
 import Orders from './pages/Orders'
@@ -22,16 +23,16 @@ const navItems = [
   { path: '/settings', label: 'Sozlamalar', icon: '⚙️' },
 ]
 
-function Sidebar() {
+function Sidebar({ dark, setDark }) {
   const location = useLocation()
 
   return (
-    <div className="w-64 bg-gray-900 text-white min-h-screen fixed left-0 top-0">
+    <div className="w-64 bg-gray-900 text-white min-h-screen fixed left-0 top-0 flex flex-col">
       <div className="p-4 border-b border-gray-700">
         <h1 className="text-xl font-bold">📚 Metodikish</h1>
         <p className="text-xs text-gray-400 mt-1">Admin Panel</p>
       </div>
-      <nav className="p-2">
+      <nav className="p-2 flex-1">
         {navItems.map(item => (
           <Link
             key={item.path}
@@ -47,29 +48,47 @@ function Sidebar() {
           </Link>
         ))}
       </nav>
+      <div className="p-3 border-t border-gray-700">
+        <button
+          onClick={() => setDark(d => { const next = !d; localStorage.setItem('admin-theme', next ? 'dark' : 'light'); return next })}
+          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors text-sm"
+        >
+          {dark ? '☀️ Yorug\' rejim' : '🌙 Qorong\'u rejim'}
+        </button>
+      </div>
     </div>
   )
 }
 
 function App() {
+  const [dark, setDark] = useState(() => {
+    return localStorage.getItem('admin-theme') === 'dark' || (!localStorage.getItem('admin-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)
+  })
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', dark)
+  }, [dark])
+
   return (
     <Router basename="/admin">
-      <div className="flex">
-        <Sidebar />
-        <div className="flex-1 ml-64">
-          <div className="p-6">
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/orders" element={<Orders />} />
-              <Route path="/orders/:id" element={<OrderDetail />} />
-              <Route path="/reviews" element={<Reviews />} />
-              <Route path="/users" element={<Users />} />
-              <Route path="/services" element={<Services />} />
-              <Route path="/cards" element={<Cards />} />
-              <Route path="/broadcast" element={<Broadcast />} />
-              <Route path="/promo-codes" element={<PromoCodes />} />
-              <Route path="/settings" element={<Settings />} />
-            </Routes>
+      <div className={`flex min-h-screen ${dark ? 'dark' : ''}`}>
+        <div className="dark:bg-gray-950 bg-gray-50 min-h-screen flex-1">
+          <Sidebar dark={dark} setDark={setDark} />
+          <div className="flex-1 ml-64">
+            <div className="p-6">
+              <Routes>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/orders" element={<Orders />} />
+                <Route path="/orders/:id" element={<OrderDetail />} />
+                <Route path="/reviews" element={<Reviews />} />
+                <Route path="/users" element={<Users />} />
+                <Route path="/services" element={<Services />} />
+                <Route path="/cards" element={<Cards />} />
+                <Route path="/broadcast" element={<Broadcast />} />
+                <Route path="/promo-codes" element={<PromoCodes />} />
+                <Route path="/settings" element={<Settings />} />
+              </Routes>
+            </div>
           </div>
         </div>
       </div>
