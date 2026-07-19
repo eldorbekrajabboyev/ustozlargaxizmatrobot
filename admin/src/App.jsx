@@ -10,7 +10,6 @@ import Settings from './pages/Settings'
 import Broadcast from './pages/Broadcast'
 import Reviews from './pages/Reviews'
 import PromoCodes from './pages/PromoCodes'
-import AdminLogin from './pages/AdminLogin'
 
 const navItems = [
   { path: '/', label: 'Dashboard', icon: '📊' },
@@ -68,7 +67,7 @@ function Sidebar({ dark, setDark, open, setOpen }) {
   )
 }
 
-function AdminPanel({ onLogout }) {
+function App() {
   const [dark, setDark] = useState(() => {
     return localStorage.getItem('admin-theme') === 'dark' || (!localStorage.getItem('admin-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)
   })
@@ -79,62 +78,32 @@ function AdminPanel({ onLogout }) {
   }, [dark])
 
   return (
-    <div className={`min-h-screen ${dark ? 'dark' : ''}`}>
-      <div className="dark:bg-gray-950 dark:text-gray-200 bg-gray-50 min-h-screen">
-        <div className="md:hidden fixed top-0 left-0 right-0 z-30 bg-gray-900 text-white px-4 py-3 flex items-center gap-3 shadow">
-          <button onClick={() => setSidebarOpen(true)} className="text-2xl">&#9776;</button>
-          <span className="font-bold">📚 Metodikish</span>
-        </div>
-        <Sidebar dark={dark} setDark={setDark} open={sidebarOpen} setOpen={setSidebarOpen} />
-        <div className="md:ml-64 pt-14 md:pt-0">
-          <div className="p-4 md:p-6">
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/orders" element={<Orders />} />
-              <Route path="/orders/:id" element={<OrderDetail />} />
-              <Route path="/reviews" element={<Reviews />} />
-              <Route path="/users" element={<Users />} />
-              <Route path="/services" element={<Services />} />
-              <Route path="/cards" element={<Cards />} />
-              <Route path="/broadcast" element={<Broadcast />} />
-              <Route path="/promo-codes" element={<PromoCodes />} />
-              <Route path="/settings" element={<Settings />} />
-            </Routes>
+    <Router basename="/admin">
+      <div className={`min-h-screen ${dark ? 'dark' : ''}`}>
+        <div className="dark:bg-gray-950 dark:text-gray-200 bg-gray-50 min-h-screen">
+          <div className="md:hidden fixed top-0 left-0 right-0 z-30 bg-gray-900 text-white px-4 py-3 flex items-center gap-3 shadow">
+            <button onClick={() => setSidebarOpen(true)} className="text-2xl">&#9776;</button>
+            <span className="font-bold">📚 Metodikish</span>
+          </div>
+          <Sidebar dark={dark} setDark={setDark} open={sidebarOpen} setOpen={setSidebarOpen} />
+          <div className="md:ml-64 pt-14 md:pt-0">
+            <div className="p-4 md:p-6">
+              <Routes>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/orders" element={<Orders />} />
+                <Route path="/orders/:id" element={<OrderDetail />} />
+                <Route path="/reviews" element={<Reviews />} />
+                <Route path="/users" element={<Users />} />
+                <Route path="/services" element={<Services />} />
+                <Route path="/cards" element={<Cards />} />
+                <Route path="/broadcast" element={<Broadcast />} />
+                <Route path="/promo-codes" element={<PromoCodes />} />
+                <Route path="/settings" element={<Settings />} />
+              </Routes>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  )
-}
-
-function App() {
-  const [loggedIn, setLoggedIn] = useState(() => !!localStorage.getItem('admin_api_key'))
-  const [checking, setChecking] = useState(true)
-
-  useEffect(() => {
-    const key = localStorage.getItem('admin_api_key')
-    if (!key) { setChecking(false); return }
-    fetch('/api/settings', { headers: { 'X-Admin-Key': key } })
-      .then(r => { setLoggedIn(r.ok); if (!r.ok) localStorage.removeItem('admin_api_key') })
-      .catch(() => { setLoggedIn(false); localStorage.removeItem('admin_api_key') })
-      .finally(() => setChecking(false))
-  }, [])
-
-  if (checking) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
-        <div className="text-gray-500 dark:text-gray-400">Yuklanmoqda...</div>
-      </div>
-    )
-  }
-
-  return (
-    <Router basename="/admin">
-      {loggedIn ? (
-        <AdminPanel onLogout={() => { localStorage.removeItem('admin_api_key'); setLoggedIn(false) }} />
-      ) : (
-        <AdminLogin onLogin={() => setLoggedIn(true)} />
-      )}
     </Router>
   )
 }
