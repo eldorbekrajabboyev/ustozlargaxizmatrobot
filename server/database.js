@@ -209,13 +209,26 @@ async function run(sql, params = []) {
 }
 
 async function withTransaction(fn) {
-  await db.execute("BEGIN");
+  const tx = await db.transaction();
   try {
-    const result = await fn();
-    await db.execute("COMMIT");
+    const txRun = async (sql, params = []) => {
+      const sanitized = sanitizeParams(params);
+      const result = await tx.execute({ sql, args: sanitized });
+      return {
+        lastInsertRowid: Number(result.lastInsertRowid) || 0,
+        changes: result.rowsAffected
+      };
+    };
+    const txQueryOne = async (sql, params = []) => {
+      const sanitized = sanitizeParams(params);
+      const result = await tx.execute({ sql, args: sanitized });
+      return result.rows.length > 0 ? result.rows[0] : undefined;
+    };
+    const result = await fn({ run: txRun, queryOne: txQueryOne });
+    await tx.commit();
     return result;
   } catch (err) {
-    await db.execute("ROLLBACK");
+    try { await tx.rollback(); } catch (_) {}
     throw err;
   }
 }

@@ -291,8 +291,8 @@ app.post('/api/orders', async (req, res) => {
     const totalPrice = basePrice - validPromoDiscount - validReferralDiscount;
 
     // P5: Wrap order + promo usage + referral deduction in a transaction
-    const orderId = await withTransaction(async () => {
-      const result = await run(`
+    const orderId = await withTransaction(async ({ run: txRun, queryOne: txQueryOne }) => {
+      const result = await txRun(`
         INSERT INTO orders (order_code, user_id, service_id, full_name, address, school, subject, grade, topic, total_price, school_type, language_surcharge, geographic_level, geographic_surcharge, promo_code_id, promo_discount, referral_discount, created_at)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [orderCode, user_id, service_id, full_name, address, school, subject, grade, topic, totalPrice, school_type || null, parseInt(language_surcharge) || 0, geographic_level || 'maktab', parseInt(geographic_surcharge) || 0, validPromoId, validPromoDiscount, validReferralDiscount, nowUZ()]);
@@ -301,13 +301,13 @@ app.post('/api/orders', async (req, res) => {
 
       // Record promo usage as reserved (C1: unique index prevents race condition)
       if (validPromoId) {
-        await run('INSERT INTO promo_code_usage (promo_code_id, user_id, order_id, status, used_at) VALUES (?, ?, ?, ?, ?)',
+        await txRun('INSERT INTO promo_code_usage (promo_code_id, user_id, order_id, status, used_at) VALUES (?, ?, ?, ?, ?)',
           [validPromoId, user_id, oid, 'reserved', nowUZ()]);
       }
 
       // Deduct referral balance
       if (validReferralDiscount > 0) {
-        await run('UPDATE users SET referral_balance = referral_balance - ? WHERE id = ?', [validReferralDiscount, user_id]);
+        await txRun('UPDATE users SET referral_balance = referral_balance - ? WHERE id = ?', [validReferralDiscount, user_id]);
       }
 
       return oid;
@@ -319,6 +319,7 @@ app.post('/api/orders', async (req, res) => {
     if (err.message && err.message.includes('UNIQUE constraint')) {
       return res.status(409).json({ error: 'Promo-kod allaqachon ishlatilgan' });
     }
+    console.error('[POST /api/orders] Error:', err);
     res.status(500).json({ error: err.message });
   }
 });
