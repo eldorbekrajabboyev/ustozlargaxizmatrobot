@@ -65,10 +65,28 @@ function AppContent() {
   )
 }
 
+function TelegramGate({ children }) {
+  const isTelegram = !!window.Telegram?.WebApp?.initData
+  if (!isTelegram) {
+    return (
+      <div className="min-h-screen bg-tg-bg flex items-center justify-center p-6">
+        <div className="bg-tg-secondary rounded-2xl p-8 max-w-sm w-full text-center border border-tg-text/5">
+          <p className="text-5xl mb-4">🔒</p>
+          <h1 className="text-xl font-bold mb-2">Telegram MiniApp</h1>
+          <p className="text-tg-hint text-sm">Bu ilova faqat Telegram orqali ochiladi. Iltimos, Telegram bot orqali kirib, xizmatni tanlang.</p>
+        </div>
+      </div>
+    )
+  }
+  return children
+}
+
 function App() {
   return (
     <Router>
-      <AppContent />
+      <TelegramGate>
+        <AppContent />
+      </TelegramGate>
     </Router>
   )
 }
