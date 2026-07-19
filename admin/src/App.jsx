@@ -109,6 +109,24 @@ function AdminPanel({ onLogout }) {
 
 function App() {
   const [loggedIn, setLoggedIn] = useState(() => !!localStorage.getItem('admin_api_key'))
+  const [checking, setChecking] = useState(true)
+
+  useEffect(() => {
+    const key = localStorage.getItem('admin_api_key')
+    if (!key) { setChecking(false); return }
+    fetch('/api/settings', { headers: { 'X-Admin-Key': key } })
+      .then(r => { setLoggedIn(r.ok); if (!r.ok) localStorage.removeItem('admin_api_key') })
+      .catch(() => { setLoggedIn(false); localStorage.removeItem('admin_api_key') })
+      .finally(() => setChecking(false))
+  }, [])
+
+  if (checking) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
+        <div className="text-gray-500 dark:text-gray-400">Yuklanmoqda...</div>
+      </div>
+    )
+  }
 
   return (
     <Router basename="/admin">
