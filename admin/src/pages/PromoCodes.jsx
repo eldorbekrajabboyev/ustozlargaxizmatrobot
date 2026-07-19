@@ -48,7 +48,7 @@ export default function PromoCodes() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Promo-kodlar</h1>
+        <h1 className="text-2xl font-bold dark:text-white">Promo-kodlar</h1>
         <button onClick={() => setShowForm(!showForm)} className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700">
           + Yangi promo-kod
         </button>
@@ -94,18 +94,18 @@ export default function PromoCodes() {
           <table className="w-full">
             <thead className="bg-gray-50 border-b dark:bg-gray-900">
               <tr>
-                <th className="text-left px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-400">Kod</th>
-                <th className="text-left px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-400">Chegirma</th>
-                <th className="text-left px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-400">Manba</th>
-                <th className="text-left px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-400">Ishlatilgan</th>
-                <th className="text-left px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-400">Holat</th>
-                <th className="text-left px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-400">Amallar</th>
+                <th className="text-left px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-300">Kod</th>
+                <th className="text-left px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-300">Chegirma</th>
+                <th className="text-left px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-300">Manba</th>
+                <th className="text-left px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-300">Ishlatilgan</th>
+                <th className="text-left px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-300">Holat</th>
+                <th className="text-left px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-300">Amallar</th>
               </tr>
             </thead>
             <tbody className="divide-y dark:divide-gray-700/50">
               {codes.map(c => (
                 <tr key={c.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                  <td className="px-4 py-3 font-mono font-bold">{c.code}</td>
+                  <td className="px-4 py-3 font-mono font-bold dark:text-white">{c.code}</td>
                   <td className="px-4 py-3">{c.discount_percent}%</td>
                   <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{c.source_name || '—'}</td>
                   <td className="px-4 py-3">

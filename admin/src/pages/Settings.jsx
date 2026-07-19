@@ -75,12 +75,12 @@ function Settings() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-6">Sozlamalar</h1>
+      <h1 className="text-2xl font-bold mb-6 dark:text-white">Sozlamalar</h1>
 
       <div className="max-w-2xl space-y-6">
         {/* Bot Settings */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-6 dark:bg-gray-800 dark:border-gray-700/50">
-          <h2 className="text-lg font-semibold">🤖 Bot sozlamalari</h2>
+          <h2 className="text-lg font-semibold dark:text-white">🤖 Bot sozlamalari</h2>
           
           {/* Bot Token */}
           <div>
@@ -163,7 +163,7 @@ function Settings() {
 
         {/* Referral Settings */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-6 dark:bg-gray-800 dark:border-gray-700/50">
-          <h2 className="text-lg font-semibold">👥 Referal tizimi sozlamalari</h2>
+          <h2 className="text-lg font-semibold dark:text-white">👥 Referal tizimi sozlamalari</h2>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
@@ -192,7 +192,7 @@ function Settings() {
 
         {/* Channels Management */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 dark:bg-gray-800 dark:border-gray-700/50">
-          <h2 className="text-lg font-semibold mb-4">📢 Majburiy obuna kanallari</h2>
+          <h2 className="text-lg font-semibold mb-4 dark:text-white">📢 Majburiy obuna kanallari</h2>
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
             Botni ishlatishdan oldin foydalanuvchi ushbu kanallarga obuna bo'lishi kerak. (Maksimal 5 ta)
           </p>
@@ -203,7 +203,7 @@ function Settings() {
               {channels.map((ch, idx) => (
                 <div key={idx} className="flex items-center justify-between bg-gray-50 rounded-lg p-3 dark:bg-gray-900">
                   <div>
-                    <p className="font-medium">{ch.name}</p>
+                    <p className="font-medium dark:text-white">{ch.name}</p>
                     <p className="text-xs text-gray-500 dark:text-gray-400">{ch.link}</p>
                   </div>
                   <button

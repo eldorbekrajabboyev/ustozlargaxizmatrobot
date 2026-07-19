@@ -74,7 +74,7 @@ function Dashboard() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
+      <h1 className="text-2xl font-bold mb-6 dark:text-white">Dashboard</h1>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-4 gap-4 mb-8">
@@ -86,7 +86,7 @@ function Dashboard() {
               </div>
               <div>
                 <p className="text-sm text-gray-500 dark:text-gray-400">{card.label}</p>
-                <p className="text-xl font-bold">{card.value}</p>
+                <p className="text-xl font-bold dark:text-white">{card.value}</p>
               </div>
             </div>
           </div>
@@ -96,7 +96,7 @@ function Dashboard() {
       {/* Orders Chart */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-6 dark:bg-gray-800 dark:border-gray-700/50">
         <div className="p-4 border-b border-gray-100 flex items-center justify-between dark:border-gray-700/50">
-          <h2 className="font-semibold">{chartLabel} buyurtmalar</h2>
+          <h2 className="font-semibold dark:text-white">{chartLabel} buyurtmalar</h2>
           <div className="flex gap-1 bg-gray-100 rounded-lg p-0.5 dark:bg-gray-700/50">
             <button onClick={() => setChartMode('daily')}
               className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${chartMode === 'daily' ? 'bg-white text-primary-600 shadow-sm dark:bg-gray-800' : 'text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200'}`}>
@@ -118,7 +118,7 @@ function Dashboard() {
         {/* Recent Orders */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 dark:bg-gray-800 dark:border-gray-700/50">
           <div className="p-4 border-b border-gray-100 flex items-center justify-between dark:border-gray-700/50">
-            <h2 className="font-semibold">So'nggi buyurtmalar</h2>
+            <h2 className="font-semibold dark:text-white">So'nggi buyurtmalar</h2>
             <Link to="/orders" className="text-primary-500 text-sm hover:underline">Barchasini ko'rish →</Link>
           </div>
           <div className="divide-y divide-gray-100 dark:divide-gray-700/50">
@@ -130,14 +130,14 @@ function Dashboard() {
               >
                 <div>
                   <p className="font-mono text-sm text-gray-500 dark:text-gray-400">{order.order_code}</p>
-                  <p className="font-medium">{order.full_name}</p>
+                  <p className="font-medium dark:text-white">{order.full_name}</p>
                   <p className="text-sm text-gray-500 dark:text-gray-400">{order.service_name}</p>
                 </div>
                 <div className="text-right">
                   <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${statusColors[order.status]}`}>
                     {statusLabels[order.status]}
                   </span>
-                  <p className="text-sm font-semibold mt-1">{order.total_price.toLocaleString()} so'm</p>
+                  <p className="text-sm font-semibold mt-1 dark:text-white">{order.total_price.toLocaleString()} so'm</p>
                 </div>
               </Link>
             ))}
@@ -147,7 +147,7 @@ function Dashboard() {
         {/* Subject Stats */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 dark:bg-gray-800 dark:border-gray-700/50">
           <div className="p-4 border-b border-gray-100 dark:border-gray-700/50">
-            <h2 className="font-semibold">Fan bo'yicha statistika</h2>
+            <h2 className="font-semibold dark:text-white">Fan bo'yicha statistika</h2>
           </div>
           <div className="p-4">
             {stats.subjectStats.length > 0 ? (

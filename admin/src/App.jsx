@@ -72,7 +72,7 @@ function App() {
   return (
     <Router basename="/admin">
       <div className={`flex min-h-screen ${dark ? 'dark' : ''}`}>
-        <div className="dark:bg-gray-950 bg-gray-50 min-h-screen flex-1">
+        <div className="dark:bg-gray-950 dark:text-gray-200 bg-gray-50 min-h-screen flex-1">
           <Sidebar dark={dark} setDark={setDark} />
           <div className="flex-1 ml-64">
             <div className="p-6">

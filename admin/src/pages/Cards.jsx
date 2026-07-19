@@ -76,7 +76,7 @@ function Cards() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">To'lov kartalari</h1>
+        <h1 className="text-2xl font-bold dark:text-white">To'lov kartalari</h1>
         <button
           onClick={() => { setShowForm(true); setEditing(null); setForm({ card_number: '', card_holder: '', bank_name: '' }) }}
           className="bg-primary-500 text-white px-4 py-2 rounded-lg hover:bg-primary-600 transition-colors"
@@ -89,7 +89,7 @@ function Cards() {
       {showForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md">
-            <h2 className="text-xl font-bold mb-4">{editing ? 'Tahrirlash' : 'Yangi karta'}</h2>
+            <h2 className="text-xl font-bold mb-4 dark:text-white">{editing ? 'Tahrirlash' : 'Yangi karta'}</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Karta raqami</label>
@@ -149,7 +149,7 @@ function Cards() {
           <div key={card.id} className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700/50 p-4">
             <div className="flex items-start justify-between mb-3">
               <div>
-                <p className="font-mono text-lg font-bold">{card.card_number}</p>
+                <p className="font-mono text-lg font-bold dark:text-white">{card.card_number}</p>
                 <p className="text-gray-600 dark:text-gray-300 mt-1">{card.card_holder}</p>
                 {card.bank_name && <p className="text-sm text-gray-500 dark:text-gray-400">{card.bank_name}</p>}
               </div>

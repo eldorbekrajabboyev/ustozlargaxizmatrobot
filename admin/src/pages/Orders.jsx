@@ -81,7 +81,7 @@ function Orders() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Buyurtmalar ({total})</h1>
+        <h1 className="text-2xl font-bold dark:text-white">Buyurtmalar ({total})</h1>
       </div>
 
       {/* Search */}
@@ -178,13 +178,13 @@ function Orders() {
                     </Link>
                   </td>
                   <td className="px-4 py-3">
-                    <p className="font-medium">{order.full_name}</p>
+                    <p className="font-medium dark:text-white">{order.full_name}</p>
                     <p className="text-sm text-gray-500 dark:text-gray-400">@{order.username || 'N/A'}</p>
                   </td>
                   <td className="px-4 py-3 text-sm">{order.service_name}</td>
                   <td className="px-4 py-3 text-sm">{order.subject}</td>
                   <td className="px-4 py-3 text-sm">{order.grade}</td>
-                  <td className="px-4 py-3 text-sm font-semibold">{order.total_price.toLocaleString()} so'm</td>
+                  <td className="px-4 py-3 text-sm font-semibold dark:text-white">{order.total_price.toLocaleString()} so'm</td>
                   <td className="px-4 py-3">
                     <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${statusColors[order.status]}`}>
                       {statusLabels[order.status]}

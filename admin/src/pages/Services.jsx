@@ -76,7 +76,7 @@ function Services() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Xizmatlar</h1>
+        <h1 className="text-2xl font-bold dark:text-white">Xizmatlar</h1>
         <button
           onClick={() => { setShowForm(true); setEditing(null); setForm({ name: '', description: '', price: '' }) }}
           className="bg-primary-500 text-white px-4 py-2 rounded-lg hover:bg-primary-600 transition-colors"
@@ -89,7 +89,7 @@ function Services() {
       {showForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md">
-            <h2 className="text-xl font-bold mb-4">{editing ? 'Tahrirlash' : 'Yangi xizmat'}</h2>
+            <h2 className="text-xl font-bold mb-4 dark:text-white">{editing ? 'Tahrirlash' : 'Yangi xizmat'}</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Nomi</label>
@@ -146,11 +146,11 @@ function Services() {
           <div key={service.id} className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700/50 p-4">
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="font-semibold text-lg">{service.name}</h3>
+                <h3 className="font-semibold text-lg dark:text-white">{service.name}</h3>
                 {service.description && (
                   <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">{service.description}</p>
                 )}
-                <p className="text-2xl font-bold text-primary-600 mt-2">
+                <p className="text-2xl font-bold text-primary-600 dark:text-primary-400 mt-2">
                   {service.price.toLocaleString()} so'm
                 </p>
               </div>
