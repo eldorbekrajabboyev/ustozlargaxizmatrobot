@@ -106,7 +106,6 @@ function ReviewModal({ order, user, onClose, onSuccess }) {
     try {
       await axios.post('/api/reviews', {
         order_id: order.id,
-        telegram_id: user?.id,
         stars,
         text: text.trim(),
         author_name: user ? `${user.first_name || ''}`.trim() || 'Foydalanuvchi' : 'Foydalanuvchi',

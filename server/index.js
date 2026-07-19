@@ -6,6 +6,8 @@ const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
 const { initDatabase, queryAll, queryOne, run, withTransaction } = require('./database');
 const adminAuth = require('./middleware/adminAuth');
+const telegramAuth = require('./middleware/telegramAuth');
+const { validateTelegramInitData } = require('./middleware/telegramAuth');
 
 const Sentry = require('@sentry/node');
 Sentry.init({ dsn: process.env.SENTRY_DSN, tracesSampleRate: 0.1 });
@@ -115,9 +117,10 @@ app.get('/api/users/:telegram_id', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.post('/api/users', async (req, res) => {
+app.post('/api/users', telegramAuth, async (req, res) => {
   try {
-    const { telegram_id, username, first_name, last_name } = req.body;
+    const { username, first_name, last_name } = req.body;
+    const telegram_id = req.telegramUserId;
     const existing = await queryOne('SELECT * FROM users WHERE telegram_id = ?', [telegram_id]);
     if (existing) {
       await run('UPDATE users SET username = ?, first_name = ?, last_name = ? WHERE telegram_id = ?',
@@ -234,6 +237,13 @@ app.get('/api/orders', adminAuth, async (req, res) => {
 
 app.get('/api/orders/:id', async (req, res) => {
   try {
+    const isAdmin = !!req.headers['x-admin-key'];
+    const isTelegram = !!req.headers['x-telegram-init-data'];
+    if (isTelegram && !isAdmin) {
+      const result = validateTelegramInitData(req.headers['x-telegram-init-data'], process.env.BOT_TOKEN);
+      if (!result) return res.status(401).json({ error: 'Telegram auth xatosi' });
+      req.telegramUserId = result.telegram_id;
+    }
     const order = await queryOne(`
       SELECT o.*, u.username, u.first_name, u.last_name, u.telegram_id, u.phone,
              s.name as service_name, s.description as service_description
@@ -243,18 +253,23 @@ app.get('/api/orders/:id', async (req, res) => {
       WHERE o.id = ?
     `, [parseInt(req.params.id)]);
     if (!order) return res.status(404).json({ error: 'Buyurtma topilmadi' });
+    if (isTelegram && !isAdmin) {
+      const dbUser = await queryOne('SELECT id FROM users WHERE telegram_id = ?', [req.telegramUserId]);
+      if (!dbUser || dbUser.id !== order.user_id) return res.status(403).json({ error: 'Ruxsatsiz' });
+    }
     order.images = await queryAll('SELECT * FROM order_images WHERE order_id = ?', [order.id]);
     res.json(fixOrderDates(order));
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.post('/api/orders', async (req, res) => {
+app.post('/api/orders', telegramAuth, async (req, res) => {
   try {
-    const { user_id, service_id, full_name, address, school, subject, grade, topic, school_type, language_surcharge, geographic_level, geographic_surcharge, promo_code_id, promo_discount, use_referral_discount } = req.body;
+    const { service_id, full_name, address, school, subject, grade, topic, school_type, language_surcharge, geographic_level, geographic_surcharge, promo_code_id, promo_discount, use_referral_discount } = req.body;
     const service = await queryOne('SELECT * FROM services WHERE id = ?', [service_id]);
     if (!service) return res.status(400).json({ error: 'Xizmat topilmadi' });
-    const user = await queryOne('SELECT id, referral_balance FROM users WHERE id = ?', [user_id]);
-    if (!user) return res.status(400).json({ error: 'Foydalanuvchi topilmadi' });
+    const tgUser = await queryOne('SELECT id, referral_balance FROM users WHERE telegram_id = ?', [req.telegramUserId]);
+    if (!tgUser) return res.status(400).json({ error: 'Foydalanuvchi topilmadi' });
+    const user_id = tgUser.id;
 
     const basePrice = service.price + (parseInt(language_surcharge) || 0) + (parseInt(geographic_surcharge) || 0);
 
@@ -282,7 +297,7 @@ app.post('/api/orders', async (req, res) => {
     if (use_referral_discount) {
       const setting = await queryOne("SELECT value FROM settings WHERE key = 'referral_discount_amount'");
       const discountAmount = setting ? parseInt(setting.value) || 0 : 0;
-      if (discountAmount > 0 && (user.referral_balance || 0) >= discountAmount) {
+      if (discountAmount > 0 && (tgUser.referral_balance || 0) >= discountAmount) {
         validReferralDiscount = discountAmount;
       }
     }
@@ -347,16 +362,24 @@ app.put('/api/orders/:id', adminAuth, async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.post('/api/orders/:id/receipt', setUploadType('receipts'), upload.single('receipt'), async (req, res) => {
+app.post('/api/orders/:id/receipt', telegramAuth, setUploadType('receipts'), upload.single('receipt'), async (req, res) => {
   try {
+    const order = await queryOne('SELECT id, user_id FROM orders WHERE id = ?', [parseInt(req.params.id)]);
+    if (!order) return res.status(404).json({ error: 'Buyurtma topilmadi' });
+    const dbUser = await queryOne('SELECT id FROM users WHERE telegram_id = ?', [req.telegramUserId]);
+    if (!dbUser || dbUser.id !== order.user_id) return res.status(403).json({ error: 'Ruxsatsiz' });
     await run(`UPDATE orders SET payment_receipt = ?, status = ?, receipt_uploaded_at = '${nowUZ()}' WHERE id = ?`,
       [`/uploads/receipts/${req.file.filename}`, 'pending_confirmation', parseInt(req.params.id)]);
     res.json({ success: true, path: `/uploads/receipts/${req.file.filename}` });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.post('/api/orders/:id/images', setUploadType('images'), upload.array('images', 5), async (req, res) => {
+app.post('/api/orders/:id/images', telegramAuth, setUploadType('images'), upload.array('images', 5), async (req, res) => {
   try {
+    const order = await queryOne('SELECT id, user_id FROM orders WHERE id = ?', [parseInt(req.params.id)]);
+    if (!order) return res.status(404).json({ error: 'Buyurtma topilmadi' });
+    const dbUser = await queryOne('SELECT id FROM users WHERE telegram_id = ?', [req.telegramUserId]);
+    if (!dbUser || dbUser.id !== order.user_id) return res.status(403).json({ error: 'Ruxsatsiz' });
     const images = [];
     for (const file of req.files) {
       const result = await run('INSERT INTO order_images (order_id, image_path) VALUES (?, ?)',
@@ -441,11 +464,13 @@ app.put('/api/orders/:id/reject-payment', adminAuth, async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.post('/api/orders/:id/auto-cancel', async (req, res) => {
+app.post('/api/orders/:id/auto-cancel', telegramAuth, async (req, res) => {
   try {
     const orderId = parseInt(req.params.id);
     const order = await queryOne('SELECT status, promo_code_id, user_id, referral_discount FROM orders WHERE id = ?', [orderId]);
     if (!order) return res.status(404).json({ error: 'Buyurtma topilmadi' });
+    const dbUser = await queryOne('SELECT id FROM users WHERE telegram_id = ?', [req.telegramUserId]);
+    if (!dbUser || dbUser.id !== order.user_id) return res.status(403).json({ error: 'Ruxsatsiz' });
     if (order.status !== 'pending_payment') {
       return res.json({ success: true, alreadyHandled: true });
     }
@@ -610,9 +635,11 @@ app.delete('/api/settings/channels/:index', adminAuth, async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.get('/api/user/orders/:telegram_id', async (req, res) => {
+app.get('/api/user/orders/:telegram_id', telegramAuth, async (req, res) => {
   try {
-    const user = await queryOne('SELECT id FROM users WHERE telegram_id = ?', [parseInt(req.params.telegram_id)]);
+    const requestedId = parseInt(req.params.telegram_id);
+    if (requestedId !== req.telegramUserId) return res.status(403).json({ error: 'Ruxsatsiz' });
+    const user = await queryOne('SELECT id FROM users WHERE telegram_id = ?', [requestedId]);
     if (!user) return res.json([]);
     const orders = await queryAll(`
       SELECT o.*, s.name as service_name FROM orders o
@@ -630,9 +657,11 @@ app.get('/api/user/active-cards', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.get('/api/user/referral-info/:telegram_id', async (req, res) => {
+app.get('/api/user/referral-info/:telegram_id', telegramAuth, async (req, res) => {
   try {
-    const user = await queryOne('SELECT id, referral_balance, referred_by FROM users WHERE telegram_id = ?', [parseInt(req.params.telegram_id)]);
+    const requestedId = parseInt(req.params.telegram_id);
+    if (requestedId !== req.telegramUserId) return res.status(403).json({ error: 'Ruxsatsiz' });
+    const user = await queryOne('SELECT id, referral_balance, referred_by FROM users WHERE telegram_id = ?', [requestedId]);
     if (!user) return res.status(404).json({ error: 'Foydalanuvchi topilmadi' });
     const referredCount = await queryOne('SELECT COUNT(*) as cnt FROM users WHERE referred_by = ?', [user.id]);
     const setting = await queryOne("SELECT value FROM settings WHERE key = 'referral_discount_amount'");
@@ -680,10 +709,13 @@ app.get('/api/filters', adminAuth, async (req, res) => {
 // ═══════════════════════════════════════════════
 
 // MiniApp: validate promo code
-app.post('/api/promo-codes/validate', async (req, res) => {
+app.post('/api/promo-codes/validate', telegramAuth, async (req, res) => {
   try {
-    const { code, user_id } = req.body;
-    if (!code || !user_id) return res.status(400).json({ error: 'Kod va foydalanuvchi ID kiritilishi shart' });
+    const { code } = req.body;
+    const dbUser = await queryOne('SELECT id FROM users WHERE telegram_id = ?', [req.telegramUserId]);
+    if (!dbUser) return res.status(400).json({ error: 'Foydalanuvchi topilmadi' });
+    const user_id = dbUser.id;
+    if (!code) return res.status(400).json({ error: 'Kod kiritilishi shart' });
 
     const promo = await queryOne('SELECT * FROM promo_codes WHERE code = ? AND is_active = 1', [code.toUpperCase().trim()]);
     if (!promo) return res.status(400).json({ error: 'Noto\'g\'ri yoki faol emas promo-kod' });
@@ -779,15 +811,15 @@ app.get('/api/reviews/published', async (req, res) => {
 });
 
 // MiniApp: submit review (order must be 'sent' and belong to user)
-app.post('/api/reviews', async (req, res) => {
+app.post('/api/reviews', telegramAuth, async (req, res) => {
   try {
-    const { order_id, telegram_id, stars, text, author_name, region } = req.body;
-    if (!order_id || !telegram_id || !stars || !text)
+    const { order_id, stars, text, author_name, region } = req.body;
+    if (!order_id || !stars || !text)
       return res.status(400).json({ error: 'Majburiy maydonlar yetishmayapdi' });
     if (stars < 1 || stars > 5)
       return res.status(400).json({ error: 'Yulduzlar 1-5 orasida bo\'lishi kerak' });
 
-    const user = await queryOne('SELECT id FROM users WHERE telegram_id = ?', [telegram_id]);
+    const user = await queryOne('SELECT id FROM users WHERE telegram_id = ?', [req.telegramUserId]);
     if (!user) return res.status(404).json({ error: 'Foydalanuvchi topilmadi' });
 
     const order = await queryOne(

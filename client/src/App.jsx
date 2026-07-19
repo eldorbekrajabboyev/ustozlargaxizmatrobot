@@ -14,6 +14,14 @@ const api = axios.create({
   baseURL: '/api',
 })
 
+axios.interceptors.request.use((config) => {
+  const tg = window.Telegram?.WebApp
+  if (tg?.initData) {
+    config.headers['X-Telegram-Init-Data'] = tg.initData
+  }
+  return config
+})
+
 const MAIN_ROUTES = ['/', '/services', '/my-orders', '/profile']
 
 function AppContent() {

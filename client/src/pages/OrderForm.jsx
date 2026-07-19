@@ -190,16 +190,8 @@ function OrderForm({ user }) {
     setPromoChecking(true)
     setPromoError('')
     try {
-      const userRes = await axios.post('/api/users', {
-        telegram_id: user.id,
-        username: user.username,
-        first_name: user.first_name,
-        last_name: user.last_name,
-      })
-      if (!userRes.data) { setPromoError('Foydalanuvchi topilmadi'); setPromoChecking(false); return }
       const res = await axios.post('/api/promo-codes/validate', {
         code: promoCode.trim(),
-        user_id: userRes.data.id
       })
       if (res.data.success) {
         const disc = Math.round(basePrice * res.data.discount_percent / 100)
@@ -232,7 +224,6 @@ function OrderForm({ user }) {
       const fullAddress = `${form.region}, ${form.district}`
 
       const orderRes = await axios.post('/api/orders', {
-        user_id: userRes.data.id,
         service_id: serviceId,
         full_name: form.full_name,
         address: fullAddress,
