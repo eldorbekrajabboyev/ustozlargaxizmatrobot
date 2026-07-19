@@ -40,13 +40,15 @@ function Dashboard() {
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
   const [chartMode, setChartMode] = useState('daily')
+  const [schoolTypeFilter, setSchoolTypeFilter] = useState('')
 
   useEffect(() => {
-    api.get('/api/stats')
+    const params = schoolTypeFilter ? `?school_type=${schoolTypeFilter}` : ''
+    api.get(`/api/stats${params}`)
       .then(res => setStats(res.data))
       .catch(console.error)
       .finally(() => setLoading(false))
-  }, [])
+  }, [schoolTypeFilter])
 
   if (loading) {
     return (
@@ -147,7 +149,20 @@ function Dashboard() {
         {/* Subject Stats */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 dark:bg-gray-800 dark:border-gray-700/50">
           <div className="p-4 border-b border-gray-100 dark:border-gray-700/50">
-            <h2 className="font-semibold dark:text-white">Fan bo'yicha statistika</h2>
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <h2 className="font-semibold dark:text-white">Fan bo'yicha statistika</h2>
+              <div className="flex gap-1">
+                {[{v:'',l:'Barchasi'},{v:'uzbek',l:"O'zbek MK"},{v:'russian',l:'Rus MK'},{v:'qoraqalpoq',l:"Qoraqalpoq MK"}].map(opt => (
+                  <button
+                    key={opt.v}
+                    onClick={() => { setLoading(true); setSchoolTypeFilter(opt.v) }}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${schoolTypeFilter === opt.v ? 'bg-primary-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'}`}
+                  >
+                    {opt.l}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
           <div className="p-4">
             {stats.subjectStats.length > 0 ? (

@@ -493,20 +493,23 @@ app.put('/api/orders/:id/send', adminAuth, async (req, res) => {
 
 app.get('/api/stats', adminAuth, async (req, res) => {
   try {
-    const totalOrders = (await queryOne('SELECT COUNT(*) as count FROM orders'))?.count || 0;
-    const pendingPayment = (await queryOne("SELECT COUNT(*) as count FROM orders WHERE status = 'pending_payment'"))?.count || 0;
-    const pendingConfirmation = (await queryOne("SELECT COUNT(*) as count FROM orders WHERE status = 'pending_confirmation'"))?.count || 0;
-    const inProgress = (await queryOne("SELECT COUNT(*) as count FROM orders WHERE status = 'in_progress'"))?.count || 0;
-    const ready = (await queryOne("SELECT COUNT(*) as count FROM orders WHERE status = 'ready'"))?.count || 0;
-    const sent = (await queryOne("SELECT COUNT(*) as count FROM orders WHERE status = 'sent'"))?.count || 0;
+    const schoolTypeFilter = req.query.school_type;
+    const stWhere = schoolTypeFilter ? `WHERE school_type = '${schoolTypeFilter}'` : '';
+    const stAndWhere = schoolTypeFilter ? `AND school_type = '${schoolTypeFilter}'` : '';
+    const totalOrders = (await queryOne(`SELECT COUNT(*) as count FROM orders ${stWhere}`))?.count || 0;
+    const pendingPayment = (await queryOne(`SELECT COUNT(*) as count FROM orders WHERE status = 'pending_payment' ${stAndWhere}`))?.count || 0;
+    const pendingConfirmation = (await queryOne(`SELECT COUNT(*) as count FROM orders WHERE status = 'pending_confirmation' ${stAndWhere}`))?.count || 0;
+    const inProgress = (await queryOne(`SELECT COUNT(*) as count FROM orders WHERE status = 'in_progress' ${stAndWhere}`))?.count || 0;
+    const ready = (await queryOne(`SELECT COUNT(*) as count FROM orders WHERE status = 'ready' ${stAndWhere}`))?.count || 0;
+    const sent = (await queryOne(`SELECT COUNT(*) as count FROM orders WHERE status = 'sent' ${stAndWhere}`))?.count || 0;
     const totalUsers = (await queryOne('SELECT COUNT(*) as count FROM users'))?.count || 0;
-    const totalRevenueResult = await queryOne("SELECT COALESCE(SUM(total_price), 0) as total FROM orders WHERE status IN ('in_progress', 'ready', 'sent')");
+    const totalRevenueResult = await queryOne(`SELECT COALESCE(SUM(total_price), 0) as total FROM orders WHERE status IN ('in_progress', 'ready', 'sent') ${stAndWhere}`);
     const totalRevenue = totalRevenueResult ? totalRevenueResult.total : 0;
     let subjectStats = [], gradeStats = [], regionStats = [], recentOrders = [];
-    try { subjectStats = await queryAll("SELECT subject, COUNT(*) as count FROM orders GROUP BY subject ORDER BY count DESC LIMIT 10"); } catch (e) {}
-    try { gradeStats = await queryAll("SELECT grade, COUNT(*) as count FROM orders GROUP BY grade ORDER BY count DESC"); } catch (e) {}
-    try { regionStats = await queryAll("SELECT address as region, COUNT(*) as count FROM orders GROUP BY region ORDER BY count DESC LIMIT 20"); } catch (e) {}
-    try { recentOrders = await queryAll("SELECT o.id, o.order_code, o.full_name, o.status, o.total_price, o.created_at, s.name as service_name FROM orders o LEFT JOIN services s ON o.service_id = s.id ORDER BY o.created_at DESC LIMIT 10"); recentOrders.forEach(fixOrderDates); } catch (e) {}
+    try { subjectStats = await queryAll(`SELECT subject, COUNT(*) as count FROM orders ${stWhere} GROUP BY subject ORDER BY count DESC LIMIT 10`); } catch (e) {}
+    try { gradeStats = await queryAll(`SELECT grade, COUNT(*) as count FROM orders ${stWhere} GROUP BY grade ORDER BY count DESC`); } catch (e) {}
+    try { regionStats = await queryAll(`SELECT address as region, COUNT(*) as count FROM orders ${stWhere} GROUP BY region ORDER BY count DESC LIMIT 20`); } catch (e) {}
+    try { recentOrders = await queryAll(`SELECT o.id, o.order_code, o.full_name, o.status, o.total_price, o.created_at, s.name as service_name FROM orders o LEFT JOIN services s ON o.service_id = s.id ${schoolTypeFilter ? `WHERE o.school_type = '${schoolTypeFilter}'` : ''} ORDER BY o.created_at DESC LIMIT 10`); recentOrders.forEach(fixOrderDates); } catch (e) {}
 
     // Daily chart data (last 14 days)
     let dailyChart = [];
