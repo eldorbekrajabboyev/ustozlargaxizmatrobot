@@ -431,7 +431,7 @@ app.post('/api/orders/:id/auto-cancel', async (req, res) => {
       return res.json({ success: true, alreadyHandled: true });
     }
     await deleteOrderImages(orderId);
-    await run("UPDATE orders SET status = 'rejected', admin_note = 'Avtomatik bekor qilindi: 2 daqiqada chek yuklanmadi' WHERE id = ?", [orderId]);
+    await run("UPDATE orders SET status = 'rejected', admin_note = 'Avtomatik bekor qilindi: 5 daqiqada chek yuklanmadi' WHERE id = ?", [orderId]);
     if (order.promo_code_id) {
       await run('DELETE FROM promo_code_usage WHERE promo_code_id = ? AND user_id = ? AND order_id = ?', [order.promo_code_id, order.user_id, orderId]);
     }

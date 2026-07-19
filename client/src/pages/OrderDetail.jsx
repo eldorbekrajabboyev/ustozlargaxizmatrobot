@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import axios from 'axios'
 import Header from '../components/Header'
 
-const PAYMENT_TIMEOUT_MS = 2 * 60 * 1000
+const PAYMENT_TIMEOUT_MS = 5 * 60 * 1000
 
 function copyToClipboard(text) {
   if (navigator.clipboard) {
