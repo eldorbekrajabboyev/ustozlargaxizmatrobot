@@ -45,12 +45,12 @@ function MyOrders({ user }) {
 
       <div className="p-4 space-y-3">
         {orders.map(order => {
-          const status = statusMap[order.status] || { label: order.status, bg: 'bg-gray-100 text-gray-600', icon: '❓' }
+          const status = statusMap[order.status] || { label: order.status, bg: 'bg-tg-hint/10 text-tg-hint', icon: '❓' }
           return (
             <button
               key={order.id}
               onClick={() => navigate(`/order-detail/${order.id}`)}
-              className="w-full text-left bg-tg-secondary rounded-2xl p-4 shadow-card border border-black/5 active:scale-[0.99] transition-transform"
+              className="w-full text-left bg-tg-secondary rounded-2xl p-4 shadow-card border border-tg-text/5 active:scale-[0.99] transition-transform"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
@@ -62,7 +62,7 @@ function MyOrders({ user }) {
                   <span>{status.icon}</span> {status.label}
                 </span>
               </div>
-              <div className="flex items-center justify-between mt-3 pt-3 border-t border-black/5">
+              <div className="flex items-center justify-between mt-3 pt-3 border-t border-tg-text/5">
                 <p className="font-bold text-primary-600">{order.total_price.toLocaleString()} so'm</p>
                 <p className="text-xs text-tg-hint">
                   {new Date(order.created_at).toLocaleDateString('uz-UZ', { timeZone: 'Asia/Tashkent' })}

@@ -12,12 +12,12 @@ function Header({ title, subtitle, onBack, right }) {
   const isHome = location.pathname === '/'
 
   return (
-    <header className="sticky top-0 z-20 bg-tg-bg/90 backdrop-blur-md border-b border-black/5">
+    <header className="sticky top-0 z-20 bg-tg-bg/90 backdrop-blur-md border-b border-tg-text/5">
       <div className="flex items-center gap-2 px-4 h-14">
         {!isHome && (
           <button
             onClick={handleBack}
-            className="shrink-0 w-9 h-9 -ml-1 flex items-center justify-center rounded-full text-lg text-tg-text hover:bg-black/5 active:bg-black/10 transition-colors"
+            className="shrink-0 w-9 h-9 -ml-1 flex items-center justify-center rounded-full text-lg text-tg-text hover:bg-tg-text/5 active:bg-tg-text/10 transition-colors"
             aria-label="Orqaga"
           >
             ‹

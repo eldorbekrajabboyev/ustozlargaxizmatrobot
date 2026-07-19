@@ -108,7 +108,7 @@ function ReviewsCarousel() {
       <div className="relative">
         {/* Card */}
         <div
-          className="rounded-2xl p-4 bg-tg-secondary border border-black/5 transition-opacity duration-200"
+          className="rounded-2xl p-4 bg-tg-secondary border border-tg-text/5 transition-opacity duration-200"
           style={{ opacity: fade ? 1 : 0, minHeight: 120 }}
         >
           <div className="flex items-center gap-3 mb-2">
@@ -123,7 +123,7 @@ function ReviewsCarousel() {
               ))}
             </div>
           </div>
-          <p className="text-xs text-tg-text leading-relaxed border-t border-black/5 pt-2">"{r.text}"</p>
+          <p className="text-xs text-tg-text leading-relaxed border-t border-tg-text/5 pt-2">"{r.text}"</p>
         </div>
 
         {/* Dots */}
@@ -295,7 +295,7 @@ export default function Home({ user }) {
                 <ul className="mt-2 space-y-1">
                   {s.points.map((p,j)=>(
                     <li key={j} className="text-[11px] opacity-85 flex items-center gap-1.5">
-                      <span className="w-1 h-1 rounded-full bg-white/70 shrink-0" />{p}
+                      <span className="w-1 h-1 rounded-full bg-tg-bg/70 shrink-0" />{p}
                     </li>
                   ))}
                 </ul>
@@ -324,9 +324,9 @@ export default function Home({ user }) {
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <Sticker e={step.e} rotZ={step.rz} sz={32} fontSize={16} animDelay={`${i*0.1}s`} />
-                    <p className="text-sm font-bold text-gray-800">{step.t}</p>
+                    <p className="text-sm font-bold text-tg-text">{step.t}</p>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1 leading-snug">{step.d}</p>
+                  <p className="text-xs text-tg-hint mt-1 leading-snug">{step.d}</p>
                 </div>
               </div>
             ))}
@@ -346,7 +346,7 @@ export default function Home({ user }) {
                 {e:'💻',rz:-3,t:'AKT vositalari',sub:'zamonaviy yondashuv'},
                 {e:'📎',rz:1,t:'Word + PDF',sub:'tayyor holda beriladi'},
               ].map((q,i)=>(
-                <div key={i} className={`flex items-center gap-2.5 p-3 ${i%2===0?'border-r border-black/5':''} ${i<4?'border-b border-black/5':''}`}>
+                <div key={i} className={`flex items-center gap-2.5 p-3 ${i%2===0?'border-r border-tg-text/5':''} ${i<4?'border-b border-tg-text/5':''}`}>
                   <Sticker e={q.e} rotZ={q.rz} sz={36} fontSize={17} animDelay={`${i*0.08}s`} />
                   <div>
                     <p className="text-xs font-bold text-tg-text">{q.t}</p>
@@ -374,9 +374,9 @@ export default function Home({ user }) {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
                     <p className="text-sm font-black" style={{ color:s.tc }}>{s.lvl}</p>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/60" style={{ color:s.tc }}>{s.price}</span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-tg-bg/60" style={{ color:s.tc }}>{s.price}</span>
                   </div>
-                  <p className="text-[11px] mt-0.5 leading-snug text-gray-600">{s.desc}</p>
+                  <p className="text-[11px] mt-0.5 leading-snug text-tg-hint">{s.desc}</p>
                   <p className="text-[10px] font-semibold mt-0.5" style={{ color:s.tc }}>✔ {s.cnt} muvaffaqiyatli</p>
                 </div>
               </div>

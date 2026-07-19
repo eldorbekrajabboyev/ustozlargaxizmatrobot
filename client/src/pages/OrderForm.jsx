@@ -328,7 +328,7 @@ function OrderForm({ user }) {
         <div className="flex gap-1.5 mb-2">
           {steps.map(s => (
             <div key={s.num} className="flex-1">
-              <div className={`h-1.5 rounded-full transition-colors ${step >= s.num ? 'bg-primary-500' : 'bg-black/5'}`}></div>
+              <div className={`h-1.5 rounded-full transition-colors ${step >= s.num ? 'bg-primary-500' : 'bg-tg-text/5'}`}></div>
             </div>
           ))}
         </div>
@@ -341,11 +341,11 @@ function OrderForm({ user }) {
             value={form.full_name}
             onChange={(e) => setForm({ ...form, full_name: e.target.value })}
             placeholder="Masalan: Karimov Valijon"
-            className="w-full border border-black/10 rounded-2xl px-4 py-3.5 text-lg bg-tg-secondary focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+            className="w-full border border-tg-text/10 rounded-2xl px-4 py-3.5 text-lg bg-tg-secondary focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
             autoFocus
           />
           <button onClick={goNext} disabled={!canNext()}
-            className="w-full bg-primary-600 text-white rounded-2xl py-3.5 font-medium disabled:bg-black/10 disabled:text-tg-hint active:bg-primary-700 transition-colors">
+            className="w-full bg-primary-600 text-white rounded-2xl py-3.5 font-medium disabled:bg-tg-text/10 disabled:text-tg-hint active:bg-primary-700 transition-colors">
             Keyingisi →
           </button>
         </div>
@@ -356,11 +356,11 @@ function OrderForm({ user }) {
           <h2 className="text-lg font-semibold">📍 Manzil</h2>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Viloyat</label>
+            <label className="block text-sm font-medium text-tg-text mb-1">Viloyat</label>
             <select
               value={form.region}
               onChange={(e) => setForm({ ...form, region: e.target.value, district: '' })}
-              className="w-full border border-black/10 rounded-2xl px-4 py-3.5 text-base bg-tg-secondary focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+              className="w-full border border-tg-text/10 rounded-2xl px-4 py-3.5 text-base bg-tg-secondary focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
             >
               <option value="">Viloyatni tanlang</option>
               {REGION_NAMES.map(r => (
@@ -370,12 +370,12 @@ function OrderForm({ user }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Tuman / Shahar</label>
+            <label className="block text-sm font-medium text-tg-text mb-1">Tuman / Shahar</label>
             <select
               value={form.district}
               onChange={(e) => setForm({ ...form, district: e.target.value })}
               disabled={!form.region}
-              className="w-full border border-black/10 rounded-2xl px-4 py-3.5 text-base bg-tg-secondary focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none disabled:opacity-50"
+              className="w-full border border-tg-text/10 rounded-2xl px-4 py-3.5 text-base bg-tg-secondary focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none disabled:opacity-50"
             >
               <option value="">{form.region ? 'Tumanni tanlang' : 'Avval viloyatni tanlang'}</option>
               {districts.map(d => (
@@ -385,18 +385,18 @@ function OrderForm({ user }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Maktab nomi</label>
+            <label className="block text-sm font-medium text-tg-text mb-1">Maktab nomi</label>
             <input
               type="text"
               value={form.school}
               onChange={(e) => setForm({ ...form, school: e.target.value })}
               placeholder="Masalan: 1-maktab"
-              className="w-full border border-black/10 rounded-2xl px-4 py-3.5 text-lg bg-tg-secondary focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+              className="w-full border border-tg-text/10 rounded-2xl px-4 py-3.5 text-lg bg-tg-secondary focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
             />
           </div>
 
           <button onClick={goNext} disabled={!canNext()}
-            className="w-full bg-primary-600 text-white rounded-2xl py-3.5 font-medium disabled:bg-black/10 disabled:text-tg-hint active:bg-primary-700 transition-colors">
+            className="w-full bg-primary-600 text-white rounded-2xl py-3.5 font-medium disabled:bg-tg-text/10 disabled:text-tg-hint active:bg-primary-700 transition-colors">
             Keyingisi →
           </button>
         </div>
@@ -411,7 +411,7 @@ function OrderForm({ user }) {
                 <button
                   key={st.id}
                   onClick={() => setForm({ ...form, school_type: st.id })}
-                  className={`w-full p-4 rounded-2xl text-left font-medium border-2 transition-all flex items-center gap-3 ${form.school_type === st.id ? 'border-primary-500 bg-primary-50 text-primary-700' : 'border-gray-200 bg-tg-secondary text-tg-text active:bg-black/5'}`}
+                  className={`w-full p-4 rounded-2xl text-left font-medium border-2 transition-all flex items-center gap-3 ${form.school_type === st.id ? 'border-primary-500 bg-primary-50 text-primary-700' : 'border-tg-hint/20 bg-tg-secondary text-tg-text active:bg-tg-text/5'}`}
                 >
                   <span className="text-2xl">{st.icon}</span>
                   <span className="text-base">{st.label}</span>
@@ -434,12 +434,12 @@ function OrderForm({ user }) {
                 }
               }}
               placeholder="Sinfni kiriting (1-11)"
-              className="w-full border border-black/10 rounded-2xl px-4 py-3.5 text-lg bg-tg-secondary focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+              className="w-full border border-tg-text/10 rounded-2xl px-4 py-3.5 text-lg bg-tg-secondary focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
             />
           </div>
 
           <button onClick={goNext} disabled={!canNext()}
-            className="w-full bg-primary-600 text-white rounded-2xl py-3.5 font-medium disabled:bg-black/10 disabled:text-tg-hint active:bg-primary-700 transition-colors">
+            className="w-full bg-primary-600 text-white rounded-2xl py-3.5 font-medium disabled:bg-tg-text/10 disabled:text-tg-hint active:bg-primary-700 transition-colors">
             Keyingisi →
           </button>
         </div>
@@ -448,20 +448,20 @@ function OrderForm({ user }) {
       {step === 4 && (
         <div className="space-y-4">
           <h2 className="text-lg font-semibold">📚 Fan nomini tanlang</h2>
-          <p className="text-gray-500 text-sm">{form.grade}-sinf · {SCHOOL_TYPES.find(s => s.id === form.school_type)?.label}</p>
+          <p className="text-tg-hint text-sm">{form.grade}-sinf · {SCHOOL_TYPES.find(s => s.id === form.school_type)?.label}</p>
           <div className="grid grid-cols-2 gap-2">
             {getSubjects(form.grade, form.school_type).map(subject => (
               <button
                 key={subject}
                 onClick={() => setForm({ ...form, subject })}
-                className={`p-3 rounded-lg text-sm font-medium border-2 transition-all text-left ${form.subject === subject ? 'border-primary-500 bg-primary-50 text-primary-700' : 'border-gray-200 bg-tg-secondary text-tg-text active:bg-black/5'}`}
+                className={`p-3 rounded-lg text-sm font-medium border-2 transition-all text-left ${form.subject === subject ? 'border-primary-500 bg-primary-50 text-primary-700' : 'border-tg-hint/20 bg-tg-secondary text-tg-text active:bg-tg-text/5'}`}
               >
                 {subject}
               </button>
             ))}
           </div>
           <button onClick={goNext} disabled={!canNext()}
-            className="w-full bg-primary-600 text-white rounded-2xl py-3.5 font-medium disabled:bg-black/10 disabled:text-tg-hint active:bg-primary-700 transition-colors">
+            className="w-full bg-primary-600 text-white rounded-2xl py-3.5 font-medium disabled:bg-tg-text/10 disabled:text-tg-hint active:bg-primary-700 transition-colors">
             Keyingisi →
           </button>
         </div>
@@ -475,16 +475,16 @@ function OrderForm({ user }) {
             value={form.topic}
             onChange={(e) => setForm({ ...form, topic: e.target.value })}
             placeholder="Masalan: Kasr sonlar"
-            className="w-full border border-black/10 rounded-2xl px-4 py-3.5 text-lg bg-tg-secondary focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+            className="w-full border border-tg-text/10 rounded-2xl px-4 py-3.5 text-lg bg-tg-secondary focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
             autoFocus
           />
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-tg-text mb-1">
               Rasmlar (ixtiyoriy, 5 tagacha)
             </label>
             <label className="block w-full border-2 border-dashed border-primary-300 rounded-2xl p-4 text-center cursor-pointer hover:border-primary-500 transition-colors">
-              <span className="text-gray-500">📷 Rasm yuklash</span>
+              <span className="text-tg-hint">📷 Rasm yuklash</span>
               <input
                 type="file"
                 accept="image/*"
@@ -514,19 +514,19 @@ function OrderForm({ user }) {
             )}
           </div>
 
-          <div className="bg-tg-secondary rounded-2xl p-4 border border-black/5 space-y-3">
+          <div className="bg-tg-secondary rounded-2xl p-4 border border-tg-text/5 space-y-3">
             <label className="flex items-center gap-3 cursor-pointer select-none">
               <input
                 type="checkbox"
                 checked={form.geo_extra}
                 onChange={(e) => setForm({ ...form, geo_extra: e.target.checked, geographic_level: 'maktab' })}
-                className="w-5 h-5 rounded-md border-gray-300 text-primary-600 focus:ring-primary-500"
+                className="w-5 h-5 rounded-md border-tg-hint/30 text-primary-600 focus:ring-primary-500"
               />
               <span className="text-sm font-medium text-tg-text">Viloyat yoki Respublika darajasida yozish kerak</span>
             </label>
             {form.geo_extra && (
               <div className="space-y-2 pl-8">
-                <label className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${form.geographic_level === 'viloyat' ? 'border-primary-500 bg-primary-50' : 'border-gray-200 bg-white'}`}>
+                <label className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${form.geographic_level === 'viloyat' ? 'border-primary-500 bg-primary-50' : 'border-tg-hint/20 bg-tg-secondary'}`}>
                   <input type="radio" name="geo" value="viloyat" checked={form.geographic_level === 'viloyat'}
                     onChange={() => setForm({ ...form, geographic_level: 'viloyat' })} className="w-4 h-4 text-primary-600" />
                   <div className="text-sm">
@@ -535,7 +535,7 @@ function OrderForm({ user }) {
                   </div>
                   <span className="ml-auto text-sm font-bold text-amber-600">+60,000</span>
                 </label>
-                <label className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${form.geographic_level === 'respublika' ? 'border-primary-500 bg-primary-50' : 'border-gray-200 bg-white'}`}>
+                <label className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${form.geographic_level === 'respublika' ? 'border-primary-500 bg-primary-50' : 'border-tg-hint/20 bg-tg-secondary'}`}>
                   <input type="radio" name="geo" value="respublika" checked={form.geographic_level === 'respublika'}
                     onChange={() => setForm({ ...form, geographic_level: 'respublika' })} className="w-4 h-4 text-primary-600" />
                   <div className="text-sm">
@@ -548,7 +548,7 @@ function OrderForm({ user }) {
             )}
           </div>
 
-          <div className="bg-tg-secondary rounded-2xl p-4 border border-black/5 space-y-3">
+          <div className="bg-tg-secondary rounded-2xl p-4 border border-tg-text/5 space-y-3">
             <label className="flex items-center gap-3 cursor-pointer select-none">
               <input
                 type="checkbox"
@@ -557,7 +557,7 @@ function OrderForm({ user }) {
                   setHasPromo(e.target.checked)
                   if (!e.target.checked) { setPromoCode(''); setPromoDiscount(0); setPromoCodeId(null); setPromoError('') }
                 }}
-                className="w-5 h-5 rounded-md border-gray-300 text-primary-600 focus:ring-primary-500"
+                className="w-5 h-5 rounded-md border-tg-hint/30 text-primary-600 focus:ring-primary-500"
               />
               <span className="text-sm font-medium text-tg-text">Menda promokod bor</span>
             </label>
@@ -569,7 +569,7 @@ function OrderForm({ user }) {
                     value={promoCode}
                     onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
                     placeholder="Promo-kodni kiriting"
-                    className="flex-1 px-3 py-2 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white uppercase"
+                    className="flex-1 px-3 py-2 rounded-xl border border-tg-hint/20 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-tg-secondary uppercase"
                   />
                   <button
                     onClick={validatePromo}
@@ -588,13 +588,13 @@ function OrderForm({ user }) {
           </div>
 
           {referralDiscountAmount > 0 && referralBalance >= referralDiscountAmount && (
-            <div className="bg-tg-secondary rounded-2xl p-4 border border-black/5 space-y-3">
+            <div className="bg-tg-secondary rounded-2xl p-4 border border-tg-text/5 space-y-3">
               <label className="flex items-center gap-3 cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={useReferral}
                   onChange={(e) => setUseReferral(e.target.checked)}
-                  className="w-5 h-5 rounded-md border-gray-300 text-primary-600 focus:ring-primary-500"
+                  className="w-5 h-5 rounded-md border-tg-hint/30 text-primary-600 focus:ring-primary-500"
                 />
                 <span className="text-sm font-medium text-tg-text">Taklif chegirmadan foydalanish</span>
               </label>
@@ -607,9 +607,9 @@ function OrderForm({ user }) {
             </div>
           )}
 
-          <div className="bg-tg-secondary rounded-2xl p-4 border border-black/5">
+          <div className="bg-tg-secondary rounded-2xl p-4 border border-tg-text/5">
             <h3 className="font-semibold mb-2">📋 Buyurtma ma'lumotlari:</h3>
-            <div className="text-sm text-gray-600 space-y-1">
+            <div className="text-sm text-tg-hint space-y-1">
               <p className="break-words"><strong>F.I.Sh:</strong> {form.full_name}</p>
               <p className="break-words"><strong>Manzil:</strong> {form.region}, {form.district}</p>
               <p className="break-words"><strong>Maktab:</strong> {form.school}</p>
@@ -618,8 +618,8 @@ function OrderForm({ user }) {
               <p><strong>Fan:</strong> {form.subject}</p>
               <p className="break-all"><strong>Mavzu:</strong> {form.topic}</p>
               {images.length > 0 && <p><strong>Rasmlar:</strong> {images.length} ta</p>}
-              <div className="pt-2 mt-2 border-t border-black/10 space-y-1">
-                <div className="flex justify-between text-sm text-gray-500">
+              <div className="pt-2 mt-2 border-t border-tg-text/10 space-y-1">
+                <div className="flex justify-between text-sm text-tg-hint">
                   <span>Xizmat narxi:</span>
                   <span>{service.price.toLocaleString()} so'm</span>
                 </div>
@@ -647,7 +647,7 @@ function OrderForm({ user }) {
                     <span>-{activeReferralDiscount.toLocaleString()} so'm</span>
                   </div>
                 )}
-                <div className="flex justify-between items-center pt-1 border-t border-black/10">
+                <div className="flex justify-between items-center pt-1 border-t border-tg-text/10">
                   <span className="font-bold text-tg-text">Jami to'lov:</span>
                   <span className="font-bold text-primary-600 text-lg">{totalPrice.toLocaleString()} so'm</span>
                 </div>
@@ -658,7 +658,7 @@ function OrderForm({ user }) {
           <button
             onClick={() => setShowConfirm(true)}
             disabled={!form.topic.trim() || submitting}
-            className="w-full bg-primary-600 text-white rounded-2xl py-3.5 font-medium disabled:bg-black/10 disabled:text-tg-hint active:bg-primary-700 transition-colors"
+            className="w-full bg-primary-600 text-white rounded-2xl py-3.5 font-medium disabled:bg-tg-text/10 disabled:text-tg-hint active:bg-primary-700 transition-colors"
           >
             ✅ Buyurtma berish
           </button>
@@ -667,8 +667,8 @@ function OrderForm({ user }) {
       </div>
 
       {showConfirm && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40" onClick={() => !submitting && setShowConfirm(false)}>
-          <div className="bg-white rounded-t-3xl sm:rounded-2xl w-full max-w-md p-6 shadow-xl" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-tg-text/40" onClick={() => !submitting && setShowConfirm(false)}>
+          <div className="bg-tg-secondary rounded-t-3xl sm:rounded-2xl w-full max-w-md p-6 shadow-xl" onClick={e => e.stopPropagation()}>
             <h3 className="text-lg font-bold mb-4 text-center">Tasdiqlaysizmi?</h3>
             <div className="space-y-2 mb-4 text-sm">
               <div className="flex justify-between"><span className="text-tg-hint">Xizmat:</span><span className="font-medium">{service?.name}</span></div>
@@ -678,7 +678,7 @@ function OrderForm({ user }) {
               <div className="flex justify-between"><span className="text-tg-hint">Fan:</span><span className="font-medium">{form.subject}</span></div>
               <div className="flex justify-between"><span className="text-tg-hint">Sinf:</span><span className="font-medium">{form.grade}</span></div>
               {form.topic && <div className="flex justify-between"><span className="text-tg-hint">Mavzu:</span><span className="font-medium text-right max-w-[60%]">{form.topic}</span></div>}
-              <div className="border-t border-black/10 pt-2 mt-2 flex justify-between items-center">
+              <div className="border-t border-tg-text/10 pt-2 mt-2 flex justify-between items-center">
                 <span className="font-bold">Jami to'lov:</span>
                 <span className="font-bold text-primary-600 text-lg">{totalPrice.toLocaleString()} so'm</span>
               </div>
@@ -688,14 +688,14 @@ function OrderForm({ user }) {
               <button
                 onClick={() => setShowConfirm(false)}
                 disabled={submitting}
-                className="flex-1 py-3 rounded-2xl font-medium bg-tg-secondary text-tg-text active:bg-black/5 transition-colors"
+                className="flex-1 py-3 rounded-2xl font-medium bg-tg-secondary text-tg-text active:bg-tg-text/5 transition-colors"
               >
                 Bekor qilish
               </button>
               <button
                 onClick={() => { setShowConfirm(false); handleSubmit(); }}
                 disabled={submitting}
-                className="flex-1 py-3 rounded-2xl font-medium bg-primary-600 text-white active:bg-primary-700 transition-colors disabled:bg-black/10 disabled:text-tg-hint"
+                className="flex-1 py-3 rounded-2xl font-medium bg-primary-600 text-white active:bg-primary-700 transition-colors disabled:bg-tg-text/10 disabled:text-tg-hint"
               >
                 {submitting ? 'Yuborilmoqda...' : '✅ Tasdiqlash'}
               </button>

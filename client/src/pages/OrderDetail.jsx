@@ -124,7 +124,7 @@ function ReviewModal({ order, user, onClose, onSuccess }) {
     <div className="fixed inset-0 z-50 flex items-end" style={{ background: 'rgba(0,0,0,0.5)' }}
       onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="w-full rounded-t-3xl p-5 bg-tg-bg animate-slide-up" style={{ maxHeight: '90vh', overflowY: 'auto' }}>
-        <div className="w-10 h-1 rounded-full bg-black/20 mx-auto mb-4" />
+        <div className="w-10 h-1 rounded-full bg-tg-text/20 mx-auto mb-4" />
         <h2 className="text-lg font-bold text-tg-text mb-1">Sharh yozing</h2>
         <p className="text-xs text-tg-hint mb-4">Xizmatimiz haqida fikringizni bildiring</p>
 
@@ -141,7 +141,7 @@ function ReviewModal({ order, user, onClose, onSuccess }) {
         <div className="mb-3">
           <label className="text-xs font-semibold text-tg-hint uppercase tracking-wide block mb-1.5">Sharhingiz *</label>
           <textarea
-            className="w-full rounded-xl border border-black/10 bg-tg-secondary p-3 text-sm text-tg-text resize-none"
+            className="w-full rounded-xl border border-tg-text/10 bg-tg-secondary p-3 text-sm text-tg-text resize-none"
             rows={4}
             maxLength={500}
             placeholder="Xizmat haqida fikringizni yozing..."
@@ -155,7 +155,7 @@ function ReviewModal({ order, user, onClose, onSuccess }) {
         <div className="mb-4">
           <label className="text-xs font-semibold text-tg-hint uppercase tracking-wide block mb-1.5">Viloyat/Shahar (ixtiyoriy)</label>
           <input
-            className="w-full rounded-xl border border-black/10 bg-tg-secondary p-3 text-sm text-tg-text"
+            className="w-full rounded-xl border border-tg-text/10 bg-tg-secondary p-3 text-sm text-tg-text"
             placeholder="Masalan: Toshkent viloyati"
             value={region}
             onChange={e => setRegion(e.target.value)}
@@ -277,7 +277,7 @@ function OrderDetail({ user }) {
     )
   }
 
-  const status = statusMap[order.status] || { label: order.status, color: 'bg-gray-100 text-gray-600', icon: '❓', desc: '' }
+  const status = statusMap[order.status] || { label: order.status, color: 'bg-tg-hint/10 text-tg-hint', icon: '❓', desc: '' }
   const canReview = ['sent', 'ready'].includes(order.status) && !reviewDone
   const servicePrice = (order.total_price || 0) - (order.language_surcharge || 0) - (order.geographic_surcharge || 0) + (order.promo_discount || 0) + (order.referral_discount || 0)
 
@@ -299,7 +299,7 @@ function OrderDetail({ user }) {
           </div>
         </div>
 
-        <div className="bg-tg-secondary rounded-2xl p-4 shadow-card border border-black/5">
+        <div className="bg-tg-secondary rounded-2xl p-4 shadow-card border border-tg-text/5">
           <h3 className="font-semibold text-tg-text mb-3">Buyurtma ma'lumotlari</h3>
           <div className="space-y-2.5 text-sm">
             <Row label="Xizmat" value={order.service_name} />
@@ -334,7 +334,7 @@ function OrderDetail({ user }) {
                   <span className="text-green-600">-{order.referral_discount.toLocaleString()} so'm</span>
                 </div>
               )}
-              <div className="flex justify-between gap-3 items-center pt-1 border-t border-black/10">
+              <div className="flex justify-between gap-3 items-center pt-1 border-t border-tg-text/10">
                 <span className="font-bold text-tg-text">Jami to'lov:</span>
                 <span className="font-bold text-primary-600 text-lg">{order.total_price?.toLocaleString()} so'm</span>
               </div>
@@ -358,7 +358,7 @@ function OrderDetail({ user }) {
         </div>
 
         {order.images && order.images.length > 0 && (
-          <div className="bg-tg-secondary rounded-2xl p-4 shadow-card border border-black/5">
+          <div className="bg-tg-secondary rounded-2xl p-4 shadow-card border border-tg-text/5">
             <h3 className="font-semibold text-tg-text mb-3">Rasmlar</h3>
             <div className="flex gap-2 flex-wrap">
               {order.images.map((img, idx) => (
@@ -369,7 +369,7 @@ function OrderDetail({ user }) {
         )}
 
         {order.status === 'pending_payment' && (
-          <div className="bg-tg-secondary rounded-2xl p-4 shadow-card border border-black/5">
+          <div className="bg-tg-secondary rounded-2xl p-4 shadow-card border border-tg-text/5">
             <div className={`rounded-xl p-4 mb-4 text-center ${countdown.expired ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-800'}`}>
               {countdown.expired ? (
                 <>
@@ -388,7 +388,7 @@ function OrderDetail({ user }) {
 
             <h3 className="font-semibold text-tg-text mb-3">To'lov</h3>
             {cards.length > 0 && (
-              <div className="bg-black/5 rounded-xl p-3 mb-4">
+              <div className="bg-tg-text/5 rounded-xl p-3 mb-4">
                 <div className="flex items-center justify-between">
                   <p className="text-xs text-tg-hint">Karta raqami</p>
                   <CopyButton text={cards[0].card_number.replace(/\s/g, '')} label="Raqamni nusxalash" />
@@ -396,7 +396,7 @@ function OrderDetail({ user }) {
                 <p className="font-mono font-bold text-lg text-tg-text mt-0.5">{cards[0].card_number}</p>
                 <p className="text-sm text-tg-text">{cards[0].card_holder}</p>
                 {cards[0].bank_name && <p className="text-xs text-tg-hint">{cards[0].bank_name}</p>}
-                <div className="mt-3 pt-3 border-t border-black/10 flex items-center justify-between">
+                <div className="mt-3 pt-3 border-t border-tg-text/10 flex items-center justify-between">
                   <span className="text-sm text-tg-hint">To'lov summasi:</span>
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-primary-600">{order.total_price?.toLocaleString()} so'm</span>
@@ -428,7 +428,7 @@ function OrderDetail({ user }) {
         )}
 
         {order.document_file && (
-          <div className="bg-tg-secondary rounded-2xl p-4 shadow-card border border-black/5">
+          <div className="bg-tg-secondary rounded-2xl p-4 shadow-card border border-tg-text/5">
             <h3 className="font-semibold text-tg-text mb-3">Hujjat</h3>
             <a href={order.document_file} target="_blank" rel="noopener noreferrer"
               className="block w-full bg-emerald-500 text-white rounded-xl py-3 text-center font-medium active:scale-95 transition-transform">

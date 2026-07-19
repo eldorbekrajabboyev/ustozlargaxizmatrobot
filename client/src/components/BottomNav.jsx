@@ -57,7 +57,7 @@ export default function BottomNav() {
     path === '/' ? location.pathname === '/' : location.pathname.startsWith(path)
 
   return (
-    <nav className="fixed bottom-0 inset-x-0 z-30 bg-tg-secondary border-t border-black/5 pb-[env(safe-area-inset-bottom,0px)]">
+    <nav className="fixed bottom-0 inset-x-0 z-30 bg-tg-secondary border-t border-tg-text/5 pb-[env(safe-area-inset-bottom,0px)]">
       <div className="flex items-stretch justify-around max-w-xl mx-auto">
         {TABS.map(tab => {
           const active = isActive(tab.path)

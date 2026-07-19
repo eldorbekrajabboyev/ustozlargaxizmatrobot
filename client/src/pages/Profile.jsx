@@ -63,7 +63,7 @@ function Profile({ user }) {
 
       <div className="p-4 space-y-4 pb-8">
         {/* User info */}
-        <div className="bg-tg-secondary rounded-2xl p-5 border border-black/5 text-center space-y-2">
+        <div className="bg-tg-secondary rounded-2xl p-5 border border-tg-text/5 text-center space-y-2">
           <div className="w-16 h-16 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center text-2xl font-bold mx-auto">
             {user?.first_name?.[0] || '?'}
           </div>
@@ -73,7 +73,7 @@ function Profile({ user }) {
 
         {/* Referral link */}
         {referralLink && (
-          <div className="bg-tg-secondary rounded-2xl p-4 border border-black/5 space-y-3">
+          <div className="bg-tg-secondary rounded-2xl p-4 border border-tg-text/5 space-y-3">
             <h3 className="font-semibold text-sm">👥 Taklif havolasi</h3>
             <p className="text-xs text-tg-hint">
               Do'stlaringizni taklif qiling — ular to'lov qilganda sizga chegirma balansi qo'shiladi
@@ -83,7 +83,7 @@ function Profile({ user }) {
                 type="text"
                 value={referralLink}
                 readOnly
-                className="flex-1 px-3 py-2 rounded-xl border border-gray-200 text-xs bg-white text-gray-600 font-mono"
+                className="flex-1 px-3 py-2 rounded-xl border border-tg-hint/20 text-xs bg-tg-secondary text-tg-hint font-mono"
               />
               <button
                 onClick={handleCopy}
@@ -100,14 +100,14 @@ function Profile({ user }) {
         )}
 
         {/* Referral stats */}
-        <div className="bg-tg-secondary rounded-2xl p-4 border border-black/5 space-y-3">
+        <div className="bg-tg-secondary rounded-2xl p-4 border border-tg-text/5 space-y-3">
           <h3 className="font-semibold text-sm">📊 Referal statistika</h3>
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-white rounded-xl p-3 text-center border border-black/5">
+            <div className="bg-tg-secondary rounded-xl p-3 text-center border border-tg-text/5">
               <p className="text-2xl font-bold text-primary-600">{referralInfo?.referred_count || 0}</p>
               <p className="text-xs text-tg-hint mt-1">Taklif qilingan</p>
             </div>
-            <div className="bg-white rounded-xl p-3 text-center border border-black/5">
+            <div className="bg-tg-secondary rounded-xl p-3 text-center border border-tg-text/5">
               <p className="text-2xl font-bold text-green-600">{(referralInfo?.referral_balance || 0).toLocaleString()}</p>
               <p className="text-xs text-tg-hint mt-1">Balans (so'm)</p>
             </div>
@@ -120,7 +120,7 @@ function Profile({ user }) {
         </div>
 
         {/* How it works */}
-        <div className="bg-tg-secondary rounded-2xl p-4 border border-black/5 space-y-2">
+        <div className="bg-tg-secondary rounded-2xl p-4 border border-tg-text/5 space-y-2">
           <h3 className="font-semibold text-sm">💡 Qanday ishlaydi?</h3>
           <ol className="text-xs text-tg-hint space-y-1.5 list-decimal list-inside">
             <li>Do'stingizga havolani yuboring</li>
